@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Netback analysis</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  :root {
+    --ink:#1c1917; --muted:#57534e; --paper:#f3efe6; --card:#fffdf8;
+    --line:#d6d0c4; --export:#0f766e; --domestic:#b45309; --accent:#1e3a5f;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif; color:var(--ink);
+    background:
+      radial-gradient(900px 400px at 0% 0%, #e7eee8, transparent 55%),
+      radial-gradient(700px 320px at 100% 0%, #efe4d4, transparent 50%),
+      var(--paper);
+  }
+  .wrap{max-width:1440px; margin:0 auto; padding:12px}
+  .topnav{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap}
+  .topnav button{
+    border-radius:999px; padding:8px 14px; font-size:.86rem; font-weight:600; cursor:pointer;
+    border:1px solid var(--line); background:#fff; color:var(--accent);
+  }
+  .topnav button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+  h1{font-size:1.2rem; margin:0 0 4px; color:var(--accent)}
+  .lead{color:var(--muted); margin:0 0 8px; font-size:.88rem; line-height:1.4}
+  .page{display:none}
+  .page.active{display:block}
+  .sticky-top{position:sticky; top:0; z-index:30; margin-bottom:10px}
+  .verdict{
+    border-radius:12px; padding:10px 14px; color:#fff;
+    display:grid; grid-template-columns:1.2fr 1fr 1fr auto; gap:12px; align-items:center;
+    box-shadow:0 6px 18px rgba(0,0,0,.12);
+  }
+  @media(max-width:900px){.verdict{grid-template-columns:1fr 1fr}}
+  .verdict.export{background:var(--export)}
+  .verdict.domestic{background:var(--domestic)}
+  .verdict.tie{background:#57534e}
+  .verdict .big{font-size:1.25rem; font-weight:700}
+  .verdict .sub{color:rgba(255,255,255,.9); font-size:.82rem; margin-top:2px}
+  .verdict .nb-label{display:block; font-size:.68rem; opacity:.9; text-transform:uppercase; letter-spacing:.04em}
+  .verdict .nb-val{font-size:1.35rem; font-weight:700; font-variant-numeric:tabular-nums}
+  .verdict .spread{font-size:1.35rem; font-weight:700; font-variant-numeric:tabular-nums; text-align:right}
+  .controls,.panel,.section{
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px;
+  }
+  .row{display:grid; grid-template-columns:repeat(6,1fr) auto; gap:10px; align-items:end}
+  .row2{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px}
+  @media(max-width:1100px){.row,.row2{grid-template-columns:1fr 1fr}}
+  label{display:block; font-size:.72rem; color:var(--muted); margin:0 0 3px}
+  .val{float:right; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%}
+  .adv-toggle{
+    margin-top:8px; border:1px dashed #c4b5fd; background:#faf5ff; color:#5b21b6;
+    border-radius:999px; padding:7px 12px; cursor:pointer; font-size:.78rem;
+  }
+  .adv-box{display:none; margin-top:8px; padding-top:8px; border-top:1px dashed var(--line)}
+  .adv-box.open{display:block}
+  .adv-title{font-size:.7rem; color:#7c3aed; text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px}
+  button.primary, #btnReset, #btnTrReset{
+    border:0; background:var(--accent); color:#fff; border-radius:999px;
+    padding:10px 14px; cursor:pointer; font-size:.82rem; white-space:nowrap;
+  }
+  button.ghost{
+    background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:999px;
+    padding:9px 14px; cursor:pointer; font-size:.84rem;
+  }
+  .grid{display:grid; grid-template-columns:400px 1fr; gap:10px; min-height:70vh}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+  .panel h2,.section h2{margin:0 0 8px; font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+  .section h2{font-size:.95rem; text-transform:none; letter-spacing:0; color:var(--ink)}
+  .left{overflow:auto; max-height:78vh}
+  #chart{min-height:560px; width:100%}
+  table.calc, table.tr{width:100%; border-collapse:collapse; font-size:.76rem}
+  table.calc th, table.tr th{text-align:left; background:#1e3a5f; color:#fff; padding:7px 6px; position:sticky; top:0}
+  table.calc td, table.tr td{padding:5px 6px; border-bottom:1px solid #ece7dc; vertical-align:top}
+  table.calc tr:nth-child(even) td, table.tr tr:nth-child(even) td{background:#faf7f0}
+  table.calc .sec td{background:#eef6f4; font-weight:700; color:#0f766e}
+  table.calc .secDom td{background:#fff7ed; font-weight:700; color:#9a3412}
+  table.calc .secIn td{background:#eef2ff; font-weight:700; color:#3730a3}
+  table.calc .total td{background:#e7e5e4; font-weight:700}
+  .name{width:30%}.formula{width:45%; color:#444; font-family:Consolas,"Courier New",monospace; font-size:.7rem; line-height:1.3}
+  .value{width:25%; text-align:right; font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap}
+  .sub{color:#78716c; font-size:.68rem; font-family:"Segoe UI",Arial,sans-serif; margin-top:2px}
+  .section.export{border-left:5px solid var(--export)}
+  .section.domestic{border-left:5px solid var(--domestic)}
+  .tag{display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px; color:#fff; margin-left:6px}
+  .tag.export{background:var(--export)}.tag.domestic{background:var(--domestic)}
+  .num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+  .pct-cell{min-width:160px}
+  .pct-lbl{display:block; text-align:right; font-size:.75rem; font-weight:600; font-variant-numeric:tabular-nums}
+  .changed{color:#9a3412; font-weight:700}
+  tr.rub td{background:#f5f3ff}
+  .tr-kpis{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px}
+  .tr-kpis .kpi{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px}
+  .tr-kpis span{display:block; font-size:.7rem; color:var(--muted); text-transform:uppercase}
+  .tr-kpis b{font-size:1.1rem; font-variant-numeric:tabular-nums}
+  .tr-kpis .export b{color:var(--export)}.tr-kpis .domestic b{color:var(--domestic)}
+  .tr-controls{display:grid; grid-template-columns:repeat(4,1fr) auto; gap:10px; align-items:end; margin-bottom:10px}
+  @media(max-width:900px){.tr-controls,.tr-kpis{grid-template-columns:1fr 1fr}}
+  #gate{
+    position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(900px 400px at 0% 0%, #e7eee8, transparent 55%),
+      radial-gradient(700px 320px at 100% 0%, #efe4d4, transparent 50%),
+      var(--paper);
+  }
+  #gate.hidden{display:none}
+  .gate-card{
+    width:min(380px,92vw); background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:28px 24px; box-shadow:0 12px 40px rgba(0,0,0,.08);
+  }
+  .gate-card h1{font-size:1.25rem; margin:0 0 6px; color:var(--accent)}
+  .gate-card p{margin:0 0 16px; color:var(--muted); font-size:.9rem}
+  .gate-card input[type=password]{
+    width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
+    font-size:1rem; margin-bottom:10px;
+  }
+  .gate-card button{
+    width:100%; border:0; background:var(--accent); color:#fff; border-radius:999px;
+    padding:12px; font-size:.95rem; font-weight:600; cursor:pointer;
+  }
+  .gate-err{color:#b45309; font-size:.82rem; min-height:1.2em; margin:0 0 8px}
+  #app{display:none}
+  #app.ready{display:block}
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="gate-card">
+    <h1>Netback analysis</h1>
+    <p>Enter the shared password to open the tool.</p>
+    <div class="gate-err" id="gateErr"></div>
+    <input id="gatePw" type="password" placeholder="Password" autocomplete="current-password"/>
+    <button type="button" id="gateBtn">Unlock</button>
+  </div>
+</div>
+<div id="app" class="wrap">
+  <nav class="topnav">
+    <button type="button" class="active" data-page="netback">Netback analysis</button>
+    <button type="button" data-page="transport">Transport costs</button>
+  </nav>
+
+  <div id="page-netback" class="page active">
+    <h1>Netback analysis — Novorossiysk vs PKOP</h1>
+    <p class="lead">Formulas from Sale-comparison.xlsx (2026 + Tr.cost 2026). One shared state — no cross-page jump.</p>
+
+    <div class="sticky-top">
+      <div id="verdict" class="verdict domestic">
+        <div>
+          <div class="big" id="verdictTxt">DOMESTIC wins</div>
+          <div class="sub" id="verdictSub"></div>
+        </div>
+        <div>
+          <span class="nb-label">Export netback</span>
+          <div class="nb-val" id="verdictExpNb">—</div>
+        </div>
+        <div>
+          <span class="nb-label">Domestic netback</span>
+          <div class="nb-val" id="verdictDomNb">—</div>
+        </div>
+        <div class="spread" id="verdictSpread">—</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <div>
+          <label>Brent <span class="val" id="brentLbl">105</span> $/bbl</label>
+          <input id="brent" type="range" min="20" max="200" step="0.5" value="105"/>
+        </div>
+        <div>
+          <label>FX <span class="val" id="fxLbl">440</span> KZT/USD</label>
+          <input id="fx" type="range" min="360" max="560" step="1" value="440"/>
+        </div>
+        <div>
+          <label>Skebco <span class="val" id="skLbl">20.1</span> $/bbl</label>
+          <input id="sk" type="range" min="0" max="30" step="0.1" value="20.1"/>
+        </div>
+        <div>
+          <label>Discount / skidka <span class="val" id="discLbl">6.18</span> $/bbl</label>
+          <input id="disc" type="range" min="-20" max="20" step="0.01" value="6.18"/>
+        </div>
+        <div>
+          <label>RUB→KZT <span class="val" id="ruLbl">6.83</span></label>
+          <input id="ru" type="range" min="4" max="10" step="0.01" value="6.83"/>
+        </div>
+        <div>
+          <label>Local PKOP VAT-incl <span class="val" id="locLbl">130,000</span> KZT/t</label>
+          <input id="localKzt" type="range" min="80000" max="180000" step="500" value="130000"/>
+        </div>
+        <div><button type="button" id="btnReset">Reset current</button></div>
+      </div>
+      <button type="button" class="adv-toggle" id="btnAdv">Show structural parameters (VAT, bbl/t, MET%)</button>
+      <div class="adv-box" id="advBox">
+        <div class="adv-title">Structural — usually unchanged short term</div>
+        <div class="row2">
+          <div>
+            <label>Export bbl/t <span class="val" id="kbLbl">7.2223</span></label>
+            <input id="kb" type="range" min="6.5" max="8" step="0.0001" value="7.2223"/>
+          </div>
+          <div>
+            <label>MET rate <span class="val" id="metLbl">5.0%</span></label>
+            <input id="metRate" type="range" min="0.01" max="0.18" step="0.005" value="0.05"/>
+          </div>
+          <div>
+            <label>VAT factor <span class="val" id="vatLbl">1.16</span></label>
+            <input id="vat" type="range" min="1" max="1.2" step="0.01" value="1.16"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <aside class="panel left">
+        <h2>Formulas & values</h2>
+        <table class="calc">
+          <thead><tr><th class="name">Item</th><th class="formula">Formula</th><th class="value">Value</th></tr></thead>
+          <tbody id="calcBody"></tbody>
+        </table>
+      </aside>
+      <section class="panel">
+        <h2>Live scenario</h2>
+        <div id="chart"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="page-transport" class="page">
+    <h1>Netback analysis — Transport costs</h1>
+    <p class="lead">Tr.cost 2026 legs for Novoros export vs PKOP domestic. Drag % bars — netback updates from the same state.</p>
+    <div style="margin-bottom:10px">
+      <button type="button" class="ghost" id="btnTrReset">Back to current (reset all %)</button>
+    </div>
+    <div class="tr-kpis">
+      <div class="kpi export"><span>Export transport</span><b id="kExp">—</b></div>
+      <div class="kpi domestic"><span>Domestic transport</span><b id="kDom">—</b></div>
+      <div class="kpi"><span>FX / RUB→KZT</span><b id="kFx">—</b></div>
+    </div>
+    <div class="controls tr-controls">
+      <div>
+        <label>FX <span class="val" id="trFxLbl">440</span></label>
+        <input id="trFx" type="range" min="360" max="560" step="1" value="440"/>
+      </div>
+      <div>
+        <label>RUB→KZT <span class="val" id="trRuLbl">6.83</span></label>
+        <input id="trRu" type="range" min="4" max="10" step="0.01" value="6.83"/>
+      </div>
+      <div>
+        <label>Bulk % EXPORT <span class="val" id="bulkExpLbl">0%</span></label>
+        <input id="bulkExp" type="range" min="-50" max="100" step="0.5" value="0"/>
+      </div>
+      <div>
+        <label>Bulk % DOMESTIC <span class="val" id="bulkDomLbl">0%</span></label>
+        <input id="bulkDom" type="range" min="-50" max="100" step="0.5" value="0"/>
+      </div>
+    </div>
+    <div class="section export" id="secExp"></div>
+    <div class="section domestic" id="secDom"></div>
+  </div>
+</div>
+
+<script>
+const STORE = 'eo_netback_v2';
+const BASE = { brent:105, fx:440, sk:20.104, disc:6.18, localKzt:130000, ru:6.83, kb:7.2223, metRate:0.05, vat:1.16 };
+const KB_RENT = 7.5, KB_MET = 7.5;
+const RENT = [[0,0],[41,0.07],[51,0.11],[61,0.14],[71,0.16],[81,0.17],[91,0.19],[101,0.21],[111,0.22],[121,0.23],[131,0.25],[141,0.26],[151,0.27],[161,0.29],[171,0.3],[181,0.32]];
+const DUTY = [[0,0],[25,10],[30,20],[35,35],[40,40],[45,45],[50,50],[55,55],[60,60],[65,65],[70,70],[75,75],[80,80],[85,85],[90,90],[95,95],[100,100],[105,115],[115,130],[125,145],[135,160],[145,176],[155,191],[165,206],[175,221],[185,236]];
+
+const TR_LINES = [
+  { id:'e29', channel:'export', group:'Export · Tasbulat to RF border', name:'тасбулат - узень', kind:'kzt', tariff:537.5, row:'29' },
+  { id:'e30', channel:'export', group:'Export · Tasbulat to RF border', name:'узень - касымова', kind:'kzt', tariff:8759.4375, row:'30' },
+  { id:'e31', channel:'export', group:'Export · Tasbulat to RF border', name:'касымова - 1235,3 км (рк / рф)', kind:'kzt', tariff:6716.175, row:'31' },
+  { id:'e43', channel:'export', group:'Export · Novorossiysk', name:'операторская деятельность (псп самара)', kind:'kzt', tariff:120.34, row:'43' },
+  { id:'e44', channel:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:83.179652, row:'44' },
+  { id:'e45', channel:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:469.914315, row:'45' },
+  { id:'e46', channel:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:265.059062, row:'46' },
+  { id:'e47', channel:'export', group:'Export · Novorossiysk', name:'тихорецк - грушевая', kind:'rub', tariff:123.653653, row:'47' },
+  { id:'e48', channel:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:42.795472, row:'48' },
+  { id:'e49', channel:'export', group:'Export · Novorossiysk', name:'самарская бсн (перевалка)', kind:'rub', tariff:1.1146, row:'49' },
+  { id:'e50', channel:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:241.768322, row:'50' },
+  { id:'e51', channel:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:217.574058, row:'51' },
+  { id:'e52', channel:'export', group:'Export · Novorossiysk', name:'тихорецкая (перевалка)', kind:'rub', tariff:8.8906, row:'52' },
+  { id:'e53', channel:'export', group:'Export · Novorossiysk', name:'тихорецк - грушовая', kind:'rub', tariff:101.501254, row:'53' },
+  { id:'e54', channel:'export', group:'Export · Novorossiysk', name:'шесхарис грушовая', kind:'rub', tariff:42.9498, row:'54' },
+  { id:'e55', channel:'export', group:'Export · Novorossiysk', name:'шесхарис шесхарис', kind:'rub', tariff:55.9256, row:'55' },
+  { id:'e56', channel:'export', group:'Export · Novorossiysk', name:'транспортно-экспедиционное', kind:'rub', tariff:3.64, row:'56' },
+  { id:'e57', channel:'export', group:'Export · Novorossiysk', name:'перевалка новороссийск', kind:'rub', tariff:292.72, row:'57' },
+  { id:'d4', channel:'domestic', group:'Domestic · PKOP', name:'псп 91 км - жетыбай', kind:'kzt', tariff:138.971, row:'4' },
+  { id:'d5', channel:'domestic', group:'Domestic · PKOP', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'5' },
+  { id:'d6', channel:'domestic', group:'Domestic · PKOP', name:'жетыбай - узень', kind:'kzt', tariff:305.4136, row:'6' },
+  { id:'d7', channel:'domestic', group:'Domestic · PKOP', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'7' },
+  { id:'d8', channel:'domestic', group:'Domestic · PKOP', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'8' },
+  { id:'d9', channel:'domestic', group:'Domestic · PKOP', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'9' },
+  { id:'d10', channel:'domestic', group:'Domestic · PKOP', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'10' },
+  { id:'d11', channel:'domestic', group:'Domestic · PKOP', name:'джумагалиева - пкоп', kind:'kzt', tariff:2645.0549, row:'11' },
+  { id:'d12', channel:'domestic', group:'Domestic · PKOP', name:'операторская деятельность', kind:'kzt', tariff:7.23, row:'12' },
+  { id:'d13', channel:'domestic', group:'Domestic · PKOP', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'13' },
+  { id:'d14', channel:'domestic', group:'Domestic · PKOP', name:'ккт', kind:'kzt', tariff:2931.21, row:'14' },
+];
+
+let state = { ...BASE, transportPct: {}, bulkExp: 0, bulkDom: 0 };
+
+function num(v, fb=0){ const n=Number(v); return Number.isFinite(n)?n:fb; }
+function fmt(n,d=2){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d}); }
+function fmtInt(n){ return Math.round(n).toLocaleString(); }
+function vlookup(x, table){ let r=table[0][1]; for(const [k,v] of table){ if(x>=k) r=v; else break; } return r; }
+
+function persist() {
+  try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {}
+}
+function hydrate() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE) || '{}');
+    if (raw && typeof raw === 'object') {
+      state = {
+        ...BASE,
+        ...raw,
+        transportPct: (raw.transportPct && typeof raw.transportPct === 'object') ? { ...raw.transportPct } : {},
+        bulkExp: num(raw.bulkExp, 0),
+        bulkDom: num(raw.bulkDom, 0)
+      };
+    }
+  } catch {}
+}
+
+function lineKzt(line, pct, ru) {
+  const tariff = line.tariff * (1 + num(pct,0)/100);
+  return line.kind === 'rub' ? tariff * num(ru, 6.83) : tariff;
+}
+function transportTotals() {
+  const ru = num(state.ru, 6.83), fx = num(state.fx, 440);
+  let expK=0, domK=0;
+  for (const line of TR_LINES) {
+    const k = lineKzt(line, state.transportPct[line.id], ru);
+    if (line.channel === 'export') expK += k; else domK += k;
+  }
+  return { expK, domK, expUsd: expK/fx, domUsd: domK/fx, fx, ru };
+}
+function trAdjusted() {
+  return Object.values(state.transportPct).some(v => Math.abs(num(v)) > 1e-9);
+}
+
+function calcNetback() {
+  const B=num(state.brent), FX=num(state.fx), S=num(state.sk), DISC=num(state.disc);
+  const LOC=num(state.localKzt), RU=num(state.ru), KB=num(state.kb), MET=num(state.metRate), VAT=num(state.vat);
+  const { expK, domK } = transportTotals();
+  const trExp = expK/FX, trDom = domK/FX;
+  const rentRate = vlookup(B, RENT), duty = vlookup(B, DUTY);
+  const priceBbl = B - S - DISC, priceTexp = priceBbl * KB;
+  const rental = rentRate * B * KB_RENT, metExp = B * MET * KB_MET;
+  const nbExp = priceTexp - trExp - duty - rental - metExp;
+  const priceTdom = LOC/FX/VAT, metDom = 0.1*metExp;
+  const nbDom = priceTdom - trDom - metDom;
+  const spread = nbExp - nbDom;
+  const skStar = B - DISC - (nbDom + trExp + duty + rental + metExp) / KB;
+  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,trExp,trDom,expK,domK,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,trAdj:trAdjusted() };
+}
+
+function row(name, formula, value, cls='') {
+  return `<tr class="${cls}"><td class="name">${name}</td><td class="formula">${formula}</td><td class="value">${value}</td></tr>`;
+}
+
+function renderNetback() {
+  const els = ['brent','fx','sk','disc','ru','localKzt','kb','metRate','vat'];
+  for (const id of els) {
+    const el = document.getElementById(id);
+    if (el && document.activeElement !== el) el.value = state[id];
+  }
+  document.getElementById('brentLbl').textContent = num(state.brent).toFixed(1).replace(/\.0$/,'');
+  document.getElementById('fxLbl').textContent = String(num(state.fx));
+  document.getElementById('skLbl').textContent = num(state.sk).toFixed(1);
+  document.getElementById('discLbl').textContent = num(state.disc).toFixed(2);
+  document.getElementById('ruLbl').textContent = num(state.ru).toFixed(2);
+  document.getElementById('locLbl').textContent = fmtInt(state.localKzt);
+  document.getElementById('kbLbl').textContent = num(state.kb).toFixed(4);
+  document.getElementById('metLbl').textContent = (num(state.metRate)*100).toFixed(1)+'%';
+  document.getElementById('vatLbl').textContent = num(state.vat).toFixed(2);
+
+  if (document.activeElement !== document.getElementById('trFx')) document.getElementById('trFx').value = state.fx;
+  if (document.activeElement !== document.getElementById('trRu')) document.getElementById('trRu').value = state.ru;
+  document.getElementById('trFxLbl').textContent = String(num(state.fx));
+  document.getElementById('trRuLbl').textContent = num(state.ru).toFixed(2);
+
+  const c = calcNetback();
+  const atBase = !c.trAdj &&
+    Math.abs(c.B-105)<1e-9 && Math.abs(c.FX-440)<1e-9 && Math.abs(c.S-20.104)<1e-9 && Math.abs(c.DISC-6.18)<1e-9 &&
+    Math.abs(c.LOC-130000)<1e-9 && Math.abs(c.RU-6.83)<1e-9 && Math.abs(c.KB-7.2223)<1e-9 &&
+    Math.abs(c.MET-0.05)<1e-9 && Math.abs(c.VAT-1.16)<1e-9;
+  const excelPass = atBase && Math.abs(c.nbExp-181.81365650445457)<1e-6 && Math.abs(c.nbDom-216.73272640282133)<1e-6;
+
+  const box = document.getElementById('verdict');
+  box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
+  document.getElementById('verdictTxt').textContent = Math.abs(c.spread)<0.5?'BREAKEVEN':c.spread>0?'EXPORT wins':'DOMESTIC wins';
+  document.getElementById('verdictSub').textContent =
+    (atBase?(excelPass?'Excel check PASS · ':'Excel check FAIL · '):'') +
+    (c.trAdj?'Transport % ON · ':'') + `Skebco* ${fmt(c.skStar,2)}`;
+  document.getElementById('verdictExpNb').textContent = fmt(c.nbExp,1)+' $/t';
+  document.getElementById('verdictDomNb').textContent = fmt(c.nbDom,1)+' $/t';
+  document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmt(c.spread,1)+' $/t';
+
+  document.getElementById('calcBody').innerHTML = [
+    row('EXCEL CHECK', atBase?'Base vs cached 2026':'Live formulas', atBase?(excelPass?'PASS':'FAIL'):'Live'),
+    row('INPUTS','','','secIn'),
+    row('Brent','L3', fmt(c.B,1)+' $/bbl'),
+    row('FX','L2', fmt(c.FX,0)+' KZT/USD'),
+    row('Skebco','D6', fmt(c.S,3)+' $/bbl'),
+    row('Discount','D7', fmt(c.DISC,2)+' $/bbl'),
+    row('Local PKOP','G5 list', fmtInt(c.LOC)+' KZT/t'),
+    row('RUB→KZT','Tr.cost J3', fmt(c.RU,2)),
+    row('EXPORT Novoros','','','sec'),
+    row('Realized $/bbl',`D11=D5−D6−D7<br><span class="sub">${fmt(c.B,1)} − ${fmt(c.S,3)} − ${fmt(c.DISC,2)}</span>`, fmt(c.priceBbl,3)),
+    row('Realized $/t',`D12=D11×D8`, fmt(c.priceTexp,2)),
+    row('Transport $/t',`D13=F67${c.trAdj?' · % adj':''}`, fmt(c.trExp,2)),
+    row('Rental $/t',`D16 rate ${(c.rentRate*100).toFixed(0)}%`, fmt(c.rental,2)),
+    row('MET $/t','D17', fmt(c.metExp,2)),
+    row('Duty $/t','D15', fmt(c.duty,0)),
+    row('Export netback','D18', fmt(c.nbExp,2)+' $/t','total'),
+    row('DOMESTIC PKOP','','','secDom'),
+    row('Price ex-VAT','G5', fmt(c.priceTdom,2)),
+    row('Transport $/t',`G13${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
+    row('Dom MET','G17=10%×D17', fmt(c.metDom,2)),
+    row('Domestic netback','G18', fmt(c.nbDom,2)+' $/t','total'),
+    row('RESULT','','','secIn'),
+    row('Spread','D18−G18', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
+    row('Skebco*','solve D18=G18', fmt(c.skStar,2)+' $/bbl'),
+  ].join('');
+
+  Plotly.newPlot('chart', [
+    {
+      type:'indicator', mode:'gauge+number+delta', value:c.spread,
+      domain:{x:[0,1], y:[0.52,1]},
+      number:{suffix:' $/t', valueformat:'.1f'},
+      title:{text:`Export advantage<br><span style="font-size:12px;color:#78716c">Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · local ${fmtInt(c.LOC)}</span>`},
+      delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
+      gauge:{
+        axis:{range:[-150,150]},
+        bar:{color:c.spread>=0?'#0f766e':'#b45309'},
+        steps:[{range:[-150,-40],color:'#fed7aa'},{range:[-40,0],color:'#ffedd5'},{range:[0,40],color:'#ccfbf1'},{range:[40,150],color:'#99f6e4'}],
+        threshold:{line:{color:'#1e3a5f',width:3}, value:0}
+      }
+    },
+    { type:'bar', orientation:'h', x:[c.nbExp,c.nbDom], y:['Export netback','Domestic netback'],
+      marker:{color:['#0f766e','#b45309']}, text:[fmt(c.nbExp,1)+' $/t', fmt(c.nbDom,1)+' $/t'], textposition:'auto' },
+    { type:'bar', orientation:'h', x:[c.rental,c.metExp,c.duty,c.trExp], y:['Rental','MET','Duty','Export transport'],
+      marker:{color:['#7c3aed','#0ea5e9','#f43f5e','#64748b']},
+      text:[fmt(c.rental,1),fmt(c.metExp,1),fmt(c.duty,0),fmt(c.trExp,1)], textposition:'auto', xaxis:'x2', yaxis:'y2' }
+  ], {
+    margin:{t:70,r:30,b:40,l:130},
+    xaxis:{title:'$/t', domain:[0,0.46], anchor:'y'}, yaxis:{domain:[0,0.42]},
+    xaxis2:{title:'$/t', domain:[0.54,1], anchor:'y2'}, yaxis2:{domain:[0,0.42]},
+    paper_bgcolor:'rgba(0,0,0,0)', showlegend:false
+  }, {responsive:true, displayModeBar:false});
+}
+
+function buildTransportTables() {
+  for (const channel of ['export','domestic']) {
+    const host = document.getElementById(channel==='export'?'secExp':'secDom');
+    const lines = TR_LINES.filter(l => l.channel===channel);
+    let html = `<h2>${channel==='export'?'EXPORT path (Novoros)':'DOMESTIC path (PKOP)'}<span class="tag ${channel}">${channel.toUpperCase()}</span></h2>`;
+    html += `<table class="tr"><thead><tr><th>Row</th><th>Leg</th><th>Ccy</th><th class="num">Base</th><th>% Δ</th><th class="num">Adj KZT/t</th></tr></thead><tbody>`;
+    let last='';
+    for (const line of lines) {
+      if (line.group!==last){ html += `<tr><td colspan="6" style="background:#eef2ff;font-weight:700">${line.group}</td></tr>`; last=line.group; }
+      html += `<tr class="${line.kind==='rub'?'rub':''}">
+        <td>${line.row}</td><td>${line.name}</td><td>${line.kind==='rub'?'RUB×J3':'KZT'}</td>
+        <td class="num">${fmt(line.tariff, line.kind==='rub'?4:2)}</td>
+        <td class="pct-cell">
+          <span class="pct-lbl" data-lbl="${line.id}">0.0%</span>
+          <input data-id="${line.id}" type="range" min="-50" max="100" step="0.5" value="0">
+        </td>
+        <td class="num" data-kzt="${line.id}">0.00</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+    host.innerHTML = html;
+  }
+  document.getElementById('secExp').addEventListener('input', onLinePct);
+  document.getElementById('secDom').addEventListener('input', onLinePct);
+}
+
+function onLinePct(e) {
+  const inp = e.target;
+  if (!inp.matches('input[data-id]')) return;
+  const id = inp.dataset.id;
+  state.transportPct[id] = num(inp.value, 0);
+  persist();
+  refreshTransportUI();
+  renderNetback();
+}
+
+function refreshTransportUI() {
+  const { expUsd, domUsd, expK, domK, fx, ru } = transportTotals();
+  document.getElementById('kExp').textContent = `${fmt(expUsd,2)} $/t (${fmt(expK,0)} KZT)`;
+  document.getElementById('kDom').textContent = `${fmt(domUsd,2)} $/t (${fmt(domK,0)} KZT)`;
+  document.getElementById('kFx').textContent = `${fx} / ${ru.toFixed(2)}`;
+  document.getElementById('bulkExpLbl').textContent = num(state.bulkExp)+'%';
+  document.getElementById('bulkDomLbl').textContent = num(state.bulkDom)+'%';
+  if (document.activeElement !== document.getElementById('bulkExp')) document.getElementById('bulkExp').value = num(state.bulkExp);
+  if (document.activeElement !== document.getElementById('bulkDom')) document.getElementById('bulkDom').value = num(state.bulkDom);
+
+  for (const line of TR_LINES) {
+    const p = num(state.transportPct[line.id], 0);
+    const kzt = lineKzt(line, p, state.ru);
+    const inp = document.querySelector(`input[data-id="${line.id}"]`);
+    const lbl = document.querySelector(`[data-lbl="${line.id}"]`);
+    const cell = document.querySelector(`[data-kzt="${line.id}"]`);
+    if (inp && document.activeElement !== inp) inp.value = p;
+    if (lbl) {
+      lbl.textContent = `${p>0?'+':''}${fmt(p,1)}%`;
+      lbl.classList.toggle('changed', Math.abs(p)>1e-9);
+    }
+    if (cell) {
+      cell.textContent = fmt(kzt,2);
+      cell.classList.toggle('changed', Math.abs(p)>1e-9);
+    }
+  }
+}
+
+function setBulk(channel, b) {
+  b = num(b, 0);
+  for (const line of TR_LINES) {
+    if (line.channel === channel) state.transportPct[line.id] = b;
+  }
+  if (channel==='export') state.bulkExp = b; else state.bulkDom = b;
+  persist();
+  refreshTransportUI();
+  renderNetback();
+}
+
+function resetAll() {
+  state = { ...BASE, transportPct: {}, bulkExp: 0, bulkDom: 0 };
+  persist();
+  for (const [k,v] of Object.entries(BASE)) {
+    const el = document.getElementById(k);
+    if (el) el.value = v;
+  }
+  document.getElementById('trFx').value = BASE.fx;
+  document.getElementById('trRu').value = BASE.ru;
+  document.getElementById('bulkExp').value = 0;
+  document.getElementById('bulkDom').value = 0;
+  refreshTransportUI();
+  renderNetback();
+}
+
+function showPage(name) {
+  document.getElementById('page-netback').classList.toggle('active', name==='netback');
+  document.getElementById('page-transport').classList.toggle('active', name==='transport');
+  document.querySelectorAll('.topnav button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.page===name);
+  });
+  location.hash = name;
+  if (name==='netback') renderNetback();
+  if (name==='transport') refreshTransportUI();
+}
+
+function bind(id, key, transform=(x)=>num(x)) {
+  document.getElementById(id).addEventListener('input', (e) => {
+    state[key] = transform(e.target.value);
+    if (key==='fx') { state.fx = num(e.target.value); }
+    if (key==='ru') { state.ru = num(e.target.value); }
+    persist();
+    refreshTransportUI();
+    renderNetback();
+  });
+}
+bind('brent','brent'); bind('fx','fx'); bind('sk','sk'); bind('disc','disc');
+bind('ru','ru'); bind('localKzt','localKzt'); bind('kb','kb'); bind('metRate','metRate'); bind('vat','vat');
+
+document.getElementById('trFx').addEventListener('input', (e) => {
+  state.fx = num(e.target.value); persist(); refreshTransportUI(); renderNetback();
+});
+document.getElementById('trRu').addEventListener('input', (e) => {
+  state.ru = num(e.target.value); persist(); refreshTransportUI(); renderNetback();
+});
+document.getElementById('bulkExp').addEventListener('input', (e) => setBulk('export', e.target.value));
+document.getElementById('bulkDom').addEventListener('input', (e) => setBulk('domestic', e.target.value));
+document.getElementById('btnReset').addEventListener('click', resetAll);
+document.getElementById('btnTrReset').addEventListener('click', resetAll);
+document.getElementById('btnAdv').addEventListener('click', () => {
+  const box=document.getElementById('advBox');
+  const open=box.classList.toggle('open');
+  document.getElementById('btnAdv').textContent = open
+    ? 'Hide structural parameters (VAT, bbl/t, MET%)'
+    : 'Show structural parameters (VAT, bbl/t, MET%)';
+});
+document.querySelectorAll('.topnav button').forEach(btn => {
+  btn.addEventListener('click', () => showPage(btn.dataset.page));
+});
+
+const PASS_HASH = 'f37fb3b334b91963156688425d552579f952550568f8ae9472e401fc9ce2767c';
+const AUTH_KEY = 'eo_netback_auth_v1';
+
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function startApp() {
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.add('ready');
+  hydrate();
+  buildTransportTables();
+  refreshTransportUI();
+  renderNetback();
+  showPage((location.hash||'#netback').replace('#','') === 'transport' ? 'transport' : 'netback');
+}
+
+async function tryUnlock(pw) {
+  const hash = await sha256(String(pw||'').trim());
+  if (hash !== PASS_HASH) {
+    document.getElementById('gateErr').textContent = 'Wrong password';
+    return false;
+  }
+  try { sessionStorage.setItem(AUTH_KEY, '1'); } catch {}
+  startApp();
+  return true;
+}
+
+document.getElementById('gateBtn').addEventListener('click', () => tryUnlock(document.getElementById('gatePw').value));
+document.getElementById('gatePw').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') tryUnlock(document.getElementById('gatePw').value);
+});
+
+(async function boot() {
+  try {
+    if (sessionStorage.getItem(AUTH_KEY) === '1') { startApp(); return; }
+  } catch {}
+  document.getElementById('gatePw').focus();
+})();
+</script>
+</body>
+</html>
