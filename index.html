@@ -126,6 +126,13 @@
   .gate-err{color:#b45309; font-size:.82rem; min-height:1.2em; margin:0 0 8px}
   #app{display:none}
   #app.ready{display:block}
+
+  .route-toggle{display:flex; gap:6px; flex-wrap:wrap; margin:0 0 8px}
+  .route-toggle button{
+    border:1px solid var(--line); background:#fff; color:var(--accent);
+    border-radius:999px; padding:8px 14px; cursor:pointer; font-size:.84rem; font-weight:600;
+  }
+  .route-toggle button.active{background:var(--domestic); color:#fff; border-color:var(--domestic)}
 </style>
 </head>
 <body>
@@ -144,9 +151,10 @@
     <button type="button" data-page="transport">Transport costs</button>
   </nav>
 
+  <!-- NETBACK PAGE -->
   <div id="page-netback" class="page active">
-    <h1>Netback analysis — Novorossiysk vs PKOP</h1>
-    <p class="lead">Formulas from Sale-comparison.xlsx (2026 + Tr.cost 2026). One shared state — no cross-page jump.</p>
+    <h1>Netback analysis — Novorossiysk vs <span id="domTitle">PKOP</span></h1>
+    <p class="lead">Formulas from Sale-comparison.xlsx (2026 + Tr.cost 2026). Switch domestic destination PKOP / Pavlodar (PNHZ).</p>
 
     <div class="sticky-top">
       <div id="verdict" class="verdict domestic">
@@ -162,11 +170,18 @@
           <span class="nb-label">Domestic netback</span>
           <div class="nb-val" id="verdictDomNb">—</div>
         </div>
-        <div class="spread" id="verdictSpread">—</div>
+        <div>
+          <span class="nb-label">Δ Export − Domestic</span>
+          <div class="nb-val" id="verdictSpread">—</div>
+        </div>
       </div>
     </div>
 
     <div class="controls">
+      <div class="route-toggle" id="domRoute" role="group" aria-label="Domestic destination">
+        <button type="button" data-route="pkop" class="active">Domestic: PKOP</button>
+        <button type="button" data-route="pavlodar">Domestic: Pavlodar (PNHZ)</button>
+      </div>
       <div class="row">
         <div>
           <label>Brent <span class="val" id="brentLbl">105</span> $/bbl</label>
@@ -189,7 +204,7 @@
           <input id="ru" type="range" min="4" max="10" step="0.01" value="6.83"/>
         </div>
         <div>
-          <label>Local PKOP VAT-incl <span class="val" id="locLbl">130,000</span> KZT/t</label>
+          <label>Local domestic VAT-incl <span class="val" id="locLbl">130,000</span> KZT/t</label>
           <input id="localKzt" type="range" min="80000" max="180000" step="500" value="130000"/>
         </div>
         <div><button type="button" id="btnReset">Reset current</button></div>
@@ -229,9 +244,10 @@
     </div>
   </div>
 
+  <!-- TRANSPORT PAGE -->
   <div id="page-transport" class="page">
     <h1>Netback analysis — Transport costs</h1>
-    <p class="lead">Tr.cost 2026 legs for Novoros export vs PKOP domestic. Drag % bars — netback updates from the same state.</p>
+    <p class="lead">Tr.cost 2026 legs for Novoros export vs selected domestic path (PKOP or Pavlodar). Drag % bars — netback updates from the same state.</p>
     <div style="margin-bottom:10px">
       <button type="button" class="ghost" id="btnTrReset">Back to current (reset all %)</button>
     </div>
@@ -271,38 +287,58 @@ const RENT = [[0,0],[41,0.07],[51,0.11],[61,0.14],[71,0.16],[81,0.17],[91,0.19],
 const DUTY = [[0,0],[25,10],[30,20],[35,35],[40,40],[45,45],[50,50],[55,55],[60,60],[65,65],[70,70],[75,75],[80,80],[85,85],[90,90],[95,95],[100,100],[105,115],[115,130],[125,145],[135,160],[145,176],[155,191],[165,206],[175,221],[185,236]];
 
 const TR_LINES = [
-  { id:'e29', channel:'export', group:'Export · Tasbulat to RF border', name:'тасбулат - узень', kind:'kzt', tariff:537.5, row:'29' },
-  { id:'e30', channel:'export', group:'Export · Tasbulat to RF border', name:'узень - касымова', kind:'kzt', tariff:8759.4375, row:'30' },
-  { id:'e31', channel:'export', group:'Export · Tasbulat to RF border', name:'касымова - 1235,3 км (рк / рф)', kind:'kzt', tariff:6716.175, row:'31' },
-  { id:'e43', channel:'export', group:'Export · Novorossiysk', name:'операторская деятельность (псп самара)', kind:'kzt', tariff:120.34, row:'43' },
-  { id:'e44', channel:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:83.179652, row:'44' },
-  { id:'e45', channel:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:469.914315, row:'45' },
-  { id:'e46', channel:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:265.059062, row:'46' },
-  { id:'e47', channel:'export', group:'Export · Novorossiysk', name:'тихорецк - грушевая', kind:'rub', tariff:123.653653, row:'47' },
-  { id:'e48', channel:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:42.795472, row:'48' },
-  { id:'e49', channel:'export', group:'Export · Novorossiysk', name:'самарская бсн (перевалка)', kind:'rub', tariff:1.1146, row:'49' },
-  { id:'e50', channel:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:241.768322, row:'50' },
-  { id:'e51', channel:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:217.574058, row:'51' },
-  { id:'e52', channel:'export', group:'Export · Novorossiysk', name:'тихорецкая (перевалка)', kind:'rub', tariff:8.8906, row:'52' },
-  { id:'e53', channel:'export', group:'Export · Novorossiysk', name:'тихорецк - грушовая', kind:'rub', tariff:101.501254, row:'53' },
-  { id:'e54', channel:'export', group:'Export · Novorossiysk', name:'шесхарис грушовая', kind:'rub', tariff:42.9498, row:'54' },
-  { id:'e55', channel:'export', group:'Export · Novorossiysk', name:'шесхарис шесхарис', kind:'rub', tariff:55.9256, row:'55' },
-  { id:'e56', channel:'export', group:'Export · Novorossiysk', name:'транспортно-экспедиционное', kind:'rub', tariff:3.64, row:'56' },
-  { id:'e57', channel:'export', group:'Export · Novorossiysk', name:'перевалка новороссийск', kind:'rub', tariff:292.72, row:'57' },
-  { id:'d4', channel:'domestic', group:'Domestic · PKOP', name:'псп 91 км - жетыбай', kind:'kzt', tariff:138.971, row:'4' },
-  { id:'d5', channel:'domestic', group:'Domestic · PKOP', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'5' },
-  { id:'d6', channel:'domestic', group:'Domestic · PKOP', name:'жетыбай - узень', kind:'kzt', tariff:305.4136, row:'6' },
-  { id:'d7', channel:'domestic', group:'Domestic · PKOP', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'7' },
-  { id:'d8', channel:'domestic', group:'Domestic · PKOP', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'8' },
-  { id:'d9', channel:'domestic', group:'Domestic · PKOP', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'9' },
-  { id:'d10', channel:'domestic', group:'Domestic · PKOP', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'10' },
-  { id:'d11', channel:'domestic', group:'Domestic · PKOP', name:'джумагалиева - пкоп', kind:'kzt', tariff:2645.0549, row:'11' },
-  { id:'d12', channel:'domestic', group:'Domestic · PKOP', name:'операторская деятельность', kind:'kzt', tariff:7.23, row:'12' },
-  { id:'d13', channel:'domestic', group:'Domestic · PKOP', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'13' },
-  { id:'d14', channel:'domestic', group:'Domestic · PKOP', name:'ккт', kind:'kzt', tariff:2931.21, row:'14' },
+  { id:'e29', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'тасбулат - узень', kind:'kzt', tariff:537.5, row:'29' },
+  { id:'e30', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'узень - касымова', kind:'kzt', tariff:8759.4375, row:'30' },
+  { id:'e31', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'касымова - 1235,3 км (рк / рф)', kind:'kzt', tariff:6716.175, row:'31' },
+  { id:'e43', channel:'export', route:'export', group:'Export · Novorossiysk', name:'операторская деятельность (псп самара)', kind:'kzt', tariff:120.34, row:'43' },
+  { id:'e44', channel:'export', route:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:83.179652, row:'44' },
+  { id:'e45', channel:'export', route:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:469.914315, row:'45' },
+  { id:'e46', channel:'export', route:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:265.059062, row:'46' },
+  { id:'e47', channel:'export', route:'export', group:'Export · Novorossiysk', name:'тихорецк - грушевая', kind:'rub', tariff:123.653653, row:'47' },
+  { id:'e48', channel:'export', route:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:42.795472, row:'48' },
+  { id:'e49', channel:'export', route:'export', group:'Export · Novorossiysk', name:'самарская бсн (перевалка)', kind:'rub', tariff:1.1146, row:'49' },
+  { id:'e50', channel:'export', route:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:241.768322, row:'50' },
+  { id:'e51', channel:'export', route:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:217.574058, row:'51' },
+  { id:'e52', channel:'export', route:'export', group:'Export · Novorossiysk', name:'тихорецкая (перевалка)', kind:'rub', tariff:8.8906, row:'52' },
+  { id:'e53', channel:'export', route:'export', group:'Export · Novorossiysk', name:'тихорецк - грушовая', kind:'rub', tariff:101.501254, row:'53' },
+  { id:'e54', channel:'export', route:'export', group:'Export · Novorossiysk', name:'шесхарис грушовая', kind:'rub', tariff:42.9498, row:'54' },
+  { id:'e55', channel:'export', route:'export', group:'Export · Novorossiysk', name:'шесхарис шесхарис', kind:'rub', tariff:55.9256, row:'55' },
+  { id:'e56', channel:'export', route:'export', group:'Export · Novorossiysk', name:'транспортно-экспедиционное', kind:'rub', tariff:3.64, row:'56' },
+  { id:'e57', channel:'export', route:'export', group:'Export · Novorossiysk', name:'перевалка новороссийск', kind:'rub', tariff:292.72, row:'57' },
+  { id:'d4', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'псп 91 км - жетыбай', kind:'kzt', tariff:138.971, row:'4' },
+  { id:'d5', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'5' },
+  { id:'d6', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'жетыбай - узень', kind:'kzt', tariff:305.4136, row:'6' },
+  { id:'d7', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'7' },
+  { id:'d8', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'8' },
+  { id:'d9', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'9' },
+  { id:'d10', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'10' },
+  { id:'d11', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'джумагалиева - пкоп', kind:'kzt', tariff:2645.0549, row:'11' },
+  { id:'d12', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'операторская деятельность', kind:'kzt', tariff:7.23, row:'12' },
+  { id:'d13', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'13' },
+  { id:'d14', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'ккт', kind:'kzt', tariff:2931.21, row:'14' },
+  { id:'p16', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'псп 91 км - жетыбай', kind:'kzt', tariff:138.971, row:'16' },
+  { id:'p17', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'17' },
+  { id:'p18', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'жетыбай - узень', kind:'kzt', tariff:305.4136, row:'18' },
+  { id:'p19', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'19' },
+  { id:'p20', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'20' },
+  { id:'p21', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'21' },
+  { id:'p22', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'22' },
+  { id:'p23', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'джумагалиева - атасу', kind:'kzt', tariff:2121.1243, row:'23' },
+  { id:'p24', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'атасу - пнхз, замещение', kind:'kzt', tariff:1903.87, row:'24' },
+  { id:'p25', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'операторская деятельность', kind:'kzt', tariff:4.02, row:'25' },
+  { id:'p26', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'26' },
+  { id:'p27', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'ккт', kind:'kzt', tariff:2931.21, row:'27' },
 ];
 
-let state = { ...BASE, transportPct: {}, bulkExp: 0, bulkDom: 0 };
+
+// ---- shared in-memory state (single source of truth) ----
+let state = {
+  ...BASE,
+  domesticRoute: 'pkop',
+  transportPct: {},
+  bulkExp: 0,
+  bulkDom: 0
+};
 
 function num(v, fb=0){ const n=Number(v); return Number.isFinite(n)?n:fb; }
 function fmt(n,d=2){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d}); }
@@ -321,7 +357,8 @@ function hydrate() {
         ...raw,
         transportPct: (raw.transportPct && typeof raw.transportPct === 'object') ? { ...raw.transportPct } : {},
         bulkExp: num(raw.bulkExp, 0),
-        bulkDom: num(raw.bulkDom, 0)
+        bulkDom: num(raw.bulkDom, 0),
+        domesticRoute: (raw.domesticRoute === 'pavlodar') ? 'pavlodar' : 'pkop'
       };
     }
   } catch {}
@@ -331,17 +368,29 @@ function lineKzt(line, pct, ru) {
   const tariff = line.tariff * (1 + num(pct,0)/100);
   return line.kind === 'rub' ? tariff * num(ru, 6.83) : tariff;
 }
+function activeDomesticRoute() {
+  return state.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop';
+}
+function domesticLabel() {
+  return activeDomesticRoute() === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'PKOP';
+}
+function domesticLines() {
+  const route = activeDomesticRoute();
+  return TR_LINES.filter(l => l.channel === 'domestic' && l.route === route);
+}
 function transportTotals() {
   const ru = num(state.ru, 6.83), fx = num(state.fx, 440);
   let expK=0, domK=0;
   for (const line of TR_LINES) {
+    if (line.channel === 'domestic' && line.route !== activeDomesticRoute()) continue;
     const k = lineKzt(line, state.transportPct[line.id], ru);
     if (line.channel === 'export') expK += k; else domK += k;
   }
   return { expK, domK, expUsd: expK/fx, domUsd: domK/fx, fx, ru };
 }
 function trAdjusted() {
-  return Object.values(state.transportPct).some(v => Math.abs(num(v)) > 1e-9);
+  const ids = new Set(TR_LINES.filter(l => l.channel==='export' || l.route===activeDomesticRoute()).map(l => l.id));
+  return [...ids].some(id => Math.abs(num(state.transportPct[id])) > 1e-9);
 }
 
 function calcNetback() {
@@ -365,6 +414,7 @@ function row(name, formula, value, cls='') {
 }
 
 function renderNetback() {
+  // sync controls from state (without fighting active drag: only when not the event source — callers set state first)
   const els = ['brent','fx','sk','disc','ru','localKzt','kb','metRate','vat'];
   for (const id of els) {
     const el = document.getElementById(id);
@@ -379,7 +429,9 @@ function renderNetback() {
   document.getElementById('kbLbl').textContent = num(state.kb).toFixed(4);
   document.getElementById('metLbl').textContent = (num(state.metRate)*100).toFixed(1)+'%';
   document.getElementById('vatLbl').textContent = num(state.vat).toFixed(2);
+  const dt=document.getElementById('domTitle'); if (dt) dt.textContent = domesticLabel();
 
+  // keep transport page twin sliders in sync if not focused
   if (document.activeElement !== document.getElementById('trFx')) document.getElementById('trFx').value = state.fx;
   if (document.activeElement !== document.getElementById('trRu')) document.getElementById('trRu').value = state.ru;
   document.getElementById('trFxLbl').textContent = String(num(state.fx));
@@ -397,7 +449,7 @@ function renderNetback() {
   document.getElementById('verdictTxt').textContent = Math.abs(c.spread)<0.5?'BREAKEVEN':c.spread>0?'EXPORT wins':'DOMESTIC wins';
   document.getElementById('verdictSub').textContent =
     (atBase?(excelPass?'Excel check PASS · ':'Excel check FAIL · '):'') +
-    (c.trAdj?'Transport % ON · ':'') + `Skebco* ${fmt(c.skStar,2)}`;
+    (c.trAdj?'Transport % ON · ':'') + `Domestic ${domesticLabel()} · Breakeven Skebco ${fmt(c.skStar,2)}`;
   document.getElementById('verdictExpNb').textContent = fmt(c.nbExp,1)+' $/t';
   document.getElementById('verdictDomNb').textContent = fmt(c.nbDom,1)+' $/t';
   document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmt(c.spread,1)+' $/t';
@@ -409,7 +461,8 @@ function renderNetback() {
     row('FX','L2', fmt(c.FX,0)+' KZT/USD'),
     row('Skebco','D6', fmt(c.S,3)+' $/bbl'),
     row('Discount','D7', fmt(c.DISC,2)+' $/bbl'),
-    row('Local PKOP','G5 list', fmtInt(c.LOC)+' KZT/t'),
+    row('Local domestic','G5/F5 list', fmtInt(c.LOC)+' KZT/t'),
+    row('Domestic destination','PKOP or Pavlodar/PNHZ', domesticLabel()),
     row('RUB→KZT','Tr.cost J3', fmt(c.RU,2)),
     row('EXPORT Novoros','','','sec'),
     row('Realized $/bbl',`D11=D5−D6−D7<br><span class="sub">${fmt(c.B,1)} − ${fmt(c.S,3)} − ${fmt(c.DISC,2)}</span>`, fmt(c.priceBbl,3)),
@@ -419,14 +472,14 @@ function renderNetback() {
     row('MET $/t','D17', fmt(c.metExp,2)),
     row('Duty $/t','D15', fmt(c.duty,0)),
     row('Export netback','D18', fmt(c.nbExp,2)+' $/t','total'),
-    row('DOMESTIC PKOP','','','secDom'),
+    row('DOMESTIC '+domesticLabel(),'','','secDom'),
     row('Price ex-VAT','G5', fmt(c.priceTdom,2)),
     row('Transport $/t',`G13${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
     row('Dom MET','G17=10%×D17', fmt(c.metDom,2)),
     row('Domestic netback','G18', fmt(c.nbDom,2)+' $/t','total'),
     row('RESULT','','','secIn'),
-    row('Spread','D18−G18', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
-    row('Skebco*','solve D18=G18', fmt(c.skStar,2)+' $/bbl'),
+    row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
+    row('Breakeven Skebco','Skebco where export NB = domestic NB', fmt(c.skStar,2)+' $/bbl'),
   ].join('');
 
   Plotly.newPlot('chart', [
@@ -434,7 +487,7 @@ function renderNetback() {
       type:'indicator', mode:'gauge+number+delta', value:c.spread,
       domain:{x:[0,1], y:[0.52,1]},
       number:{suffix:' $/t', valueformat:'.1f'},
-      title:{text:`Export advantage<br><span style="font-size:12px;color:#78716c">Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · local ${fmtInt(c.LOC)}</span>`},
+      title:{text:`Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)}</span>`},
       delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
       gauge:{
         axis:{range:[-150,150]},
@@ -459,8 +512,11 @@ function renderNetback() {
 function buildTransportTables() {
   for (const channel of ['export','domestic']) {
     const host = document.getElementById(channel==='export'?'secExp':'secDom');
-    const lines = TR_LINES.filter(l => l.channel===channel);
-    let html = `<h2>${channel==='export'?'EXPORT path (Novoros)':'DOMESTIC path (PKOP)'}<span class="tag ${channel}">${channel.toUpperCase()}</span></h2>`;
+    const lines = channel==='export'
+      ? TR_LINES.filter(l => l.channel==='export')
+      : domesticLines();
+    const domName = domesticLabel();
+    let html = `<h2>${channel==='export'?'EXPORT path (Novoros)':'DOMESTIC path ('+domName+')'}<span class="tag ${channel}">${channel.toUpperCase()}</span></h2>`;
     html += `<table class="tr"><thead><tr><th>Row</th><th>Leg</th><th>Ccy</th><th class="num">Base</th><th>% Δ</th><th class="num">Adj KZT/t</th></tr></thead><tbody>`;
     let last='';
     for (const line of lines) {
@@ -478,8 +534,11 @@ function buildTransportTables() {
     html += `</tbody></table>`;
     host.innerHTML = html;
   }
-  document.getElementById('secExp').addEventListener('input', onLinePct);
-  document.getElementById('secDom').addEventListener('input', onLinePct);
+  if (!buildTransportTables._bound) {
+    document.getElementById('secExp').addEventListener('input', onLinePct);
+    document.getElementById('secDom').addEventListener('input', onLinePct);
+    buildTransportTables._bound = true;
+  }
 }
 
 function onLinePct(e) {
@@ -523,7 +582,9 @@ function refreshTransportUI() {
 function setBulk(channel, b) {
   b = num(b, 0);
   for (const line of TR_LINES) {
-    if (line.channel === channel) state.transportPct[line.id] = b;
+    if (line.channel !== channel) continue;
+    if (channel === 'domestic' && line.route !== activeDomesticRoute()) continue;
+    state.transportPct[line.id] = b;
   }
   if (channel==='export') state.bulkExp = b; else state.bulkDom = b;
   persist();
@@ -532,8 +593,9 @@ function setBulk(channel, b) {
 }
 
 function resetAll() {
-  state = { ...BASE, transportPct: {}, bulkExp: 0, bulkDom: 0 };
+  state = { ...BASE, domesticRoute: 'pkop', transportPct: {}, bulkExp: 0, bulkDom: 0 };
   persist();
+  // force all controls
   for (const [k,v] of Object.entries(BASE)) {
     const el = document.getElementById(k);
     if (el) el.value = v;
@@ -542,6 +604,8 @@ function resetAll() {
   document.getElementById('trRu').value = BASE.ru;
   document.getElementById('bulkExp').value = 0;
   document.getElementById('bulkDom').value = 0;
+  syncRouteToggle();
+  buildTransportTables();
   refreshTransportUI();
   renderNetback();
 }
@@ -557,9 +621,11 @@ function showPage(name) {
   if (name==='transport') refreshTransportUI();
 }
 
+// controls
 function bind(id, key, transform=(x)=>num(x)) {
   document.getElementById(id).addEventListener('input', (e) => {
     state[key] = transform(e.target.value);
+    // keep twins synced
     if (key==='fx') { state.fx = num(e.target.value); }
     if (key==='ru') { state.ru = num(e.target.value); }
     persist();
@@ -591,6 +657,29 @@ document.querySelectorAll('.topnav button').forEach(btn => {
   btn.addEventListener('click', () => showPage(btn.dataset.page));
 });
 
+function syncRouteToggle() {
+  const route = activeDomesticRoute();
+  document.querySelectorAll('#domRoute button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.route === route);
+  });
+  const t = document.getElementById('domTitle');
+  if (t) t.textContent = domesticLabel();
+}
+function setDomesticRoute(route) {
+  state.domesticRoute = route === 'pavlodar' ? 'pavlodar' : 'pkop';
+  persist();
+  syncRouteToggle();
+  buildTransportTables();
+  refreshTransportUI();
+  renderNetback();
+}
+document.getElementById('domRoute').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-route]');
+  if (!btn) return;
+  setDomesticRoute(btn.dataset.route);
+});
+
+
 const PASS_HASH = 'f37fb3b334b91963156688425d552579f952550568f8ae9472e401fc9ce2767c';
 const AUTH_KEY = 'eo_netback_auth_v1';
 
@@ -604,6 +693,7 @@ function startApp() {
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('app').classList.add('ready');
   hydrate();
+  syncRouteToggle();
   buildTransportTables();
   refreshTransportUI();
   renderNetback();
