@@ -425,6 +425,26 @@
       <div class="btn-row" style="margin-top:8px">
         <button type="button" class="ghost" id="btnPeFillOct">Fill from Oct 2026 baseline</button>
         <button type="button" class="ghost" id="btnPeFillActive">Fill from current Netback sliders</button>
+        <button type="button" class="ghost" id="btnPeApplyBulk">Apply bulk % to all legs</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Transport costs (editable)</h2>
+      <p class="lead">Edit adjusted KZT/t per leg. Totals and netback preview update live. RUB legs use RUB→KZT above.</p>
+      <div class="tr-kpis" style="margin-bottom:10px">
+        <div class="kpi export"><span>Export transport</span><b id="peTrExpTot">—</b></div>
+        <div class="kpi domestic"><span>Domestic transport</span><b id="peTrDomTot">—</b></div>
+        <div class="kpi"><span>RUB→KZT used</span><b id="peTrRuUsed">—</b></div>
+      </div>
+      <div class="two-col">
+        <div>
+          <h2 style="font-size:.85rem">EXPORT · Novoros</h2>
+          <div id="peTrExp" style="overflow:auto; max-height:420px"></div>
+        </div>
+        <div>
+          <h2 style="font-size:.85rem">DOMESTIC · <span id="peTrDomTitle">PKOP</span></h2>
+          <div id="peTrDom" style="overflow:auto; max-height:420px"></div>
+        </div>
       </div>
     </div>
     <div class="preview-box">
@@ -908,8 +928,8 @@ function normalizeParams(p) {
   const route = p.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop';
   const bulkExp = num(p.bulkExp, 0), bulkDom = num(p.bulkDom, 0);
   let transportPct = (p.transportPct && typeof p.transportPct === 'object') ? { ...p.transportPct } : {};
-  // apply bulk % onto legs if provided (same as setBulk)
-  if (Math.abs(bulkExp) > 1e-9 || Math.abs(bulkDom) > 1e-9) {
+  // apply bulk only when no per-leg map was provided
+  if (!Object.keys(transportPct).length && (Math.abs(bulkExp) > 1e-9 || Math.abs(bulkDom) > 1e-9)) {
     for (const line of TR_LINES) {
       if (line.channel === 'export') transportPct[line.id] = bulkExp;
       else if (line.route === route) transportPct[line.id] = bulkDom;
@@ -1060,7 +1080,8 @@ function mergeProfileDbs(remote, local) {
     else {
       const ta = Date.parse(cur.savedAt || 0) || 0;
       const tb = Date.parse(p.savedAt || 0) || 0;
-      if (tb >= ta) map.set(p.id, p);
+      // Prefer local on tie so in-progress edits are not wiped by cloud refresh
+      if (tb > ta) map.set(p.id, p);
     }
   }
   return {
@@ -1092,10 +1113,11 @@ function getPublishToken() {
   try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
 }
 
-async function publishOnline() {
+async function publishOnline(statusId) {
+  const sid = statusId || 'saveStatus';
   const token = getPublishToken();
   if (!token) {
-    setStatus('saveStatus', 'Saved on this device. Add a GitHub gist token under Online publish settings to share with everyone.', 'err');
+    setStatus(sid, 'Saved on this device. Add a GitHub gist token under Profiles → Online publish settings to share with everyone.', 'err');
     return false;
   }
   const body = {
@@ -1117,14 +1139,14 @@ async function publishOnline() {
     });
     if (!r.ok) {
       const t = await r.text();
-      setStatus('saveStatus', 'Online publish failed (' + r.status + '). Check token gist scope. Device copy kept.', 'err');
+      setStatus(sid, 'Saved on this device. Online publish failed (' + r.status + '). Check token gist scope.', 'err');
       console.warn(t);
       return false;
     }
-    setStatus('saveStatus', 'Saved online. Colleagues can Refresh from online.', 'ok');
+    setStatus(sid, 'Saved online. Colleagues can Refresh from online.', 'ok');
     return true;
   } catch (e) {
-    setStatus('saveStatus', 'Online publish error. Device copy kept.', 'err');
+    setStatus(sid, 'Saved on this device. Online publish error.', 'err');
     return false;
   }
 }
@@ -1168,46 +1190,77 @@ function renderProfileUI() {
 }
 
 function upsertProfile({ month, label, author, notes, online, params, statusId }) {
-  const id = String(month);
+  const id = String(month || '').trim();
   const sid = statusId || 'saveStatus';
-  const norm = normalizeParams(params || captureParams());
-  const { calc } = computeFromParams(norm);
-  const snap = {
-    nbExp: calc.nbExp, nbDom: calc.nbDom, spread: calc.spread,
-    trExp: calc.trExp, trDom: calc.trDom, duty: calc.duty, rental: calc.rental, metExp: calc.metExp,
-    domesticRoute: norm.domesticRoute
-  };
-  const existing = profileDb.profiles.find(p => p.id === id);
-  const row = {
-    id,
-    label: label || (month + ' profile'),
-    month: id,
-    author: author || '',
-    notes: notes || '',
-    savedAt: new Date().toISOString(),
-    isCurrent: id === CURRENT_MONTH_ID,
-    params: norm,
-    snapshot: snap
-  };
-  if (existing) Object.assign(existing, row);
-  else profileDb.profiles.push(row);
-  ensureOctBaseline();
-  sortProfiles();
-  saveProfilesLocal();
-  try { localStorage.setItem(ACTIVE_KEY, id); } catch {}
-  renderProfileUI();
-  const sel = document.getElementById('profileSelect');
-  if (sel) sel.value = id;
-  const al = document.getElementById('activeProfileLbl');
-  if (al) al.textContent = `${row.label} (${row.month})`;
-  if (online) {
-    return publishOnline().then(ok => {
-      setStatus(sid, ok ? 'Saved online.' : (document.getElementById(sid)?.textContent || 'Saved on device; online publish needs token.'), ok ? 'ok' : 'err');
-      return ok;
-    });
+  if (!id) {
+    setStatus(sid, 'Month is required.', 'err');
+    return Promise.resolve(false);
   }
-  setStatus(sid, 'Saved on this device.', 'ok');
-  return Promise.resolve(true);
+  try {
+    const norm = normalizeParams(params || captureParams());
+    const { calc } = computeFromParams(norm);
+    const snap = {
+      nbExp: calc.nbExp, nbDom: calc.nbDom, spread: calc.spread,
+      trExp: calc.trExp, trDom: calc.trDom, duty: calc.duty, rental: calc.rental, metExp: calc.metExp,
+      domesticRoute: norm.domesticRoute
+    };
+    const existing = profileDb.profiles.find(p => p.id === id);
+    const row = {
+      id,
+      label: String(label || '').trim() || (id + ' profile'),
+      month: id,
+      author: String(author ?? '').trim(),
+      notes: String(notes ?? '').trim(),
+      savedAt: new Date().toISOString(),
+      isCurrent: id === CURRENT_MONTH_ID,
+      params: norm,
+      snapshot: snap
+    };
+    if (existing) {
+      existing.label = row.label;
+      existing.month = row.month;
+      existing.author = row.author;
+      existing.notes = row.notes;
+      existing.savedAt = row.savedAt;
+      existing.isCurrent = row.isCurrent;
+      existing.params = row.params;
+      existing.snapshot = row.snapshot;
+      existing.id = row.id;
+    } else {
+      profileDb.profiles.push(row);
+    }
+    ensureOctBaseline();
+    sortProfiles();
+    saveProfilesLocal();
+    // verify local write stuck
+    try {
+      const check = JSON.parse(localStorage.getItem(PROFILES_LOCAL) || '{}');
+      const saved = (check.profiles || []).find(p => p.id === id);
+      if (!saved || saved.author !== row.author) {
+        setStatus(sid, 'Save verification failed (browser storage). Try again.', 'err');
+        return Promise.resolve(false);
+      }
+    } catch {}
+    try { localStorage.setItem(ACTIVE_KEY, id); } catch {}
+    renderProfileUI();
+    const sel = document.getElementById('profileSelect');
+    if (sel) sel.value = id;
+    const al = document.getElementById('activeProfileLbl');
+    if (al) al.textContent = `${row.label} (${row.month})`;
+    if (online) {
+      return publishOnline(sid).then(ok => {
+        if (ok) setStatus(sid, `Saved online · ${row.label} · author: ${row.author || '(none)'}`, 'ok');
+        // publishOnline already sets status on failure; keep local success visible
+        return ok;
+      });
+    }
+    setStatus(sid, `Saved on this device · ${row.label} · author: ${row.author || '(none)'}`, 'ok');
+    return Promise.resolve(true);
+  } catch (err) {
+    console.error(err);
+    setStatus(sid, 'Save failed: ' + (err && err.message ? err.message : 'unknown error'), 'err');
+    return Promise.resolve(false);
+  }
 }
 
 function loadProfileById(id) {
@@ -1484,6 +1537,120 @@ function buildTrendReport(ids) {
 }
 
 
+function peEditorRu() {
+  return num(document.getElementById('peRu') && document.getElementById('peRu').value, BASE.ru);
+}
+function peEditorRoute() {
+  return (document.getElementById('peRoute') && document.getElementById('peRoute').value) === 'pavlodar' ? 'pavlodar' : 'pkop';
+}
+function peBaseKzt(line, ru) {
+  return line.kind === 'rub' ? line.tariff * num(ru, BASE.ru) : line.tariff;
+}
+function peActiveTrLines() {
+  const route = peEditorRoute();
+  return TR_LINES.filter(l => l.channel === 'export' || (l.channel === 'domestic' && l.route === route));
+}
+function buildPeTransportTables(pctMap) {
+  pctMap = pctMap || {};
+  const ru = peEditorRu();
+  const route = peEditorRoute();
+  const title = document.getElementById('peTrDomTitle');
+  if (title) title.textContent = route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'PKOP';
+  for (const channel of ['export', 'domestic']) {
+    const host = document.getElementById(channel === 'export' ? 'peTrExp' : 'peTrDom');
+    if (!host) continue;
+    const lines = TR_LINES.filter(l => channel === 'export' ? l.channel === 'export' : (l.channel === 'domestic' && l.route === route));
+    let html = `<table class="tr"><thead><tr><th>Row</th><th>Leg</th><th>Ccy</th><th class="num">Base KZT</th><th class="num">Adj KZT/t</th><th class="num">%</th></tr></thead><tbody>`;
+    let last = '';
+    for (const line of lines) {
+      if (line.group !== last) {
+        html += `<tr><td colspan="6" style="background:#eef2ff;font-weight:700">${line.group}</td></tr>`;
+        last = line.group;
+      }
+      const base = peBaseKzt(line, ru);
+      const pct = num(pctMap[line.id], 0);
+      const adj = base * (1 + pct / 100);
+      html += `<tr class="${line.kind==='rub'?'rub':''}">
+        <td>${line.row}</td>
+        <td>${line.name}</td>
+        <td>${line.kind==='rub'?'RUB×J3':'KZT'}</td>
+        <td class="num" data-pe-base="${line.id}">${fmt(base,2)}</td>
+        <td class="num"><input data-pe-kzt="${line.id}" type="number" step="0.01" value="${adj.toFixed(2)}" style="width:110px;text-align:right;padding:4px 6px;border:1px solid var(--line);border-radius:6px"></td>
+        <td class="num" data-pe-pct="${line.id}">${(pct>0?'+':'')+fmt(pct,1)}%</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+    host.innerHTML = html;
+  }
+  if (!buildPeTransportTables._bound) {
+    const onTr = (e) => {
+      const inp = e.target.closest('input[data-pe-kzt]');
+      if (!inp) return;
+      const id = inp.dataset.peKzt;
+      const line = TR_LINES.find(l => l.id === id);
+      if (!line) return;
+      const base = peBaseKzt(line, peEditorRu());
+      const adj = num(inp.value, base);
+      const pct = base > 1e-12 ? ((adj / base) - 1) * 100 : 0;
+      const lbl = document.querySelector(`[data-pe-pct="${id}"]`);
+      if (lbl) {
+        lbl.textContent = `${pct>0?'+':''}${fmt(pct,1)}%`;
+        lbl.classList.toggle('changed', Math.abs(pct) > 1e-9);
+      }
+      refreshProfileEditorPreview();
+    };
+    document.getElementById('peTrExp').addEventListener('input', onTr);
+    document.getElementById('peTrDom').addEventListener('input', onTr);
+    buildPeTransportTables._bound = true;
+  }
+}
+function readEditorTransportPct() {
+  const ru = peEditorRu();
+  const pct = {};
+  for (const line of peActiveTrLines()) {
+    const inp = document.querySelector(`input[data-pe-kzt="${line.id}"]`);
+    const base = peBaseKzt(line, ru);
+    if (!inp) { pct[line.id] = 0; continue; }
+    const adj = num(inp.value, base);
+    pct[line.id] = base > 1e-12 ? ((adj / base) - 1) * 100 : 0;
+  }
+  return pct;
+}
+function applyPeBulkToLegs() {
+  const bulkExp = num(document.getElementById('peBulkExp').value, 0);
+  const bulkDom = num(document.getElementById('peBulkDom').value, 0);
+  const route = peEditorRoute();
+  const pctMap = {};
+  for (const line of TR_LINES) {
+    if (line.channel === 'export') pctMap[line.id] = bulkExp;
+    else if (line.route === route) pctMap[line.id] = bulkDom;
+  }
+  buildPeTransportTables(pctMap);
+  refreshProfileEditorPreview();
+}
+function rebuildPeTransportBasesKeepingAdj() {
+  // keep current adj KZT values when RU/route changes where possible
+  const prev = {};
+  document.querySelectorAll('input[data-pe-kzt]').forEach(inp => { prev[inp.dataset.peKzt] = num(inp.value); });
+  const ru = peEditorRu();
+  const route = peEditorRoute();
+  const pctMap = {};
+  for (const line of TR_LINES) {
+    if (line.channel === 'domestic' && line.route !== route) continue;
+    if (line.channel !== 'export' && line.channel !== 'domestic') continue;
+    const base = peBaseKzt(line, ru);
+    if (prev[line.id] != null && line.channel === 'export') {
+      pctMap[line.id] = base > 1e-12 ? ((prev[line.id] / base) - 1) * 100 : 0;
+    } else if (prev[line.id] != null && line.route === route) {
+      pctMap[line.id] = base > 1e-12 ? ((prev[line.id] / base) - 1) * 100 : 0;
+    } else {
+      pctMap[line.id] = 0;
+    }
+  }
+  buildPeTransportTables(pctMap);
+  refreshProfileEditorPreview();
+}
+
 function readEditorParams() {
   return normalizeParams({
     brent: document.getElementById('peBrent').value,
@@ -1498,7 +1665,7 @@ function readEditorParams() {
     domesticRoute: document.getElementById('peRoute').value,
     bulkExp: document.getElementById('peBulkExp').value,
     bulkDom: document.getElementById('peBulkDom').value,
-    transportPct: {}
+    transportPct: readEditorTransportPct()
   });
 }
 
@@ -1521,6 +1688,7 @@ function fillEditor(params, meta) {
   document.getElementById('peRoute').value = params.domesticRoute;
   document.getElementById('peBulkExp').value = params.bulkExp;
   document.getElementById('peBulkDom').value = params.bulkDom;
+  buildPeTransportTables(params.transportPct || {});
   refreshProfileEditorPreview();
 }
 
@@ -1533,6 +1701,12 @@ function refreshProfileEditorPreview() {
   document.getElementById('peWinner').textContent = Math.abs(c.spread)<0.5 ? 'Breakeven' : (c.spread>0 ? 'EXPORT' : 'DOMESTIC');
   document.getElementById('peCalcHint').textContent =
     `Route ${domesticLabelFrom(params.domesticRoute)} · Tr exp ${fmt(c.trExp,1)} · Tr dom ${fmt(c.trDom,1)} · Duty ${fmt(c.duty,0)} · Rental ${fmt(c.rental,1)} · MET ${fmt(c.metExp,1)}`;
+  const peTrExpTot = document.getElementById('peTrExpTot');
+  const peTrDomTot = document.getElementById('peTrDomTot');
+  const peTrRuUsed = document.getElementById('peTrRuUsed');
+  if (peTrExpTot) peTrExpTot.textContent = `${fmt(c.trExp,2)} $/t (${fmt(c.expK,0)} KZT)`;
+  if (peTrDomTot) peTrDomTot.textContent = `${fmt(c.trDom,2)} $/t (${fmt(c.domK,0)} KZT)`;
+  if (peTrRuUsed) peTrRuUsed.textContent = fmt(params.ru,2);
 }
 
 function openNewProfileEditor() {
@@ -1559,17 +1733,36 @@ async function saveFromEditor(online) {
   const month = document.getElementById('peMonth').value;
   if (!month) { setStatus('peSaveStatus', 'Month is required.', 'err'); return; }
   setStatus('peSaveStatus', 'Saving…');
-  await upsertProfile({
+  let params;
+  try {
+    // Ensure transport tables exist before reading
+    if (!document.querySelector('input[data-pe-kzt]')) {
+      buildPeTransportTables({});
+    }
+    params = readEditorParams();
+  } catch (err) {
+    console.error(err);
+    setStatus('peSaveStatus', 'Could not read form values: ' + (err.message || err), 'err');
+    return;
+  }
+  const ok = await upsertProfile({
     month,
     label: document.getElementById('peLabel').value || (monthLabel(month) + ' profile'),
     author: document.getElementById('peAuthor').value,
     notes: document.getElementById('peNotes').value,
-    params: readEditorParams(),
-    online,
+    params,
+    online: !!online,
     statusId: 'peSaveStatus'
   });
-  // also apply to live netback view
-  applyParams(readEditorParams());
+  if (!ok && online) {
+    // local may still have succeeded when online publish failed — re-check message already set
+  }
+  try { applyParams(params); } catch (e) { console.warn(e); }
+  // Show list so author/label change is visible
+  renderProfileUI();
+  showPage('profiles');
+  const msg = document.getElementById('peSaveStatus')?.textContent || '';
+  if (msg) setStatus('profileStatus', msg, document.getElementById('peSaveStatus')?.classList.contains('err') ? 'err' : 'ok');
 }
 
 function wireProfilesReports() {
@@ -1644,11 +1837,16 @@ function wireProfilesReports() {
   };
   document.getElementById('btnPrintReport').onclick = () => window.print();
 
-  ['peBrent','peFx','peSk','peDisc','peLocal','peRu','peKb','peMet','peVat','peRoute','peBulkExp','peBulkDom'].forEach(id => {
+  ['peBrent','peFx','peSk','peDisc','peLocal','peKb','peMet','peVat','peBulkExp','peBulkDom'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', refreshProfileEditorPreview);
     if (el) el.addEventListener('change', refreshProfileEditorPreview);
   });
+  const peRu = document.getElementById('peRu');
+  const peRoute = document.getElementById('peRoute');
+  if (peRu) peRu.addEventListener('change', rebuildPeTransportBasesKeepingAdj);
+  if (peRu) peRu.addEventListener('input', () => { /* live preview only; rebuild on change */ refreshProfileEditorPreview(); });
+  if (peRoute) peRoute.addEventListener('change', rebuildPeTransportBasesKeepingAdj);
   document.getElementById('btnPeFillOct').onclick = () => fillEditor(OCT2026_PROFILE.params, {
     month: document.getElementById('peMonth').value,
     label: document.getElementById('peLabel').value,
@@ -1661,6 +1859,8 @@ function wireProfilesReports() {
     author: document.getElementById('peAuthor').value,
     notes: document.getElementById('peNotes').value
   });
+  const btnBulk = document.getElementById('btnPeApplyBulk');
+  if (btnBulk) btnBulk.onclick = applyPeBulkToLegs;
   document.getElementById('btnPeSaveOnline').onclick = () => saveFromEditor(true);
   document.getElementById('btnPeSaveLocal').onclick = () => saveFromEditor(false);
   document.getElementById('btnPeCancel').onclick = () => showPage('profiles');
