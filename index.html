@@ -224,11 +224,20 @@
   @media(max-width:980px){.route-side{grid-template-columns:1fr}}
   .route-leg-list{max-height:560px; overflow:auto; font-size:.78rem}
   .route-leg-list .leg{
-    border-bottom:1px solid #ece7dc; padding:7px 4px; cursor:default;
+    border-bottom:1px solid #ece7dc; padding:7px 4px; cursor:pointer;
+    border-left:3px solid transparent; transition:background .12s, border-color .12s;
   }
   .route-leg-list .leg:hover{background:#f5f5f4}
+  .route-leg-list .leg.is-active{
+    background:#ecfdf5; border-left-color:#0f766e;
+  }
   .route-leg-list .leg b{float:right; font-variant-numeric:tabular-nums}
   .leaflet-popup-content{font-size:.82rem; line-height:1.35; margin:8px 10px}
+  .route-hl-tip{
+    background:#111827; color:#fff; border:none; border-radius:6px;
+    font-size:.72rem; font-weight:600; padding:4px 8px; box-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .route-hl-tip::before{border-top-color:#111827 !important}
   .month-mini-grid{
     display:grid; gap:10px; margin-top:10px;
     grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
@@ -446,7 +455,7 @@
   <!-- ROUTE MAP PAGE -->
   <div id="page-route-map" class="page">
     <h1>Transportation route map</h1>
-    <p class="lead">Approximate pipeline/rail path for Novoros export and domestic Shymkent / Pavlodar. Hover a point or leg to see live tariff from current Analysis rates (RUB×RUB→KZT, then ÷FX).</p>
+    <p class="lead">Approximate pipeline/rail path for Novoros export and domestic Shymkent / Pavlodar. Hover a leg in the list (or on the map) to highlight that exact segment and see live tariff from current Analysis rates (RUB×RUB→KZT, then ÷FX).</p>
     <div class="route-legend">
       <span><i style="background:#0f766e"></i> Export → Novorossiysk</span>
       <span><i style="background:#b45309"></i> Domestic → Shymkent (PKOP)</span>
@@ -791,43 +800,43 @@ function resetTaxAll() {
 }
 
 const TR_LINES = [
-  { id:'e29', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'тасбулат - узень', kind:'kzt', tariff:537.5, row:'29' },
-  { id:'e30', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'узень - касымова', kind:'kzt', tariff:8759.4375, row:'30' },
-  { id:'e31', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'касымова - 1235,3 км (рк / рф)', kind:'kzt', tariff:6716.175, row:'31' },
-  { id:'e43', channel:'export', route:'export', group:'Export · Novorossiysk', name:'операторская деятельность (псп самара)', kind:'kzt', tariff:120.34, row:'43' },
-  { id:'e44', channel:'export', route:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:83.179652, row:'44' },
-  { id:'e45', channel:'export', route:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:469.914315, row:'45' },
-  { id:'e46', channel:'export', route:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:265.059062, row:'46' },
-  { id:'e47', channel:'export', route:'export', group:'Export · Novorossiysk', name:'тихорецк - грушевая', kind:'rub', tariff:123.653653, row:'47' },
-  { id:'e48', channel:'export', route:'export', group:'Export · Novorossiysk', name:'граница рк / рф - самара', kind:'rub', tariff:42.795472, row:'48' },
-  { id:'e49', channel:'export', route:'export', group:'Export · Novorossiysk', name:'самарская бсн (перевалка)', kind:'rub', tariff:1.1146, row:'49' },
-  { id:'e50', channel:'export', route:'export', group:'Export · Novorossiysk', name:'самара - красноармейск - 915 км', kind:'rub', tariff:241.768322, row:'50' },
-  { id:'e51', channel:'export', route:'export', group:'Export · Novorossiysk', name:'915 км - родионовская - тихорецк', kind:'rub', tariff:217.574058, row:'51' },
-  { id:'e52', channel:'export', route:'export', group:'Export · Novorossiysk', name:'тихорецкая (перевалка)', kind:'rub', tariff:8.8906, row:'52' },
-  { id:'e53', channel:'export', route:'export', group:'Export · Novorossiysk', name:'тихорецк - грушовая', kind:'rub', tariff:101.501254, row:'53' },
-  { id:'e54', channel:'export', route:'export', group:'Export · Novorossiysk', name:'шесхарис грушовая', kind:'rub', tariff:42.9498, row:'54' },
-  { id:'e55', channel:'export', route:'export', group:'Export · Novorossiysk', name:'шесхарис шесхарис', kind:'rub', tariff:55.9256, row:'55' },
-  { id:'e56', channel:'export', route:'export', group:'Export · Novorossiysk', name:'транспортно-экспедиционное', kind:'rub', tariff:3.64, row:'56' },
-  { id:'e57', channel:'export', route:'export', group:'Export · Novorossiysk', name:'перевалка новороссийск', kind:'rub', tariff:292.72, row:'57' },
-  { id:'d5', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'5' },
-  { id:'d7', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'7' },
-  { id:'d8', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'8' },
-  { id:'d9', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'9' },
-  { id:'d10', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'10' },
-  { id:'d11', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'джумагалиева - пкоп', kind:'kzt', tariff:2645.0549, row:'11' },
-  { id:'d12', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'операторская деятельность', kind:'kzt', tariff:7.23, row:'12' },
-  { id:'d13', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'13' },
-  { id:'d14', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'ккт', kind:'kzt', tariff:2931.21, row:'14' },
-  { id:'p17', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'17' },
-  { id:'p19', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'19' },
-  { id:'p20', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'20' },
-  { id:'p21', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'21' },
-  { id:'p22', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'22' },
-  { id:'p23', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'джумагалиева - атасу', kind:'kzt', tariff:2121.1243, row:'23' },
-  { id:'p24', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'атасу - пнхз, замещение', kind:'kzt', tariff:1903.87, row:'24' },
-  { id:'p25', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'операторская деятельность', kind:'kzt', tariff:4.02, row:'25' },
-  { id:'p26', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'26' },
-  { id:'p27', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'ккт', kind:'kzt', tariff:2931.21, row:'27' },
+  { id:'e29', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'Tasbulat – Uzen', kind:'kzt', tariff:537.5, row:'29' },
+  { id:'e30', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'Uzen – Kasymova', kind:'kzt', tariff:8759.4375, row:'30' },
+  { id:'e31', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'Kasymova – 1235.3 km (RK/RF border)', kind:'kzt', tariff:6716.175, row:'31' },
+  { id:'e43', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Operator activity (PSP Samara)', kind:'kzt', tariff:120.34, row:'43' },
+  { id:'e44', channel:'export', route:'export', group:'Export · Novorossiysk', name:'RK/RF border – Samara', kind:'rub', tariff:83.179652, row:'44' },
+  { id:'e45', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Samara – Krasnoarmeysk – 915 km', kind:'rub', tariff:469.914315, row:'45' },
+  { id:'e46', channel:'export', route:'export', group:'Export · Novorossiysk', name:'915 km – Rodionovskaya – Tikhoretsk', kind:'rub', tariff:265.059062, row:'46' },
+  { id:'e47', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Tikhoretsk – Grushevaya', kind:'rub', tariff:123.653653, row:'47' },
+  { id:'e48', channel:'export', route:'export', group:'Export · Novorossiysk', name:'RK/RF border – Samara', kind:'rub', tariff:42.795472, row:'48' },
+  { id:'e49', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Samara BSN (transshipment)', kind:'rub', tariff:1.1146, row:'49' },
+  { id:'e50', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Samara – Krasnoarmeysk – 915 km', kind:'rub', tariff:241.768322, row:'50' },
+  { id:'e51', channel:'export', route:'export', group:'Export · Novorossiysk', name:'915 km – Rodionovskaya – Tikhoretsk', kind:'rub', tariff:217.574058, row:'51' },
+  { id:'e52', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Tikhoretskaya (transshipment)', kind:'rub', tariff:8.8906, row:'52' },
+  { id:'e53', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Tikhoretsk – Grushovaya', kind:'rub', tariff:101.501254, row:'53' },
+  { id:'e54', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Grushovaya – Sheskharis', kind:'rub', tariff:42.9498, row:'54' },
+  { id:'e55', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Sheskharis (handling)', kind:'rub', tariff:55.9256, row:'55' },
+  { id:'e56', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Forwarding / expedition', kind:'rub', tariff:3.64, row:'56' },
+  { id:'e57', channel:'export', route:'export', group:'Export · Novorossiysk', name:'Novorossiysk transshipment', kind:'rub', tariff:292.72, row:'57' },
+  { id:'d5', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Tasbulat – Uzen', kind:'kzt', tariff:213.4198, row:'5' },
+  { id:'d7', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Uzen – Shmanova', kind:'kzt', tariff:3362.3785, row:'7' },
+  { id:'d8', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Shmanova transshipment', kind:'kzt', tariff:137.46, row:'8' },
+  { id:'d9', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Kenkiyak transshipment', kind:'kzt', tariff:144.05, row:'9' },
+  { id:'d10', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Kumkol – Dzhumagaliyeva', kind:'kzt', tariff:987.1904, row:'10' },
+  { id:'d11', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Dzhumagaliyeva – PKOP', kind:'kzt', tariff:2645.0549, row:'11' },
+  { id:'d12', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Operator activity', kind:'kzt', tariff:7.23, row:'12' },
+  { id:'d13', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'Munaytas', kind:'kzt', tariff:4101.6877, row:'13' },
+  { id:'d14', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'CPC (KKT)', kind:'kzt', tariff:2931.21, row:'14' },
+  { id:'p17', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Tasbulat – Uzen', kind:'kzt', tariff:213.4198, row:'17' },
+  { id:'p19', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Uzen – Shmanova', kind:'kzt', tariff:3362.3785, row:'19' },
+  { id:'p20', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Shmanova transshipment', kind:'kzt', tariff:137.46, row:'20' },
+  { id:'p21', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Kenkiyak transshipment', kind:'kzt', tariff:144.05, row:'21' },
+  { id:'p22', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Kumkol – Dzhumagaliyeva', kind:'kzt', tariff:987.1904, row:'22' },
+  { id:'p23', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Dzhumagaliyeva – Atasu', kind:'kzt', tariff:2121.1243, row:'23' },
+  { id:'p24', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Atasu – PNHZ (substitution)', kind:'kzt', tariff:1903.87, row:'24' },
+  { id:'p25', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Operator activity', kind:'kzt', tariff:4.02, row:'25' },
+  { id:'p26', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'Munaytas', kind:'kzt', tariff:4101.6877, row:'26' },
+  { id:'p27', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'CPC (KKT)', kind:'kzt', tariff:2931.21, row:'27' },
 ];
 
 
@@ -1279,6 +1288,9 @@ const ROUTE_EDGES = {
 let routeMap = null;
 let routeLayers = { export: null, pkop: null, pavlodar: null };
 let routeMarkers = [];
+let routeLegLayers = {};   // id → { layer, color, nodes, line }
+let routeHighlight = null; // temporary highlight layer group
+let routeLastMode = 'all';
 
 function legPriceHtml(line) {
   const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
@@ -1292,40 +1304,105 @@ function legPriceHtml(line) {
     (Math.abs(pct)>1e-9 ? `<br>% adj ${(pct>0?'+':'')+fmt(pct,1)}%` : '');
 }
 
-function buildRouteCoords(lineIds) {
-  const pts = [];
-  const seen = new Set();
-  for (const id of lineIds) {
-    const edge = ROUTE_EDGES[id];
-    if (!edge) continue;
-    for (const key of edge) {
-      const n = ROUTE_NODES[key];
-      if (!n) continue;
-      const sig = key;
-      if (!seen.has(sig)) {
-        seen.add(sig);
-        pts.push([n.lat, n.lng, n.name, key]);
-      }
+function clearRouteHighlight() {
+  if (routeHighlight && routeMap) {
+    routeMap.removeLayer(routeHighlight);
+    routeHighlight = null;
+  }
+  document.querySelectorAll('#routeLegList .leg.is-active').forEach(el => el.classList.remove('is-active'));
+  // restore dimmed base legs
+  Object.values(routeLegLayers).forEach(info => {
+    if (!info || !info.layer) return;
+    if (info.layer.setStyle) {
+      info.layer.setStyle({ opacity: info.baseOpacity, weight: info.baseWeight, color: info.color });
+    } else if (info.layer.setRadius) {
+      info.layer.setStyle({ fillOpacity: 0.85, radius: info.baseRadius || 9, weight: 2 });
+    }
+  });
+  routeMarkers.forEach(m => {
+    if (m.setStyle) m.setStyle({ opacity: 1, fillOpacity: 0.95, radius: 7, weight: 2 });
+  });
+}
+
+function highlightRouteLeg(id, listEl) {
+  clearRouteHighlight();
+  const info = routeLegLayers[id];
+  if (!info || !routeMap) return;
+  if (listEl) listEl.classList.add('is-active');
+
+  // dim everything else
+  Object.entries(routeLegLayers).forEach(([lid, other]) => {
+    if (!other || !other.layer || lid === id) return;
+    if (other.layer.setStyle) {
+      if (other.isPoint) other.layer.setStyle({ fillOpacity: 0.25, opacity: 0.3, radius: 6 });
+      else other.layer.setStyle({ opacity: 0.18, weight: 2 });
+    }
+  });
+  routeMarkers.forEach(m => {
+    const nk = m._routeNodeKey;
+    if (info.nodes.includes(nk)) return;
+    if (m.setStyle) m.setStyle({ opacity: 0.25, fillOpacity: 0.25, radius: 5 });
+  });
+
+  routeHighlight = L.layerGroup().addTo(routeMap);
+  const glowColor = '#f59e0b';
+
+  if (info.isPoint) {
+    const n = ROUTE_NODES[info.nodes[0]];
+    if (n) {
+      L.circleMarker([n.lat, n.lng], {
+        radius: 18, color: glowColor, weight: 3, fillColor: glowColor, fillOpacity: 0.4
+      }).addTo(routeHighlight);
+      L.circleMarker([n.lat, n.lng], {
+        radius: 10, color: '#fff', weight: 2, fillColor: info.color, fillOpacity: 1
+      }).addTo(routeHighlight).bindTooltip(info.line.name, { permanent:true, direction:'top', className:'route-hl-tip' }).openTooltip();
+    }
+  } else {
+    const latlngs = info.nodes.map(k => {
+      const n = ROUTE_NODES[k];
+      return n ? [n.lat, n.lng] : null;
+    }).filter(Boolean);
+    if (latlngs.length >= 2) {
+      L.polyline(latlngs, { color: glowColor, weight: 14, opacity: 0.4, lineCap:'round' }).addTo(routeHighlight);
+      L.polyline(latlngs, { color: info.color, weight: 7, opacity: 1, lineCap:'round' })
+        .addTo(routeHighlight)
+        .bindTooltip(info.line.name, { permanent:true, direction:'center', className:'route-hl-tip' })
+        .openTooltip();
+      info.nodes.forEach(nk => {
+        const n = ROUTE_NODES[nk];
+        if (!n) return;
+        L.circleMarker([n.lat, n.lng], {
+          radius: 11, color: '#fff', weight: 2, fillColor: glowColor, fillOpacity: 1
+        }).addTo(routeHighlight).bindTooltip(n.name, { permanent:true, direction:'top', offset:[0,-8] });
+      });
     }
   }
-  return pts;
+  // keep camera fixed — no pan / re-fit on highlight
 }
 
 function renderRouteMap(mode) {
-  mode = mode || 'all';
+  mode = mode || routeLastMode || 'all';
+  routeLastMode = mode;
   const host = document.getElementById('routeMap');
   if (!host || typeof L === 'undefined') return;
   if (!routeMap) {
-    routeMap = L.map('routeMap', { scrollWheelZoom:true }).setView([48.5, 55], 4);
+    // Fixed framing: Caspian → Black Sea corridor, north-up, no rotation
+    routeMap = L.map('routeMap', {
+      scrollWheelZoom:true,
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
+      preferCanvas: true
+    }).setView([47.2, 55.5], 5.25);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 12,
       attribution: '&copy; OpenStreetMap'
     }).addTo(routeMap);
   }
-  // clear old
+  clearRouteHighlight();
   Object.values(routeLayers).forEach(g => { if (g) routeMap.removeLayer(g); });
   routeMarkers.forEach(m => routeMap.removeLayer(m));
   routeMarkers = [];
+  routeLegLayers = {};
   routeLayers = { export: L.layerGroup(), pkop: L.layerGroup(), pavlodar: L.layerGroup() };
 
   const groups = {
@@ -1336,23 +1413,56 @@ function renderRouteMap(mode) {
 
   const list = document.getElementById('routeLegList');
   let listHtml = `<h2 style="margin-top:0">Legs · live prices</h2>
-    <p class="lead" style="margin:0 0 8px">FX ${fmt(state.fx,2)} · RUB→KZT ${fmt(state.ru,2)} · route ${domesticLabel()}</p>`;
+    <p class="lead" style="margin:0 0 8px">Hover a leg to highlight it on the map. FX ${fmt(state.fx,2)} · RUB→KZT ${fmt(state.ru,2)} · route ${domesticLabel()}</p>`;
 
   for (const [key, g] of Object.entries(groups)) {
     if (mode === 'export' && key !== 'export') continue;
     if (mode === 'dom' && key === 'export') continue;
     if (mode === 'dom' && key !== activeDomesticRoute()) continue;
 
-    const ids = g.lines.map(l => l.id);
-    const pts = buildRouteCoords(ids);
-    if (pts.length >= 2) {
-      const latlngs = pts.map(p => [p[0], p[1]]);
-      const poly = L.polyline(latlngs, { color:g.color, weight:4, opacity:0.85 }).addTo(g.layer);
-      poly.bindTooltip(key === 'export' ? 'Export → Novoros' : (key==='pkop'?'Domestic Shymkent':'Domestic Pavlodar'));
-    }
+    // one polyline / point marker per tariff leg
+    g.lines.forEach(line => {
+      const edge = ROUTE_EDGES[line.id];
+      if (!edge) return;
+      const a = ROUTE_NODES[edge[0]], b = ROUTE_NODES[edge[1]];
+      if (!a || !b) return;
+      const isPoint = edge[0] === edge[1];
+      let layer;
+      if (isPoint) {
+        layer = L.circleMarker([a.lat, a.lng], {
+          radius: 9, color: g.color, weight: 2, fillColor: g.color, fillOpacity: 0.85
+        }).bindTooltip(line.name).bindPopup(legPriceHtml(line), { maxWidth:280 });
+        layer.addTo(g.layer);
+        routeLegLayers[line.id] = {
+          layer, color: g.color, nodes: [edge[0]], line, isPoint: true,
+          baseOpacity: 0.85, baseWeight: 2, baseRadius: 9
+        };
+      } else {
+        layer = L.polyline([[a.lat, a.lng], [b.lat, b.lng]], {
+          color: g.color, weight: 4, opacity: 0.8, lineCap: 'round'
+        }).bindTooltip(line.name).bindPopup(legPriceHtml(line), { maxWidth:280 });
+        layer.addTo(g.layer);
+        routeLegLayers[line.id] = {
+          layer, color: g.color, nodes: [edge[0], edge[1]], line, isPoint: false,
+          baseOpacity: 0.8, baseWeight: 4
+        };
+      }
+      layer.on('mouseover', () => {
+        const el = document.querySelector(`#routeLegList [data-map-leg="${line.id}"]`);
+        highlightRouteLeg(line.id, el);
+        if (el) el.scrollIntoView({ block:'nearest', behavior:'smooth' });
+      });
+      layer.on('mouseout', () => clearRouteHighlight());
+      layer.on('click', () => {
+        const el = document.querySelector(`#routeLegList [data-map-leg="${line.id}"]`);
+        highlightRouteLeg(line.id, el);
+        if (el) el.scrollIntoView({ block:'nearest', behavior:'smooth' });
+      });
+    });
+
     // node markers
     const nodeKeys = new Set();
-    ids.forEach(id => (ROUTE_EDGES[id]||[]).forEach(k => nodeKeys.add(k)));
+    g.lines.forEach(l => (ROUTE_EDGES[l.id]||[]).forEach(k => nodeKeys.add(k)));
     [...nodeKeys].forEach(nk => {
       const n = ROUTE_NODES[nk];
       if (!n) return;
@@ -1361,11 +1471,11 @@ function renderRouteMap(mode) {
       const m = L.circleMarker([n.lat, n.lng], {
         radius:7, color:'#fff', weight:2, fillColor:g.color, fillOpacity:0.95
       }).bindPopup(html, { maxWidth:280 }).bindTooltip(n.name);
+      m._routeNodeKey = nk;
       m.addTo(g.layer);
       routeMarkers.push(m);
     });
 
-    // list legs
     listHtml += `<div style="margin:8px 0 4px;font-weight:700;color:${g.color}">${key==='export'?'EXPORT':(key==='pkop'?'DOMESTIC Shymkent':'DOMESTIC Pavlodar')}</div>`;
     g.lines.forEach(line => {
       const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
@@ -1378,22 +1488,25 @@ function renderRouteMap(mode) {
   if (list) {
     list.innerHTML = listHtml;
     list.querySelectorAll('[data-map-leg]').forEach(el => {
-      el.addEventListener('mouseenter', () => {
-        const id = el.dataset.mapLeg;
-        const edge = ROUTE_EDGES[id];
-        if (!edge) return;
-        const n = ROUTE_NODES[edge[edge.length-1]] || ROUTE_NODES[edge[0]];
-        if (!n || !routeMap) return;
-        routeMap.panTo([n.lat, n.lng], { animate:true });
+      el.addEventListener('mouseenter', () => highlightRouteLeg(el.dataset.mapLeg, el));
+      el.addEventListener('mouseleave', () => clearRouteHighlight());
+      el.addEventListener('click', () => {
+        highlightRouteLeg(el.dataset.mapLeg, el);
       });
     });
   }
   setTimeout(() => {
     routeMap.invalidateSize();
-    const layers = Object.values(routeLayers).filter(Boolean);
-    if (layers.length) {
-      const fg = L.featureGroup(layers);
-      try { routeMap.fitBounds(fg.getBounds().pad(0.15)); } catch {}
+    // Fixed angle/zoom once — tighter than before, north-up; Fit button still overrides
+    if (!routeMap._eoFramed) {
+      const layers = Object.values(routeLayers).filter(Boolean);
+      if (layers.length) {
+        const fg = L.featureGroup(layers);
+        try {
+          routeMap.fitBounds(fg.getBounds().pad(0.06), { maxZoom: 5.75, animate:false });
+          routeMap._eoFramed = true;
+        } catch {}
+      }
     }
   }, 80);
 }
@@ -1403,14 +1516,21 @@ function wireRouteMap() {
   const exp = document.getElementById('btnMapShowExp');
   const dom = document.getElementById('btnMapShowDom');
   const fit = document.getElementById('btnMapFit');
-  if (all) all.onclick = () => renderRouteMap('all');
-  if (exp) exp.onclick = () => renderRouteMap('export');
-  if (dom) dom.onclick = () => renderRouteMap('dom');
+  const reframe = (mode) => {
+    if (routeMap) routeMap._eoFramed = false;
+    renderRouteMap(mode);
+  };
+  if (all) all.onclick = () => reframe('all');
+  if (exp) exp.onclick = () => reframe('export');
+  if (dom) dom.onclick = () => reframe('dom');
   if (fit) fit.onclick = () => {
     if (!routeMap) return;
     const layers = Object.values(routeLayers).filter(Boolean);
     if (!layers.length) return;
-    try { routeMap.fitBounds(L.featureGroup(layers).getBounds().pad(0.15)); } catch {}
+    try {
+      routeMap.fitBounds(L.featureGroup(layers).getBounds().pad(0.06), { maxZoom: 5.75, animate:true });
+      routeMap._eoFramed = true;
+    } catch {}
   };
 }
 
