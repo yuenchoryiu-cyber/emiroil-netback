@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-31T12:00:00.000Z",
+  "currentMonthId": "2026-10",
+  "profiles": [
+    {
+      "id": "2026-10",
+      "label": "Oct 2026 (current)",
+      "month": "2026-10",
+      "author": "baseline",
+      "notes": "Sale-comparison.xlsx 2026 base case — Brent 105, FX 440, Skebco 20.104, discount 6.18, local 130000 KZT/t",
+      "savedAt": "2026-10-31T12:00:00.000Z",
+      "isCurrent": true,
+      "params": {
+        "brent": 105,
+        "fx": 440,
+        "sk": 20.104,
+        "disc": 6.18,
+        "localKzt": 130000,
+        "ru": 6.83,
+        "kb": 7.2223,
+        "metRate": 0.05,
+        "vat": 1.16,
+        "domesticRoute": "pkop",
+        "transportPct": {},
+        "bulkExp": 0,
+        "bulkDom": 0
+      },
+      "snapshot": {
+        "nbExp": 181.81365650445457,
+        "nbDom": 216.73272640282133,
+        "spread": -34.91906989836676,
+        "trExp": 66.94691029554545,
+        "trDom": 34.03196795454545,
+        "duty": 115,
+        "rental": 165.375,
+        "metExp": 39.375
+      }
+    }
+  ]
+}
