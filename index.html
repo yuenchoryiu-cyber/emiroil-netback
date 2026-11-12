@@ -1107,6 +1107,7 @@ function showPage(name) {
   if (name==='taxes') renderTaxPage();
   if (name==='profile-edit') refreshProfileEditorPreview();
   if (name==='profiles') renderProfileUI();
+  if (name==='reports') renderProfileUI();
 }
 
 function ladderRowsHtml(kind) {
@@ -1574,11 +1575,20 @@ function renderProfileUI() {
   if (start) start.innerHTML = opts;
   if (resetSel) resetSel.innerHTML = opts;
   if (trResetSel) trResetSel.innerHTML = opts;
+  const latestId = (() => {
+    const list = profileDb.profiles || [];
+    if (list.some(p => p.id === CURRENT_MONTH_ID)) return CURRENT_MONTH_ID;
+    if (!list.length) return CURRENT_MONTH_ID;
+    return [...list].sort((a, b) => String(b.month).localeCompare(String(a.month)))[0].id;
+  })();
   try {
-    const aid = localStorage.getItem(ACTIVE_KEY) || CURRENT_MONTH_ID;
+    const aid = localStorage.getItem(ACTIVE_KEY) || latestId;
     if ([...sel.options].some(o => o.value === aid)) sel.value = aid;
     if (resetSel && [...resetSel.options].some(o => o.value === aid)) resetSel.value = aid;
     if (trResetSel && [...trResetSel.options].some(o => o.value === aid)) trResetSel.value = aid;
+    // Reports always default to latest / current month
+    if (single && [...single.options].some(o => o.value === latestId)) single.value = latestId;
+    if (start && [...start.options].some(o => o.value === latestId)) start.value = latestId;
   } catch {}
   updateMonthHeadlines();
 
