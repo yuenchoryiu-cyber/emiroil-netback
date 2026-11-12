@@ -1413,12 +1413,13 @@ function calcTableHtml(c, params) {
     <thead><tr><th>Item</th><th>Formula / note</th><th class="num">Value</th></tr></thead>
     <tbody>
       <tr><td>Brent</td><td>L3</td><td class="num">${fmt(c.B,1)} $/bbl</td></tr>
-      <tr><td>FX</td><td>L2</td><td class="num">${fmt(c.FX,0)} KZT/USD</td></tr>
+      <tr><td>FX (USD→KZT)</td><td>transport KZT → $/t</td><td class="num">${fmt(c.FX,2)} KZT/USD</td></tr>
+      <tr><td>RUB→KZT</td><td>Novoros RUB legs → KZT</td><td class="num">${fmt(c.RU,4)}</td></tr>
       <tr><td>Skebco (D6)</td><td>D6</td><td class="num">${fmt(c.S,3)} $/bbl</td></tr>
       <tr><td>Discount (D7)</td><td>D7</td><td class="num">${fmt(c.DISC,2)} $/bbl</td></tr>
       <tr><td>Realized $/bbl</td><td>Brent − Skebco − Discount</td><td class="num">${fmt(c.priceBbl,3)}</td></tr>
       <tr><td>Realized $/t</td><td>× bbl/t ${fmt(c.KB,4)}</td><td class="num">${fmt(c.priceTexp,2)}</td></tr>
-      <tr><td>Export transport</td><td>Tr.cost Novoros</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
+      <tr><td>Export transport</td><td>Σ(KZT + RUB×${fmt(c.RU,2)}) / FX</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
       <tr><td>Duty</td><td>GCA lookup</td><td class="num">${fmt(c.duty,0)} $/t</td></tr>
       <tr><td>Rental</td><td>rate ${(c.rentRate*100).toFixed(0)}% × Brent × ${fmt(c.kbRent,1)}</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
       <tr><td>Export MET</td><td>Brent × MET% × ${fmt(c.kbMet,1)}</td><td class="num">${fmt(c.metExp,2)} $/t</td></tr>
