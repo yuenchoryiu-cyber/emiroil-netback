@@ -43,10 +43,11 @@
   .sticky-top{position:sticky; top:0; z-index:30; margin-bottom:10px}
   .verdict{
     border-radius:12px; padding:10px 14px; color:#fff;
-    display:grid; grid-template-columns:1.2fr 1fr 1fr auto; gap:12px; align-items:center;
+    display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr .9fr .9fr; gap:10px; align-items:center;
     box-shadow:0 6px 18px rgba(0,0,0,.12);
   }
-  @media(max-width:900px){.verdict{grid-template-columns:1fr 1fr}}
+  @media(max-width:1100px){.verdict{grid-template-columns:1fr 1fr 1fr}}
+  @media(max-width:700px){.verdict{grid-template-columns:1fr 1fr}}
   .verdict.export{background:var(--export)}
   .verdict.domestic{background:var(--domestic)}
   .verdict.tie{background:#57534e}
@@ -294,6 +295,14 @@
           <span class="nb-label">Δ Export − Domestic</span>
           <div class="nb-val" id="verdictSpread">—</div>
         </div>
+        <div>
+          <span class="nb-label">USD→KZT (FX)</span>
+          <div class="nb-val" id="verdictFx">—</div>
+        </div>
+        <div>
+          <span class="nb-label">RUB→KZT</span>
+          <div class="nb-val" id="verdictRu">—</div>
+        </div>
       </div>
     </div>
 
@@ -320,7 +329,7 @@
           <input id="disc" type="range" min="-20" max="20" step="0.01" value="6.18"/>
         </div>
         <div>
-          <label>RUB→KZT <span class="val" id="ruLbl">5.56</span></label>
+          <label>RUB→KZT (Novoros legs) <span class="val" id="ruLbl">5.56</span></label>
           <input id="ru" type="range" min="4" max="10" step="0.01" value="5.56"/>
         </div>
         <div>
@@ -808,7 +817,7 @@ function hydrate() {
 
 function lineKzt(line, pct, ru) {
   const tariff = line.tariff * (1 + num(pct,0)/100);
-  return line.kind === 'rub' ? tariff * num(ru, 6.83) : tariff;
+  return line.kind === 'rub' ? tariff * num(ru, BASE.ru) : tariff;
 }
 function activeDomesticRoute() {
   return state.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop';
@@ -821,14 +830,21 @@ function domesticLines() {
   return TR_LINES.filter(l => l.channel === 'domestic' && l.route === route);
 }
 function transportTotals() {
-  const ru = num(state.ru, 6.83), fx = num(state.fx, 440);
-  let expK=0, domK=0;
+  const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
+  let expK=0, domK=0, expRubTariff=0, expRubKzt=0;
   for (const line of TR_LINES) {
     if (line.channel === 'domestic' && line.route !== activeDomesticRoute()) continue;
     const k = lineKzt(line, state.transportPct[line.id], ru);
-    if (line.channel === 'export') expK += k; else domK += k;
+    if (line.channel === 'export') {
+      expK += k;
+      if (line.kind === 'rub') {
+        const pct = num(state.transportPct[line.id], 0);
+        expRubTariff += line.tariff * (1 + pct/100);
+        expRubKzt += k;
+      }
+    } else domK += k;
   }
-  return { expK, domK, expUsd: expK/fx, domUsd: domK/fx, fx, ru };
+  return { expK, domK, expUsd: expK/fx, domUsd: domK/fx, fx, ru, expRubTariff, expRubKzt };
 }
 function trAdjusted() {
   const ids = new Set(TR_LINES.filter(l => l.channel==='export' || l.route===activeDomesticRoute()).map(l => l.id));
@@ -840,7 +856,7 @@ function calcNetback() {
   const LOC=num(state.localKzt), RU=num(state.ru), KB=num(state.kb), MET=num(state.metRate), VAT=num(state.vat);
   const kbRent = num(taxState.kbRent, 7.5), kbMet = num(taxState.kbMet, 7.5);
   const domMetShare = num(taxState.domMetShare, 0.1);
-  const { expK, domK } = transportTotals();
+  const { expK, domK, expRubTariff, expRubKzt } = transportTotals();
   const trExp = expK/FX, trDom = domK/FX;
   const rentRate = vlookup(B, taxState.rent), duty = vlookup(B, taxState.duty);
   const priceBbl = B - S - DISC, priceTexp = priceBbl * KB;
@@ -850,7 +866,7 @@ function calcNetback() {
   const nbDom = priceTdom - trDom - metDom;
   const spread = nbExp - nbDom;
   const skStar = B - DISC - (nbDom + trExp + duty + rental + metExp) / KB;
-  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,kbRent,kbMet,domMetShare,trExp,trDom,expK,domK,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,trAdj:trAdjusted() };
+  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,kbRent,kbMet,domMetShare,trExp,trDom,expK,domK,expRubTariff,expRubKzt,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,trAdj:trAdjusted() };
 }
 
 function row(name, formula, value, cls='') {
@@ -896,32 +912,38 @@ function renderNetback() {
   document.getElementById('verdictTxt').textContent = Math.abs(c.spread)<0.5?'BREAKEVEN':c.spread>0?'EXPORT wins':'DOMESTIC wins';
   document.getElementById('verdictSub').textContent =
     (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
-    (c.trAdj?'Transport % ON · ':'') + `Domestic ${domesticLabel()} · Breakeven Skebco ${fmt(c.skStar,2)}`;
+    (c.trAdj?'Transport % ON · ':'') +
+    `Domestic ${domesticLabel()} · RUB legs live × ${fmt(c.RU,2)} · Breakeven Skebco ${fmt(c.skStar,2)}`;
   document.getElementById('verdictExpNb').textContent = fmt(c.nbExp,1)+' $/t';
   document.getElementById('verdictDomNb').textContent = fmt(c.nbDom,1)+' $/t';
   document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmt(c.spread,1)+' $/t';
+  const vFx = document.getElementById('verdictFx');
+  const vRu = document.getElementById('verdictRu');
+  if (vFx) vFx.textContent = fmt(c.FX,2);
+  if (vRu) vRu.textContent = fmt(c.RU,2);
 
   document.getElementById('calcBody').innerHTML = [
     row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
     row('INPUTS','','','secIn'),
     row('Brent','L3', fmt(c.B,1)+' $/bbl'),
-    row('FX','L2', fmt(c.FX,0)+' KZT/USD'),
+    row('FX (USD→KZT)','Converts all transport KZT → $/t', fmt(c.FX,2)+' KZT/USD'),
+    row('RUB→KZT','Converts Novoros RUB legs → KZT (live)', fmt(c.RU,4)),
     row('Skebco (D6)','D6', fmt(c.S,3)+' $/bbl'),
     row('Discount (D7)','D7', fmt(c.DISC,2)+' $/bbl'),
     row('Local domestic','G5/F5 list', fmtInt(c.LOC)+' KZT/t'),
     row('Domestic destination','Shymkent (PKOP) or Pavlodar/PNHZ', domesticLabel()),
-    row('RUB→KZT','Tr.cost J3', fmt(c.RU,2)),
     row('EXPORT Novoros','','','sec'),
     row('Realized $/bbl',`D11=D5−D6−D7<br><span class="sub">${fmt(c.B,1)} − ${fmt(c.S,3)} − ${fmt(c.DISC,2)}</span>`, fmt(c.priceBbl,3)),
     row('Realized $/t',`D12=D11×D8`, fmt(c.priceTexp,2)),
-    row('Transport $/t',`D13=F67${c.trAdj?' · % adj':''}`, fmt(c.trExp,2)),
+    row('Export RUB legs',`Σ RUB tariffs × RUB→KZT ${fmt(c.RU,2)}`, fmt(c.expRubKzt,0)+' KZT'),
+    row('Transport $/t',`Σ(KZT + RUB×${fmt(c.RU,2)}) / FX${c.trAdj?' · % adj':''}`, fmt(c.trExp,2)),
     row('Rental $/t',`D16 rate ${(c.rentRate*100).toFixed(0)}%`, fmt(c.rental,2)),
     row('MET $/t','D17', fmt(c.metExp,2)),
     row('Duty $/t','D15', fmt(c.duty,0)),
     row('Export netback','D18', fmt(c.nbExp,2)+' $/t','total'),
     row('DOMESTIC '+domesticLabel(),'','','secDom'),
-    row('Price ex-VAT','G5', fmt(c.priceTdom,2)),
-    row('Transport $/t',`G13${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
+    row('Price ex-VAT','local KZT / FX / VAT', fmt(c.priceTdom,2)),
+    row('Transport $/t',`domestic KZT / FX${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
     row('Dom MET',`G17=${(c.domMetShare*100).toFixed(0)}%×export MET`, fmt(c.metDom,2)),
     row('Domestic netback','G18', fmt(c.nbDom,2)+' $/t','total'),
     row('RESULT','','','secIn'),
