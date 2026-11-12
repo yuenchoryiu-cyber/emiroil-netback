@@ -19,12 +19,23 @@
       var(--paper);
   }
   .wrap{max-width:1440px; margin:0 auto; padding:12px}
-  .topnav{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap}
-  .topnav button{
-    border-radius:999px; padding:8px 14px; font-size:.86rem; font-weight:600; cursor:pointer;
-    border:1px solid var(--line); background:#fff; color:var(--accent);
+  .app-brand{margin:0 0 10px}
+  .app-brand .brand{margin:0; font-size:1.45rem; color:var(--accent); letter-spacing:.01em}
+  .app-brand .brand-sub{margin:3px 0 0; color:var(--muted); font-size:.86rem}
+  .subnav{
+    display:flex; gap:6px; margin:0 0 14px; flex-wrap:wrap; padding:8px; border:1px solid var(--line);
+    border-radius:12px; background:linear-gradient(180deg,#fffdf8,#f7f3ea);
   }
-  .topnav button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+  .subnav .subnav-label{
+    font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+    align-self:center; margin-right:4px; font-weight:700;
+  }
+  .subnav button{
+    border-radius:999px; padding:7px 12px; font-size:.82rem; font-weight:600; cursor:pointer;
+    border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  .subnav button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+  .subnav button[data-page="netback"].active{background:#0f766e; border-color:#0f766e}
   h1{font-size:1.2rem; margin:0 0 4px; color:var(--accent)}
   .lead{color:var(--muted); margin:0 0 8px; font-size:.88rem; line-height:1.4}
   .page{display:none}
@@ -111,6 +122,18 @@
   .tr-kpis .export b{color:var(--export)}.tr-kpis .domestic b{color:var(--domestic)}
   .tr-controls{display:grid; grid-template-columns:repeat(4,1fr) auto; gap:10px; align-items:end; margin-bottom:10px}
   @media(max-width:900px){.tr-controls,.tr-kpis{grid-template-columns:1fr 1fr}}
+  .tax-factors{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:10px 0}
+  @media(max-width:900px){.tax-factors{grid-template-columns:1fr 1fr}}
+  .tax-factors .field input[type=number]{width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px}
+  .ladder-wrap{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media(max-width:900px){.ladder-wrap{grid-template-columns:1fr}}
+  .ladder-table{width:100%; border-collapse:collapse; font-size:.8rem}
+  .ladder-table th,.ladder-table td{border:1px solid var(--line); padding:5px 6px}
+  .ladder-table th{background:#1e3a5f; color:#fff; text-align:left}
+  .ladder-table input{width:100%; padding:4px 6px; border:1px solid var(--line); border-radius:6px; text-align:right}
+  .ladder-table .act{width:70px; text-align:center}
+  .tax-formula{font-family:Consolas,"Courier New",monospace; font-size:.78rem; color:#444; line-height:1.45; background:#faf7f0; border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+  .tax-formula b{color:var(--accent); font-family:inherit}
   #gate{
     position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
     background:
@@ -188,7 +211,7 @@
   .report-section h2{font-size:.95rem; margin:0 0 6px; color:var(--accent)}
   @media print{
     body{background:#fff}
-    #gate,.topnav,.report-toolbar,.no-print{display:none !important}
+    #gate,.app-brand,.subnav,.report-toolbar,.no-print{display:none !important}
     #app{display:block !important}
     .page{display:none !important}
     #page-reports{display:block !important}
@@ -208,9 +231,15 @@
   </div>
 </div>
 <div id="app" class="wrap">
-  <nav class="topnav">
-    <button type="button" class="active" data-page="netback">Netback analysis</button>
-    <button type="button" data-page="transport">Transport costs</button>
+  <header class="app-brand">
+    <h1 class="brand">Emir Oil Netback</h1>
+    <p class="brand-sub">Main analysis plus tools for transport, taxes, month profiles, and reports — no Excel required</p>
+  </header>
+  <nav class="subnav" aria-label="Netback tools">
+    <span class="subnav-label">Tools</span>
+    <button type="button" class="active" data-page="netback">Analysis</button>
+    <button type="button" data-page="transport">Transport</button>
+    <button type="button" data-page="taxes">Taxes / fiscal</button>
     <button type="button" data-page="profiles">Month profiles</button>
     <button type="button" data-page="profile-edit">New / edit profile</button>
     <button type="button" data-page="reports">Reports</button>
@@ -218,9 +247,9 @@
 
   <!-- NETBACK PAGE -->
   <div id="page-netback" class="page active">
-    <h1>Netback analysis — Novorossiysk vs <span id="domTitle">Shymkent (PKOP)</span></h1>
+    <h1>Analysis — Novorossiysk vs <span id="domTitle">Shymkent (PKOP)</span></h1>
     <div class="month-head" id="netbackMonthHead">—</div>
-    <p class="lead">Formulas from Sale-comparison.xlsx (2026 + Tr.cost 2026). Switch domestic destination Shymkent (PKOP) / Pavlodar (PNHZ).</p>
+    <p class="lead">Primary netback view. Use the tools bar above for transport costs, tax tables, month profiles, and reports.</p>
 
     <div class="sticky-top">
       <div id="verdict" class="verdict domestic">
@@ -355,10 +384,95 @@
     <div class="section domestic" id="secDom"></div>
   </div>
 
+  <!-- TAXES / FISCAL PAGE -->
+  <div id="page-taxes" class="page">
+    <h1>Taxes / fiscal</h1>
+    <p class="lead">Structural fiscal layer — usually unchanged month to month. Edits apply immediately to netback. Separate from monthly price profiles.</p>
+    <div class="btn-row no-print" style="margin-bottom:10px">
+      <button type="button" class="ok" id="btnTaxResetAll">Reset all taxes to Oct 2026 baseline</button>
+      <button type="button" class="ghost" id="btnTaxResetLadders">Reset ladders only</button>
+    </div>
+    <div class="status" id="taxStatus"></div>
+
+    <div class="section">
+      <h2>How taxes enter netback</h2>
+      <div class="tax-formula" id="taxFormulaStrip">
+        <div><b>Export rental</b> = GCA rental rate(Brent) × Brent × rental bbl factor</div>
+        <div><b>Export MET</b> = Brent × MET% × MET bbl factor</div>
+        <div><b>Export duty</b> = GCA duty ladder(Brent) $/t</div>
+        <div><b>Domestic MET</b> = domestic MET share × export MET</div>
+        <div><b>Local price ex-VAT</b> = local KZT / FX / VAT factor</div>
+      </div>
+      <div class="kpi-grid" style="margin-top:10px" id="taxLiveKpis">
+        <div class="k"><span>Rental rate @ Brent</span><b id="taxKpiRentRate">—</b></div>
+        <div class="k"><span>Duty @ Brent</span><b id="taxKpiDuty">—</b></div>
+        <div class="k"><span>Export MET</span><b id="taxKpiMetExp">—</b></div>
+        <div class="k"><span>Domestic MET</span><b id="taxKpiMetDom">—</b></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Live factors</h2>
+      <div class="tax-factors">
+        <div class="field">
+          <label>Export MET rate</label>
+          <input id="taxMetRate" type="number" step="0.005" min="0" max="0.5" value="0.05"/>
+        </div>
+        <div class="field">
+          <label>Domestic MET share (× export MET)</label>
+          <input id="taxDomMetShare" type="number" step="0.01" min="0" max="1" value="0.1"/>
+        </div>
+        <div class="field">
+          <label>VAT factor</label>
+          <input id="taxVat" type="number" step="0.01" min="1" max="1.3" value="1.16"/>
+        </div>
+        <div class="field">
+          <label>Export bbl/t</label>
+          <input id="taxKb" type="number" step="0.0001" min="5" max="10" value="7.2223"/>
+        </div>
+        <div class="field">
+          <label>Rental bbl factor</label>
+          <input id="taxKbRent" type="number" step="0.1" min="0" max="20" value="7.5"/>
+        </div>
+        <div class="field">
+          <label>MET bbl factor</label>
+          <input id="taxKbMet" type="number" step="0.1" min="0" max="20" value="7.5"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Brent ladders (GCA)</h2>
+      <p class="lead" style="margin-bottom:8px">Lookup = last row where Brent ≥ threshold. Sorted automatically on save.</p>
+      <div class="ladder-wrap">
+        <div>
+          <h3 style="font-size:.9rem;margin:0 0 6px">Rental rate ladder</h3>
+          <table class="ladder-table">
+            <thead><tr><th>Brent ≥ $/bbl</th><th>Rate (e.g. 0.21)</th><th class="act"></th></tr></thead>
+            <tbody id="rentLadderBody"></tbody>
+          </table>
+          <div class="btn-row" style="margin-top:8px">
+            <button type="button" class="ghost" id="btnAddRentRow">Add rental row</button>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:.9rem;margin:0 0 6px">Export duty ladder ($/t)</h3>
+          <table class="ladder-table">
+            <thead><tr><th>Brent ≥ $/bbl</th><th>Duty $/t</th><th class="act"></th></tr></thead>
+            <tbody id="dutyLadderBody"></tbody>
+          </table>
+          <div class="btn-row" style="margin-top:8px">
+            <button type="button" class="ghost" id="btnAddDutyRow">Add duty row</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- PROFILES PAGE -->
   <div id="page-profiles" class="page">
     <h1>Month profiles</h1>
-    <p class="lead">Current baseline is <b>Oct 2026</b> (Sale-comparison workbook). Save scenarios online so colleagues can load or create other months later.</p>
+    <p class="lead">Current baseline month is <b>Oct 2026</b>. Save scenarios online so colleagues can load or create other months later. Tax tables are shared under <b>Taxes / fiscal</b>.</p>
     <div class="two-col">
       <div class="section">
         <h2>1) Current month &amp; load</h2>
@@ -527,10 +641,71 @@
 
 <script>
 const STORE = 'eo_netback_v2';
+const TAX_STORE = 'eo_tax_v1';
 const BASE = { brent:105, fx:440, sk:20.104, disc:6.18, localKzt:130000, ru:6.83, kb:7.2223, metRate:0.05, vat:1.16 };
-const KB_RENT = 7.5, KB_MET = 7.5;
-const RENT = [[0,0],[41,0.07],[51,0.11],[61,0.14],[71,0.16],[81,0.17],[91,0.19],[101,0.21],[111,0.22],[121,0.23],[131,0.25],[141,0.26],[151,0.27],[161,0.29],[171,0.3],[181,0.32]];
-const DUTY = [[0,0],[25,10],[30,20],[35,35],[40,40],[45,45],[50,50],[55,55],[60,60],[65,65],[70,70],[75,75],[80,80],[85,85],[90,90],[95,95],[100,100],[105,115],[115,130],[125,145],[135,160],[145,176],[155,191],[165,206],[175,221],[185,236]];
+const RENT_BASELINE = [[0,0],[41,0.07],[51,0.11],[61,0.14],[71,0.16],[81,0.17],[91,0.19],[101,0.21],[111,0.22],[121,0.23],[131,0.25],[141,0.26],[151,0.27],[161,0.29],[171,0.3],[181,0.32]];
+const DUTY_BASELINE = [[0,0],[25,10],[30,20],[35,35],[40,40],[45,45],[50,50],[55,55],[60,60],[65,65],[70,70],[75,75],[80,80],[85,85],[90,90],[95,95],[100,100],[105,115],[115,130],[125,145],[135,160],[145,176],[155,191],[165,206],[175,221],[185,236]];
+const TAX_BASELINE = {
+  kbRent: 7.5,
+  kbMet: 7.5,
+  domMetShare: 0.1,
+  rent: RENT_BASELINE.map(r => [r[0], r[1]]),
+  duty: DUTY_BASELINE.map(r => [r[0], r[1]])
+};
+let taxState = {
+  kbRent: TAX_BASELINE.kbRent,
+  kbMet: TAX_BASELINE.kbMet,
+  domMetShare: TAX_BASELINE.domMetShare,
+  rent: TAX_BASELINE.rent.map(r => [r[0], r[1]]),
+  duty: TAX_BASELINE.duty.map(r => [r[0], r[1]])
+};
+function cloneLadder(rows) {
+  return (rows || []).map(r => [num(r[0], 0), num(r[1], 0)]);
+}
+function sortLadder(rows) {
+  return cloneLadder(rows).sort((a, b) => a[0] - b[0]);
+}
+function persistTax() {
+  try {
+    localStorage.setItem(TAX_STORE, JSON.stringify({
+      kbRent: taxState.kbRent,
+      kbMet: taxState.kbMet,
+      domMetShare: taxState.domMetShare,
+      rent: taxState.rent,
+      duty: taxState.duty
+    }));
+  } catch {}
+}
+function hydrateTax() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TAX_STORE) || '{}');
+    if (!raw || typeof raw !== 'object') return;
+    if (raw.kbRent != null) taxState.kbRent = num(raw.kbRent, TAX_BASELINE.kbRent);
+    if (raw.kbMet != null) taxState.kbMet = num(raw.kbMet, TAX_BASELINE.kbMet);
+    if (raw.domMetShare != null) taxState.domMetShare = num(raw.domMetShare, TAX_BASELINE.domMetShare);
+    if (Array.isArray(raw.rent) && raw.rent.length) taxState.rent = sortLadder(raw.rent);
+    if (Array.isArray(raw.duty) && raw.duty.length) taxState.duty = sortLadder(raw.duty);
+  } catch {}
+}
+function resetTaxLadders() {
+  taxState.rent = TAX_BASELINE.rent.map(r => [r[0], r[1]]);
+  taxState.duty = TAX_BASELINE.duty.map(r => [r[0], r[1]]);
+  persistTax();
+}
+function resetTaxAll() {
+  taxState = {
+    kbRent: TAX_BASELINE.kbRent,
+    kbMet: TAX_BASELINE.kbMet,
+    domMetShare: TAX_BASELINE.domMetShare,
+    rent: TAX_BASELINE.rent.map(r => [r[0], r[1]]),
+    duty: TAX_BASELINE.duty.map(r => [r[0], r[1]])
+  };
+  state.metRate = BASE.metRate;
+  state.vat = BASE.vat;
+  state.kb = BASE.kb;
+  persist();
+  persistTax();
+}
 
 const TR_LINES = [
   { id:'e29', channel:'export', route:'export', group:'Export · Tasbulat to RF border', name:'тасбулат - узень', kind:'kzt', tariff:537.5, row:'29' },
@@ -638,17 +813,19 @@ function trAdjusted() {
 function calcNetback() {
   const B=num(state.brent), FX=num(state.fx), S=num(state.sk), DISC=num(state.disc);
   const LOC=num(state.localKzt), RU=num(state.ru), KB=num(state.kb), MET=num(state.metRate), VAT=num(state.vat);
+  const kbRent = num(taxState.kbRent, 7.5), kbMet = num(taxState.kbMet, 7.5);
+  const domMetShare = num(taxState.domMetShare, 0.1);
   const { expK, domK } = transportTotals();
   const trExp = expK/FX, trDom = domK/FX;
-  const rentRate = vlookup(B, RENT), duty = vlookup(B, DUTY);
+  const rentRate = vlookup(B, taxState.rent), duty = vlookup(B, taxState.duty);
   const priceBbl = B - S - DISC, priceTexp = priceBbl * KB;
-  const rental = rentRate * B * KB_RENT, metExp = B * MET * KB_MET;
+  const rental = rentRate * B * kbRent, metExp = B * MET * kbMet;
   const nbExp = priceTexp - trExp - duty - rental - metExp;
-  const priceTdom = LOC/FX/VAT, metDom = 0.1*metExp;
+  const priceTdom = LOC/FX/VAT, metDom = domMetShare * metExp;
   const nbDom = priceTdom - trDom - metDom;
   const spread = nbExp - nbDom;
   const skStar = B - DISC - (nbDom + trExp + duty + rental + metExp) / KB;
-  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,trExp,trDom,expK,domK,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,trAdj:trAdjusted() };
+  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,kbRent,kbMet,domMetShare,trExp,trDom,expK,domK,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,trAdj:trAdjusted() };
 }
 
 function row(name, formula, value, cls='') {
@@ -681,24 +858,26 @@ function renderNetback() {
   document.getElementById('trRuLbl').textContent = num(state.ru).toFixed(2);
 
   const c = calcNetback();
-  const atBase = !c.trAdj &&
+  const taxAtBase =
+    Math.abs(c.kbRent-7.5)<1e-9 && Math.abs(c.kbMet-7.5)<1e-9 && Math.abs(c.domMetShare-0.1)<1e-9;
+  const atBase = !c.trAdj && taxAtBase &&
     Math.abs(c.B-105)<1e-9 && Math.abs(c.FX-440)<1e-9 && Math.abs(c.S-20.104)<1e-9 && Math.abs(c.DISC-6.18)<1e-9 &&
     Math.abs(c.LOC-130000)<1e-9 && Math.abs(c.RU-6.83)<1e-9 && Math.abs(c.KB-7.2223)<1e-9 &&
     Math.abs(c.MET-0.05)<1e-9 && Math.abs(c.VAT-1.16)<1e-9;
-  const excelPass = atBase && Math.abs(c.nbExp-181.81365650445457)<1e-6 && Math.abs(c.nbDom-217.74269140282132)<1e-6;
+  const baselinePass = atBase && Math.abs(c.nbExp-181.81365650445457)<1e-6 && Math.abs(c.nbDom-217.74269140282132)<1e-6;
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
   document.getElementById('verdictTxt').textContent = Math.abs(c.spread)<0.5?'BREAKEVEN':c.spread>0?'EXPORT wins':'DOMESTIC wins';
   document.getElementById('verdictSub').textContent =
-    (atBase?(excelPass?'Excel check PASS · ':'Excel check FAIL · '):'') +
+    (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
     (c.trAdj?'Transport % ON · ':'') + `Domestic ${domesticLabel()} · Breakeven Skebco ${fmt(c.skStar,2)}`;
   document.getElementById('verdictExpNb').textContent = fmt(c.nbExp,1)+' $/t';
   document.getElementById('verdictDomNb').textContent = fmt(c.nbDom,1)+' $/t';
   document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmt(c.spread,1)+' $/t';
 
   document.getElementById('calcBody').innerHTML = [
-    row('EXCEL CHECK', atBase?'Base vs cached 2026':'Live formulas', atBase?(excelPass?'PASS':'FAIL'):'Live'),
+    row('BASELINE CHECK', atBase?'Oct 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
     row('INPUTS','','','secIn'),
     row('Brent','L3', fmt(c.B,1)+' $/bbl'),
     row('FX','L2', fmt(c.FX,0)+' KZT/USD'),
@@ -718,7 +897,7 @@ function renderNetback() {
     row('DOMESTIC '+domesticLabel(),'','','secDom'),
     row('Price ex-VAT','G5', fmt(c.priceTdom,2)),
     row('Transport $/t',`G13${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
-    row('Dom MET','G17=10%×D17', fmt(c.metDom,2)),
+    row('Dom MET',`G17=${(c.domMetShare*100).toFixed(0)}%×export MET`, fmt(c.metDom,2)),
     row('Domestic netback','G18', fmt(c.nbDom,2)+' $/t','total'),
     row('RESULT','','','secIn'),
     row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
@@ -913,19 +1092,150 @@ function resetFromTransport() {
 }
 
 function showPage(name) {
-  document.getElementById('page-netback').classList.toggle('active', name==='netback');
-  document.getElementById('page-transport').classList.toggle('active', name==='transport');
-  const pp=document.getElementById('page-profiles'); if (pp) pp.classList.toggle('active', name==='profiles');
-  const pe=document.getElementById('page-profile-edit'); if (pe) pe.classList.toggle('active', name==='profile-edit');
-  const pr=document.getElementById('page-reports'); if (pr) pr.classList.toggle('active', name==='reports');
-  document.querySelectorAll('.topnav button').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.page===name);
+  const pages = ['netback','transport','taxes','profiles','profile-edit','reports'];
+  if (!pages.includes(name)) name = 'netback';
+  pages.forEach(id => {
+    const el = document.getElementById('page-' + id);
+    if (el) el.classList.toggle('active', id === name);
+  });
+  document.querySelectorAll('.subnav button[data-page]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.page === name);
   });
   location.hash = name;
   if (name==='netback') renderNetback();
   if (name==='transport') refreshTransportUI();
+  if (name==='taxes') renderTaxPage();
   if (name==='profile-edit') refreshProfileEditorPreview();
   if (name==='profiles') renderProfileUI();
+}
+
+function ladderRowsHtml(kind) {
+  const rows = kind === 'rent' ? taxState.rent : taxState.duty;
+  const valLabel = kind === 'rent' ? 'rate' : 'duty';
+  return rows.map((r, i) => `<tr data-kind="${kind}" data-i="${i}">
+    <td><input type="number" step="1" data-ladder="${kind}" data-i="${i}" data-col="0" value="${num(r[0],0)}"></td>
+    <td><input type="number" step="${kind==='rent'?'0.01':'1'}" data-ladder="${kind}" data-i="${i}" data-col="1" value="${num(r[1],0)}"></td>
+    <td class="act"><button type="button" class="ghost" data-del-ladder="${kind}" data-i="${i}" ${rows.length<=1?'disabled':''}>Del</button></td>
+  </tr>`).join('');
+}
+function renderTaxPage() {
+  const met = document.getElementById('taxMetRate');
+  const share = document.getElementById('taxDomMetShare');
+  const vat = document.getElementById('taxVat');
+  const kb = document.getElementById('taxKb');
+  const kbRent = document.getElementById('taxKbRent');
+  const kbMet = document.getElementById('taxKbMet');
+  if (met && document.activeElement !== met) met.value = num(state.metRate, BASE.metRate);
+  if (share && document.activeElement !== share) share.value = num(taxState.domMetShare, 0.1);
+  if (vat && document.activeElement !== vat) vat.value = num(state.vat, BASE.vat);
+  if (kb && document.activeElement !== kb) kb.value = num(state.kb, BASE.kb);
+  if (kbRent && document.activeElement !== kbRent) kbRent.value = num(taxState.kbRent, 7.5);
+  if (kbMet && document.activeElement !== kbMet) kbMet.value = num(taxState.kbMet, 7.5);
+
+  const rentBody = document.getElementById('rentLadderBody');
+  const dutyBody = document.getElementById('dutyLadderBody');
+  if (rentBody) rentBody.innerHTML = ladderRowsHtml('rent');
+  if (dutyBody) dutyBody.innerHTML = ladderRowsHtml('duty');
+
+  const c = calcNetback();
+  const kRent = document.getElementById('taxKpiRentRate');
+  const kDuty = document.getElementById('taxKpiDuty');
+  const kMet = document.getElementById('taxKpiMetExp');
+  const kDom = document.getElementById('taxKpiMetDom');
+  if (kRent) kRent.textContent = (c.rentRate*100).toFixed(0) + '%';
+  if (kDuty) kDuty.textContent = fmt(c.duty, 0) + ' $/t';
+  if (kMet) kMet.textContent = fmt(c.metExp, 2) + ' $/t';
+  if (kDom) kDom.textContent = fmt(c.metDom, 2) + ' $/t';
+}
+function applyTaxFactorInputs() {
+  state.metRate = num(document.getElementById('taxMetRate').value, BASE.metRate);
+  state.vat = num(document.getElementById('taxVat').value, BASE.vat);
+  state.kb = num(document.getElementById('taxKb').value, BASE.kb);
+  taxState.domMetShare = num(document.getElementById('taxDomMetShare').value, 0.1);
+  taxState.kbRent = num(document.getElementById('taxKbRent').value, 7.5);
+  taxState.kbMet = num(document.getElementById('taxKbMet').value, 7.5);
+  persist();
+  persistTax();
+  renderTaxPage();
+  renderNetback();
+  refreshTransportUI();
+}
+function readLadderFromDom(kind) {
+  const inputs = [...document.querySelectorAll(`input[data-ladder="${kind}"]`)];
+  const map = {};
+  for (const inp of inputs) {
+    const i = Number(inp.dataset.i);
+    const col = Number(inp.dataset.col);
+    if (!map[i]) map[i] = [0, 0];
+    map[i][col] = num(inp.value, 0);
+  }
+  return sortLadder(Object.keys(map).sort((a,b)=>Number(a)-Number(b)).map(k => map[k]));
+}
+function commitLaddersFromDom() {
+  taxState.rent = readLadderFromDom('rent');
+  taxState.duty = readLadderFromDom('duty');
+  persistTax();
+  renderTaxPage();
+  renderNetback();
+}
+function wireTaxPage() {
+  ['taxMetRate','taxDomMetShare','taxVat','taxKb','taxKbRent','taxKbMet'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', applyTaxFactorInputs);
+    el.addEventListener('change', applyTaxFactorInputs);
+  });
+  document.getElementById('btnTaxResetAll').onclick = () => {
+    resetTaxAll();
+    setStatus('taxStatus', 'All tax factors and ladders reset to Oct 2026 baseline.', 'ok');
+    renderTaxPage();
+    renderNetback();
+    refreshTransportUI();
+  };
+  document.getElementById('btnTaxResetLadders').onclick = () => {
+    resetTaxLadders();
+    setStatus('taxStatus', 'Rental and duty ladders reset to baseline.', 'ok');
+    renderTaxPage();
+    renderNetback();
+  };
+  document.getElementById('btnAddRentRow').onclick = () => {
+    taxState.rent = readLadderFromDom('rent');
+    const last = taxState.rent[taxState.rent.length - 1] || [0, 0];
+    taxState.rent.push([last[0] + 10, last[1]]);
+    taxState.rent = sortLadder(taxState.rent);
+    persistTax();
+    renderTaxPage();
+    renderNetback();
+  };
+  document.getElementById('btnAddDutyRow').onclick = () => {
+    taxState.duty = readLadderFromDom('duty');
+    const last = taxState.duty[taxState.duty.length - 1] || [0, 0];
+    taxState.duty.push([last[0] + 10, last[1] + 10]);
+    taxState.duty = sortLadder(taxState.duty);
+    persistTax();
+    renderTaxPage();
+    renderNetback();
+  };
+  const onLadder = (e) => {
+    const del = e.target.closest('[data-del-ladder]');
+    if (del) {
+      const kind = del.dataset.delLadder;
+      const i = Number(del.dataset.i);
+      const rows = kind === 'rent' ? readLadderFromDom('rent') : readLadderFromDom('duty');
+      if (rows.length <= 1) return;
+      rows.splice(i, 1);
+      if (kind === 'rent') taxState.rent = sortLadder(rows); else taxState.duty = sortLadder(rows);
+      persistTax();
+      renderTaxPage();
+      renderNetback();
+      return;
+    }
+    if (e.target.matches('input[data-ladder]')) commitLaddersFromDom();
+  };
+  document.getElementById('rentLadderBody').addEventListener('change', onLadder);
+  document.getElementById('dutyLadderBody').addEventListener('change', onLadder);
+  document.getElementById('rentLadderBody').addEventListener('click', onLadder);
+  document.getElementById('dutyLadderBody').addEventListener('click', onLadder);
 }
 
 // controls
@@ -960,7 +1270,7 @@ document.getElementById('btnAdv').addEventListener('click', () => {
     ? 'Hide structural parameters (VAT, bbl/t, MET%)'
     : 'Show structural parameters (VAT, bbl/t, MET%)';
 });
-document.querySelectorAll('.topnav button').forEach(btn => {
+document.querySelectorAll('.subnav button[data-page]').forEach(btn => {
   btn.addEventListener('click', () => showPage(btn.dataset.page));
 });
 
@@ -996,7 +1306,7 @@ const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
 const CURRENT_MONTH_ID = '2026-10';
 
-const OCT2026_PROFILE = {"id": "2026-10", "label": "Oct 2026 (current)", "month": "2026-10", "author": "baseline", "notes": "Sale-comparison.xlsx 2026 base — D6 Skebco 20.104, D7 discount 6.18; domestic transport excludes rows 4 & 6", "savedAt": "2026-10-31T12:00:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 440, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 6.83, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 181.81365650445457, "nbDom": 217.74269140282132, "spread": -35.92903489836675, "trExp": 66.94691029554545, "trDom": 33.02200295454546, "duty": 115, "rental": 165.375, "metExp": 39.375}};
+const OCT2026_PROFILE = {"id": "2026-10", "label": "Oct 2026 (current)", "month": "2026-10", "author": "baseline", "notes": "Oct 2026 baseline — D6 Skebco 20.104, D7 discount 6.18; domestic transport excludes rows 4 & 6", "savedAt": "2026-10-31T12:00:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 440, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 6.83, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 181.81365650445457, "nbDom": 217.74269140282132, "spread": -35.92903489836675, "trExp": 66.94691029554545, "trDom": 33.02200295454546, "duty": 115, "rental": 165.375, "metExp": 39.375}};
 
 let profileDb = {
   version: 1,
@@ -1062,12 +1372,12 @@ function calcTableHtml(c, params) {
       <tr><td>Realized $/t</td><td>× bbl/t ${fmt(c.KB,4)}</td><td class="num">${fmt(c.priceTexp,2)}</td></tr>
       <tr><td>Export transport</td><td>Tr.cost Novoros</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
       <tr><td>Duty</td><td>GCA lookup</td><td class="num">${fmt(c.duty,0)} $/t</td></tr>
-      <tr><td>Rental</td><td>rate ${(c.rentRate*100).toFixed(0)}% × Brent × 7.5</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
-      <tr><td>Export MET</td><td>Brent × MET% × 7.5</td><td class="num">${fmt(c.metExp,2)} $/t</td></tr>
+      <tr><td>Rental</td><td>rate ${(c.rentRate*100).toFixed(0)}% × Brent × ${fmt(c.kbRent,1)}</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
+      <tr><td>Export MET</td><td>Brent × MET% × ${fmt(c.kbMet,1)}</td><td class="num">${fmt(c.metExp,2)} $/t</td></tr>
       <tr><td><b>Export netback</b></td><td>D18</td><td class="num"><b>${fmt(c.nbExp,2)} $/t</b></td></tr>
       <tr><td>Local price ex-VAT</td><td>KZT / FX / VAT</td><td class="num">${fmt(c.priceTdom,2)} $/t</td></tr>
       <tr><td>Domestic transport (${route})</td><td>Tr.cost path</td><td class="num">${fmt(c.trDom,2)} $/t</td></tr>
-      <tr><td>Domestic MET</td><td>10% × export MET</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
+      <tr><td>Domestic MET</td><td>${(c.domMetShare*100).toFixed(0)}% × export MET</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
       <tr><td><b>Domestic netback</b></td><td>G18 / F18</td><td class="num"><b>${fmt(c.nbDom,2)} $/t</b></td></tr>
       <tr><td><b>Δ Export − Domestic</b></td><td>export NB − domestic NB</td><td class="num"><b>${(c.spread>=0?'+':'')+fmt(c.spread,2)} $/t</b></td></tr>
       <tr><td>Breakeven Skebco</td><td>Skebco where export = domestic</td><td class="num">${fmt(c.skStar,2)} $/bbl</td></tr>
@@ -2064,13 +2374,15 @@ function startApp() {
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('app').classList.add('ready');
   hydrate();
+  hydrateTax();
   syncRouteToggle();
   buildTransportTables();
   refreshTransportUI();
+  wireTaxPage();
   renderNetback();
   initProfilesReports();
   const hash=(location.hash||'#netback').replace('#','');
-  showPage(['netback','transport','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
+  showPage(['netback','transport','taxes','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
 }
 
 async function tryUnlock(pw) {
