@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Netback analysis</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
     --ink:#1c1917; --muted:#57534e; --paper:#f3efe6; --card:#fffdf8;
@@ -201,10 +203,32 @@
   .report-table th{background:#f5f5f4; text-align:left}
   .report-table .num{text-align:right; font-variant-numeric:tabular-nums}
   .delta-up{color:#0f766e; font-weight:700}.delta-down{color:#9a3412; font-weight:700}
-  #trendChart,#driverChart,#diffChart{width:100%; margin-top:10px}
-  #trendChart.range-3{min-height:300px} #driverChart.range-3,#diffChart.range-3{min-height:240px}
-  #trendChart.range-6{min-height:380px} #driverChart.range-6,#diffChart.range-6{min-height:300px}
-  #trendChart.range-12{min-height:480px} #driverChart.range-12,#diffChart.range-12{min-height:360px}
+  #trendChart,#diffChart,#driverDeltaChart,#impactChart{width:100%; margin-top:10px}
+  #trendChart.range-3{min-height:300px} #diffChart.range-3{min-height:240px}
+  #trendChart.range-6{min-height:380px} #diffChart.range-6{min-height:300px}
+  #trendChart.range-12{min-height:480px} #diffChart.range-12{min-height:360px}
+  .driver-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px}
+  @media(max-width:800px){.driver-grid{grid-template-columns:1fr}}
+  .driver-grid .driver-pane{
+    border:1px solid var(--line); border-radius:10px; padding:6px 8px 2px; background:#fff;
+  }
+  .driver-grid .driver-pane h3{margin:0; font-size:.78rem; color:var(--accent)}
+  .driver-grid .driver-pane .dc{height:180px; width:100%}
+  .driver-grid.range-12 .driver-pane .dc{height:210px}
+  .driver-grid.range-3 .driver-pane .dc{height:160px}
+  #routeMap{height:560px; width:100%; border-radius:12px; border:1px solid var(--line); z-index:1}
+  .route-legend{display:flex; flex-wrap:wrap; gap:10px; margin:8px 0; font-size:.82rem}
+  .route-legend span{display:inline-flex; align-items:center; gap:6px}
+  .route-legend i{width:18px; height:4px; border-radius:2px; display:inline-block}
+  .route-side{display:grid; grid-template-columns:1.6fr .9fr; gap:10px}
+  @media(max-width:980px){.route-side{grid-template-columns:1fr}}
+  .route-leg-list{max-height:560px; overflow:auto; font-size:.78rem}
+  .route-leg-list .leg{
+    border-bottom:1px solid #ece7dc; padding:7px 4px; cursor:default;
+  }
+  .route-leg-list .leg:hover{background:#f5f5f4}
+  .route-leg-list .leg b{float:right; font-variant-numeric:tabular-nums}
+  .leaflet-popup-content{font-size:.82rem; line-height:1.35; margin:8px 10px}
   .month-mini-grid{
     display:grid; gap:10px; margin-top:10px;
     grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
@@ -265,6 +289,7 @@
     <span class="subnav-label">Tools</span>
     <button type="button" class="active" data-page="netback">Analysis</button>
     <button type="button" data-page="transport">Transport</button>
+    <button type="button" data-page="route-map">Route map</button>
     <button type="button" data-page="taxes">Taxes / fiscal</button>
     <button type="button" data-page="profiles">Month profiles</button>
     <button type="button" data-page="profile-edit">New / edit profile</button>
@@ -416,6 +441,27 @@
     </div>
     <div class="section export" id="secExp"></div>
     <div class="section domestic" id="secDom"></div>
+  </div>
+
+  <!-- ROUTE MAP PAGE -->
+  <div id="page-route-map" class="page">
+    <h1>Transportation route map</h1>
+    <p class="lead">Approximate pipeline/rail path for Novoros export and domestic Shymkent / Pavlodar. Hover a point or leg to see live tariff from current Analysis rates (RUB×RUB→KZT, then ÷FX).</p>
+    <div class="route-legend">
+      <span><i style="background:#0f766e"></i> Export → Novorossiysk</span>
+      <span><i style="background:#b45309"></i> Domestic → Shymkent (PKOP)</span>
+      <span><i style="background:#7c3aed"></i> Domestic → Pavlodar (PNHZ)</span>
+    </div>
+    <div class="btn-row" style="margin-bottom:8px">
+      <button type="button" class="ok" id="btnMapShowAll">Show all routes</button>
+      <button type="button" class="ghost" id="btnMapShowExp">Export only</button>
+      <button type="button" class="ghost" id="btnMapShowDom">Domestic (active route)</button>
+      <button type="button" class="ghost" id="btnMapFit">Fit map</button>
+    </div>
+    <div class="route-side">
+      <div id="routeMap"></div>
+      <div class="section route-leg-list" id="routeLegList"></div>
+    </div>
   </div>
 
   <!-- TAXES / FISCAL PAGE -->
@@ -1139,7 +1185,7 @@ function resetFromTransport() {
 }
 
 function showPage(name) {
-  const pages = ['netback','transport','taxes','profiles','profile-edit','reports'];
+  const pages = ['netback','transport','route-map','taxes','profiles','profile-edit','reports'];
   if (!pages.includes(name)) name = 'netback';
   pages.forEach(id => {
     const el = document.getElementById('page-' + id);
@@ -1151,10 +1197,211 @@ function showPage(name) {
   location.hash = name;
   if (name==='netback') renderNetback();
   if (name==='transport') refreshTransportUI();
+  if (name==='route-map') renderRouteMap();
   if (name==='taxes') renderTaxPage();
   if (name==='profile-edit') refreshProfileEditorPreview();
   if (name==='profiles') renderProfileUI();
   if (name==='reports') renderProfileUI();
+}
+
+/* ===== Route map (Leaflet) ===== */
+const ROUTE_NODES = {
+  tasbulat: { name:'Tasbulat', lat:43.55, lng:53.25 },
+  uzen: { name:'Uzen', lat:43.34, lng:52.85 },
+  kasymova: { name:'Kasymova', lat:46.2, lng:51.8 },
+  border: { name:'RK/RF border', lat:50.1, lng:50.6 },
+  samara: { name:'Samara', lat:53.20, lng:50.15 },
+  krasno: { name:'Krasnoarmeysk / 915km', lat:50.1, lng:45.5 },
+  tikhoretsk: { name:'Tikhoretsk / Rodionovskaya', lat:45.85, lng:40.12 },
+  grushovaya: { name:'Grushovaya', lat:44.95, lng:38.85 },
+  sheskharis: { name:'Sheskharis', lat:44.78, lng:37.90 },
+  novoros: { name:'Novorossiysk', lat:44.72, lng:37.77 },
+  shmanova: { name:'Shmanova', lat:45.8, lng:55.2 },
+  kenkiyak: { name:'Kenkiyak', lat:48.25, lng:57.15 },
+  kumkol: { name:'Kumkol', lat:46.55, lng:65.45 },
+  dzhuma: { name:'Dzhumagaliyeva', lat:44.2, lng:67.8 },
+  pkop: { name:'Shymkent (PKOP)', lat:42.34, lng:69.59 },
+  atasu: { name:'Atasu', lat:48.55, lng:70.05 },
+  pavlodar: { name:'Pavlodar (PNHZ)', lat:52.29, lng:76.97 }
+};
+
+// Map each TR_LINES id to from→to node keys (approximate schematic)
+const ROUTE_EDGES = {
+  e29: ['tasbulat','uzen'],
+  e30: ['uzen','kasymova'],
+  e31: ['kasymova','border'],
+  e43: ['border','samara'],
+  e44: ['border','samara'],
+  e45: ['samara','krasno'],
+  e46: ['krasno','tikhoretsk'],
+  e47: ['tikhoretsk','grushovaya'],
+  e48: ['border','samara'],
+  e49: ['samara','samara'],
+  e50: ['samara','krasno'],
+  e51: ['krasno','tikhoretsk'],
+  e52: ['tikhoretsk','tikhoretsk'],
+  e53: ['tikhoretsk','grushovaya'],
+  e54: ['grushovaya','sheskharis'],
+  e55: ['sheskharis','sheskharis'],
+  e56: ['sheskharis','novoros'],
+  e57: ['novoros','novoros'],
+  d5: ['tasbulat','uzen'],
+  d7: ['uzen','shmanova'],
+  d8: ['shmanova','shmanova'],
+  d9: ['kenkiyak','kenkiyak'],
+  d10: ['kumkol','dzhuma'],
+  d11: ['dzhuma','pkop'],
+  d12: ['pkop','pkop'],
+  d13: ['kenkiyak','kumkol'],
+  d14: ['pkop','pkop'],
+  p17: ['tasbulat','uzen'],
+  p19: ['uzen','shmanova'],
+  p20: ['shmanova','shmanova'],
+  p21: ['kenkiyak','kenkiyak'],
+  p22: ['kumkol','dzhuma'],
+  p23: ['dzhuma','atasu'],
+  p24: ['atasu','pavlodar'],
+  p25: ['pavlodar','pavlodar'],
+  p26: ['kenkiyak','kumkol'],
+  p27: ['pavlodar','pavlodar']
+};
+
+let routeMap = null;
+let routeLayers = { export: null, pkop: null, pavlodar: null };
+let routeMarkers = [];
+
+function legPriceHtml(line) {
+  const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
+  const pct = num(state.transportPct[line.id], 0);
+  const kzt = lineKzt(line, pct, ru);
+  const usd = kzt / fx;
+  return `<b>${line.name}</b><br>` +
+    `Route row ${line.row} · ${line.kind==='rub'?'RUB tariff':'KZT tariff'} ${fmt(line.tariff, line.kind==='rub'?3:2)}<br>` +
+    (line.kind==='rub' ? `× RUB→KZT ${fmt(ru,2)} → ${fmt(kzt,0)} KZT<br>` : `Adj ${fmt(kzt,0)} KZT<br>`) +
+    `= <b>${fmt(usd,2)} $/t</b> at FX ${fmt(fx,2)}` +
+    (Math.abs(pct)>1e-9 ? `<br>% adj ${(pct>0?'+':'')+fmt(pct,1)}%` : '');
+}
+
+function buildRouteCoords(lineIds) {
+  const pts = [];
+  const seen = new Set();
+  for (const id of lineIds) {
+    const edge = ROUTE_EDGES[id];
+    if (!edge) continue;
+    for (const key of edge) {
+      const n = ROUTE_NODES[key];
+      if (!n) continue;
+      const sig = key;
+      if (!seen.has(sig)) {
+        seen.add(sig);
+        pts.push([n.lat, n.lng, n.name, key]);
+      }
+    }
+  }
+  return pts;
+}
+
+function renderRouteMap(mode) {
+  mode = mode || 'all';
+  const host = document.getElementById('routeMap');
+  if (!host || typeof L === 'undefined') return;
+  if (!routeMap) {
+    routeMap = L.map('routeMap', { scrollWheelZoom:true }).setView([48.5, 55], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 12,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(routeMap);
+  }
+  // clear old
+  Object.values(routeLayers).forEach(g => { if (g) routeMap.removeLayer(g); });
+  routeMarkers.forEach(m => routeMap.removeLayer(m));
+  routeMarkers = [];
+  routeLayers = { export: L.layerGroup(), pkop: L.layerGroup(), pavlodar: L.layerGroup() };
+
+  const groups = {
+    export: { color:'#0f766e', lines: TR_LINES.filter(l => l.channel==='export'), layer: routeLayers.export },
+    pkop: { color:'#b45309', lines: TR_LINES.filter(l => l.channel==='domestic' && l.route==='pkop'), layer: routeLayers.pkop },
+    pavlodar: { color:'#7c3aed', lines: TR_LINES.filter(l => l.channel==='domestic' && l.route==='pavlodar'), layer: routeLayers.pavlodar }
+  };
+
+  const list = document.getElementById('routeLegList');
+  let listHtml = `<h2 style="margin-top:0">Legs · live prices</h2>
+    <p class="lead" style="margin:0 0 8px">FX ${fmt(state.fx,2)} · RUB→KZT ${fmt(state.ru,2)} · route ${domesticLabel()}</p>`;
+
+  for (const [key, g] of Object.entries(groups)) {
+    if (mode === 'export' && key !== 'export') continue;
+    if (mode === 'dom' && key === 'export') continue;
+    if (mode === 'dom' && key !== activeDomesticRoute()) continue;
+
+    const ids = g.lines.map(l => l.id);
+    const pts = buildRouteCoords(ids);
+    if (pts.length >= 2) {
+      const latlngs = pts.map(p => [p[0], p[1]]);
+      const poly = L.polyline(latlngs, { color:g.color, weight:4, opacity:0.85 }).addTo(g.layer);
+      poly.bindTooltip(key === 'export' ? 'Export → Novoros' : (key==='pkop'?'Domestic Shymkent':'Domestic Pavlodar'));
+    }
+    // node markers
+    const nodeKeys = new Set();
+    ids.forEach(id => (ROUTE_EDGES[id]||[]).forEach(k => nodeKeys.add(k)));
+    [...nodeKeys].forEach(nk => {
+      const n = ROUTE_NODES[nk];
+      if (!n) return;
+      const related = g.lines.filter(l => (ROUTE_EDGES[l.id]||[]).includes(nk));
+      const html = `<b>${n.name}</b><br>` + related.map(l => legPriceHtml(l)).join('<hr style="margin:6px 0;border:0;border-top:1px solid #ddd">');
+      const m = L.circleMarker([n.lat, n.lng], {
+        radius:7, color:'#fff', weight:2, fillColor:g.color, fillOpacity:0.95
+      }).bindPopup(html, { maxWidth:280 }).bindTooltip(n.name);
+      m.addTo(g.layer);
+      routeMarkers.push(m);
+    });
+
+    // list legs
+    listHtml += `<div style="margin:8px 0 4px;font-weight:700;color:${g.color}">${key==='export'?'EXPORT':(key==='pkop'?'DOMESTIC Shymkent':'DOMESTIC Pavlodar')}</div>`;
+    g.lines.forEach(line => {
+      const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
+      const usd = lineKzt(line, state.transportPct[line.id], ru) / fx;
+      listHtml += `<div class="leg" data-map-leg="${line.id}"><span>${line.row}. ${line.name}</span><b>${fmt(usd,2)} $/t</b></div>`;
+    });
+
+    g.layer.addTo(routeMap);
+  }
+  if (list) {
+    list.innerHTML = listHtml;
+    list.querySelectorAll('[data-map-leg]').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        const id = el.dataset.mapLeg;
+        const edge = ROUTE_EDGES[id];
+        if (!edge) return;
+        const n = ROUTE_NODES[edge[edge.length-1]] || ROUTE_NODES[edge[0]];
+        if (!n || !routeMap) return;
+        routeMap.panTo([n.lat, n.lng], { animate:true });
+      });
+    });
+  }
+  setTimeout(() => {
+    routeMap.invalidateSize();
+    const layers = Object.values(routeLayers).filter(Boolean);
+    if (layers.length) {
+      const fg = L.featureGroup(layers);
+      try { routeMap.fitBounds(fg.getBounds().pad(0.15)); } catch {}
+    }
+  }, 80);
+}
+
+function wireRouteMap() {
+  const all = document.getElementById('btnMapShowAll');
+  const exp = document.getElementById('btnMapShowExp');
+  const dom = document.getElementById('btnMapShowDom');
+  const fit = document.getElementById('btnMapFit');
+  if (all) all.onclick = () => renderRouteMap('all');
+  if (exp) exp.onclick = () => renderRouteMap('export');
+  if (dom) dom.onclick = () => renderRouteMap('dom');
+  if (fit) fit.onclick = () => {
+    if (!routeMap) return;
+    const layers = Object.values(routeLayers).filter(Boolean);
+    if (!layers.length) return;
+    try { routeMap.fitBounds(L.featureGroup(layers).getBounds().pad(0.15)); } catch {}
+  };
 }
 
 function ladderRowsHtml(kind) {
@@ -1955,17 +2202,89 @@ function buildTrendReport(endYm, nMonths) {
       legend:{orientation:'h', y:1.12, x:0}, paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.5)'
     }, {responsive:true, displayModeBar:false});
 
-    Plotly.newPlot('driverChart', [
-      { x, y: yOrNull(s => s.params.brent), name: 'Brent', mode:'lines+markers', connectgaps:false, line:{color:'#0ea5e9'}, marker:{size:mk-1} },
-      { x, y: yOrNull(s => s.params.sk), name: 'Skebco D6', mode:'lines+markers', connectgaps:false, line:{color:'#7c3aed'}, marker:{size:mk-1} },
-      { x, y: yOrNull(s => s.params.disc), name: 'Discount D7', mode:'lines+markers', connectgaps:false, line:{color:'#f43f5e'}, marker:{size:mk-1} },
-      { x, y: yOrNull(s => s.params.fx/10), name: 'FX÷10', mode:'lines+markers', connectgaps:false, line:{color:'#64748b', dash:'dot'}, marker:{size:mk-2} },
-    ], {
-      margin:{t:36,r:24,b:chartH.bottom,l:50}, height:chartH.driver,
-      xaxis:{tickangle: chartH.tickAngle, automargin:true},
-      yaxis:{title:'Drivers', gridcolor:'#eee'},
-      legend:{orientation:'h', y:1.12, x:0}, paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.5)'
-    }, {responsive:true, displayModeBar:false});
+    const driverDefs = [
+      { id:'driverBrent', title:'Brent ($/bbl)', color:'#0ea5e9', fn:s => s.params.brent, dp:1 },
+      { id:'driverSk', title:'Skebco D6 ($/bbl)', color:'#7c3aed', fn:s => s.params.sk, dp:2 },
+      { id:'driverDisc', title:'Discount D7 ($/bbl)', color:'#f43f5e', fn:s => s.params.disc, dp:2 },
+      { id:'driverFx', title:'FX USD→KZT', color:'#64748b', fn:s => s.params.fx, dp:0 },
+      { id:'driverRu', title:'RUB→KZT', color:'#0f766e', fn:s => s.params.ru, dp:2 },
+      { id:'driverLocal', title:'Local KZT/t', color:'#b45309', fn:s => s.params.localKzt, dp:0 },
+    ];
+    const smallH = nMonths>=12 ? 210 : (nMonths>=6 ? 180 : 160);
+    driverDefs.forEach(d => {
+      const el = document.getElementById(d.id);
+      if (!el) return;
+      const ys = yOrNull(d.fn);
+      Plotly.newPlot(el, [{
+        x, y: ys, mode:'lines+markers', connectgaps:false,
+        line:{color:d.color, width:2}, marker:{size:mk-1, color:d.color},
+        name:d.title, hovertemplate:'%{x}<br>%{y:.'+d.dp+'f}<extra></extra>'
+      }], {
+        margin:{t:8,r:12,b: nMonths>=6 ? 48 : 32, l:42}, height:smallH,
+        xaxis:{tickangle: chartH.tickAngle, automargin:true, tickfont:{size:10}},
+        yaxis:{gridcolor:'#eee', tickfont:{size:10}, zeroline:false, automargin:true},
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.6)', showlegend:false
+      }, {responsive:true, displayModeBar:false});
+    });
+
+    // Driver month-to-month differences (own scale per series via separate traces normalized? show absolute deltas)
+    const momPresent = [];
+    for (let i = 1; i < slots.length; i++) {
+      if (slots[i-1].missing || slots[i].missing) continue;
+      momPresent.push({ a: slots[i-1], b: slots[i], label: monthLabel(slots[i-1].ym)+'→'+monthLabel(slots[i].ym) });
+    }
+    if (momPresent.length && document.getElementById('driverDeltaChart')) {
+      const deltaTraces = driverDefs.map(d => ({
+        type:'bar', name:d.title, marker:{color:d.color},
+        x: momPresent.map(r => r.label),
+        y: momPresent.map(r => d.fn(r.b) - d.fn(r.a)),
+        hovertemplate:'%{x}<br>'+d.title+': %{y:+.2f}<extra></extra>'
+      }));
+      Plotly.newPlot('driverDeltaChart', deltaTraces, {
+        barmode:'group',
+        margin:{t:30,r:20,b: Math.max(chartH.bottom, 60), l:50}, height: Math.max(260, chartH.driver - 40),
+        xaxis:{tickangle: chartH.tickAngle, automargin:true},
+        yaxis:{title:'MoM change (native units)', zeroline:true, gridcolor:'#eee'},
+        legend:{orientation:'h', y:1.15}, paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.5)'
+      }, {responsive:true, displayModeBar:false});
+    }
+
+    // Parameter impact % on Δ Exp−Dom (first → last), one-at-a-time attribution
+    if (first && last && document.getElementById('impactChart')) {
+      const keys = [
+        ['brent','Brent'], ['sk','Skebco'], ['disc','Discount'], ['fx','FX'],
+        ['ru','RUB→KZT'], ['localKzt','Local KZT'], ['kb','bbl/t']
+      ];
+      const baseSpread = first.c.spread;
+      const totalMove = last.c.spread - baseSpread;
+      const effects = keys.map(([k, label]) => {
+        const trial = { ...first.params, [k]: last.params[k] };
+        const sp = computeFromParams(trial).calc.spread;
+        return { key:k, label, effect: sp - baseSpread };
+      });
+      const absSum = effects.reduce((s,e) => s + Math.abs(e.effect), 0) || 1;
+      Plotly.newPlot('impactChart', [{
+        type:'bar',
+        x: effects.map(e => e.label),
+        y: effects.map(e => e.effect),
+        marker:{color: effects.map(e => e.effect>=0 ? '#0f766e' : '#b45309')},
+        text: effects.map(e => {
+          const pct = 100 * Math.abs(e.effect) / absSum;
+          return `${e.effect>=0?'+':''}${fmt(e.effect,1)} (${fmt(pct,0)}%)`;
+        }),
+        textposition:'outside', cliponaxis:false,
+        hovertemplate:'%{x}<br>Impact on Δ: %{y:+.2f} $/t<br>% of |impacts|: %{customdata:.0f}%<extra></extra>',
+        customdata: effects.map(e => 100 * Math.abs(e.effect) / absSum)
+      }], {
+        margin:{t:36,r:20,b:50,l:50}, height:300,
+        yaxis:{title:'Impact on Δ Exp−Dom ($/t)', zeroline:true, gridcolor:'#eee'},
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.5)',
+        annotations:[{
+          xref:'paper', yref:'paper', x:0, y:1.12, showarrow:false, align:'left',
+          text:`First→last total Δ move: ${(totalMove>=0?'+':'')+fmt(totalMove,1)} $/t · bars = change if only that driver moved`
+        }]
+      }, {responsive:true, displayModeBar:false});
+    }
 
     const momPlot = momRows.filter(r => !r.skip);
     if (momPlot.length) {
@@ -2098,7 +2417,20 @@ function buildTrendReport(endYm, nMonths) {
       <div class="month-mini-grid ${rangeCls}">${miniCards}</div>
     </div>
     <div class="report-section"><h2>Netback trend</h2><div id="trendChart" class="${rangeCls}"></div></div>
-    <div class="report-section"><h2>Driver parameters</h2><div id="driverChart" class="${rangeCls}"></div></div>
+    <div class="report-section">
+      <h2>Driver parameters (separate scales)</h2>
+      <p class="lead" style="margin:0 0 6px">Each driver uses its own axis so small series are not crushed by Brent/FX magnitude.</p>
+      <div class="driver-grid ${rangeCls}">
+        <div class="driver-pane"><h3>Brent</h3><div class="dc" id="driverBrent"></div></div>
+        <div class="driver-pane"><h3>Skebco (D6)</h3><div class="dc" id="driverSk"></div></div>
+        <div class="driver-pane"><h3>Discount (D7)</h3><div class="dc" id="driverDisc"></div></div>
+        <div class="driver-pane"><h3>FX USD→KZT</h3><div class="dc" id="driverFx"></div></div>
+        <div class="driver-pane"><h3>RUB→KZT</h3><div class="dc" id="driverRu"></div></div>
+        <div class="driver-pane"><h3>Local domestic KZT/t</h3><div class="dc" id="driverLocal"></div></div>
+      </div>
+    </div>
+    <div class="report-section"><h2>Driver month-to-month differences</h2><div id="driverDeltaChart" class="${rangeCls}"></div></div>
+    <div class="report-section"><h2>Parameter impact on Δ Exp−Dom (first → last)</h2><div id="impactChart"></div></div>
     <div class="report-section"><h2>Month-to-month change in Δ Exp−Dom</h2><div id="diffChart" class="${rangeCls}"></div></div>
     <div class="report-section"><h2>Overall change (first → last with data)</h2>
       <table class="report-table">
@@ -2535,7 +2867,8 @@ function startApp() {
   renderNetback();
   initProfilesReports();
   const hash=(location.hash||'#netback').replace('#','');
-  showPage(['netback','transport','taxes','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
+  wireRouteMap();
+  showPage(['netback','transport','route-map','taxes','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
 }
 
 async function tryUnlock(pw) {
