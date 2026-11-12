@@ -670,6 +670,9 @@
         <div class="k"><span>Domestic NB</span><b id="peNbDom">—</b></div>
         <div class="k"><span>Δ Exp − Dom</span><b id="peSpread">—</b></div>
         <div class="k"><span>Winner</span><b id="peWinner">—</b></div>
+        <div class="k"><span>BE Skebco</span><b id="peBeSk">—</b></div>
+        <div class="k"><span>BE Discount</span><b id="peBeDisc">—</b></div>
+        <div class="k"><span>BE Skebco+Disc</span><b id="peBeSkDisc">—</b></div>
       </div>
       <div class="status" id="peCalcHint" style="margin-top:8px"></div>
     </div>
@@ -911,8 +914,12 @@ function calcNetback() {
   const priceTdom = LOC/FX/VAT, metDom = domMetShare * metExp;
   const nbDom = priceTdom - trDom - metDom;
   const spread = nbExp - nbDom;
-  const skStar = B - DISC - (nbDom + trExp + duty + rental + metExp) / KB;
-  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,kbRent,kbMet,domMetShare,trExp,trDom,expK,domK,expRubTariff,expRubKzt,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,trAdj:trAdjusted() };
+  // Export NB = (B − S − DISC)×KB − trExp − duty − rental − metExp  equals  nbDom
+  const neededPriceBbl = (nbDom + trExp + duty + rental + metExp) / KB;
+  const skStar = B - DISC - neededPriceBbl;          // hold Discount fixed
+  const discStar = B - S - neededPriceBbl;           // hold Skebco fixed
+  const skDiscStar = B - neededPriceBbl;             // combined S+DISC haircut from Brent
+  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,kbRent,kbMet,domMetShare,trExp,trDom,expK,domK,expRubTariff,expRubKzt,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,discStar,skDiscStar,neededPriceBbl,trAdj:trAdjusted() };
 }
 
 function row(name, formula, value, cls='') {
@@ -959,7 +966,7 @@ function renderNetback() {
   document.getElementById('verdictSub').textContent =
     (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
     (c.trAdj?'Transport % ON · ':'') +
-    `Domestic ${domesticLabel()} · RUB legs live × ${fmt(c.RU,2)} · Breakeven Skebco ${fmt(c.skStar,2)}`;
+    `Domestic ${domesticLabel()} · RUB×${fmt(c.RU,2)} · BE Sk ${fmt(c.skStar,2)} · BE Disc ${fmt(c.discStar,2)} · BE Sk+Disc ${fmt(c.skDiscStar,2)}`;
   document.getElementById('verdictExpNb').textContent = fmt(c.nbExp,1)+' $/t';
   document.getElementById('verdictDomNb').textContent = fmt(c.nbDom,1)+' $/t';
   document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmt(c.spread,1)+' $/t';
@@ -994,7 +1001,10 @@ function renderNetback() {
     row('Domestic netback','G18', fmt(c.nbDom,2)+' $/t','total'),
     row('RESULT','','','secIn'),
     row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
-    row('Breakeven Skebco','Skebco where export NB = domestic NB', fmt(c.skStar,2)+' $/bbl'),
+    row('BREAKEVEN (export = domestic)','','','secIn'),
+    row('Breakeven Skebco',`Hold Discount ${fmt(c.DISC,2)} · S* = Brent − Disc − needed $/bbl`, fmt(c.skStar,2)+' $/bbl'),
+    row('Breakeven Discount',`Hold Skebco ${fmt(c.S,3)} · D* = Brent − Skebco − needed $/bbl`, fmt(c.discStar,2)+' $/bbl'),
+    row('Breakeven Skebco + Discount',`(S+D)* = Brent − needed $/bbl · now S+D=${fmt(c.S+c.DISC,2)}`, fmt(c.skDiscStar,2)+' $/bbl'),
   ].join('');
 
   Plotly.newPlot('chart', [
@@ -1676,7 +1686,9 @@ function calcTableHtml(c, params) {
       <tr><td>Domestic MET</td><td>${(c.domMetShare*100).toFixed(0)}% × export MET</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
       <tr><td><b>Domestic netback</b></td><td>G18 / F18</td><td class="num"><b>${fmt(c.nbDom,2)} $/t</b></td></tr>
       <tr><td><b>Δ Export − Domestic</b></td><td>export NB − domestic NB</td><td class="num"><b>${(c.spread>=0?'+':'')+fmt(c.spread,2)} $/t</b></td></tr>
-      <tr><td>Breakeven Skebco</td><td>Skebco where export = domestic</td><td class="num">${fmt(c.skStar,2)} $/bbl</td></tr>
+      <tr><td>Breakeven Skebco</td><td>Hold Discount fixed</td><td class="num">${fmt(c.skStar,2)} $/bbl</td></tr>
+      <tr><td>Breakeven Discount</td><td>Hold Skebco fixed</td><td class="num">${fmt(c.discStar,2)} $/bbl</td></tr>
+      <tr><td>Breakeven Skebco + Discount</td><td>Combined S+D haircut from Brent</td><td class="num">${fmt(c.skDiscStar,2)} $/bbl</td></tr>
     </tbody>
   </table>`;
 }
@@ -2124,6 +2136,10 @@ function buildSingleReport(id) {
       <div class="k"><span>Export NB</span><b>${fmt(c.nbExp,1)} $/t</b></div>
       <div class="k"><span>Domestic NB (${domesticLabelFrom(params.domesticRoute)})</span><b>${fmt(c.nbDom,1)} $/t</b></div>
       <div class="k"><span>Δ Export − Domestic</span><b>${(c.spread>=0?'+':'')+fmt(c.spread,1)} $/t</b></div>
+      <div class="k"><span>BE Skebco</span><b>${fmt(c.skStar,2)} $/bbl</b></div>
+      <div class="k"><span>BE Discount</span><b>${fmt(c.discStar,2)} $/bbl</b></div>
+      <div class="k"><span>BE Skebco + Discount</span><b>${fmt(c.skDiscStar,2)} $/bbl</b></div>
+      <div class="k"><span>Actual S + D</span><b>${fmt(c.S+c.DISC,2)} $/bbl</b></div>
     </div>
     <div class="report-section"><h2>Graph</h2><div id="singleChart"></div></div>
     <div class="report-section"><h2>Parameters</h2>
@@ -2655,6 +2671,12 @@ function refreshProfileEditorPreview() {
   document.getElementById('peNbDom').textContent = fmt(c.nbDom,1) + ' $/t';
   document.getElementById('peSpread').textContent = (c.spread>=0?'+':'') + fmt(c.spread,1) + ' $/t';
   document.getElementById('peWinner').textContent = Math.abs(c.spread)<0.5 ? 'Breakeven' : (c.spread>0 ? 'EXPORT' : 'DOMESTIC');
+  const peBeSk = document.getElementById('peBeSk');
+  const peBeDisc = document.getElementById('peBeDisc');
+  const peBeSkDisc = document.getElementById('peBeSkDisc');
+  if (peBeSk) peBeSk.textContent = fmt(c.skStar,2) + ' $/bbl';
+  if (peBeDisc) peBeDisc.textContent = fmt(c.discStar,2) + ' $/bbl';
+  if (peBeSkDisc) peBeSkDisc.textContent = fmt(c.skDiscStar,2) + ' $/bbl';
   document.getElementById('peCalcHint').textContent =
     `Route ${domesticLabelFrom(params.domesticRoute)} · Tr exp ${fmt(c.trExp,1)} · Tr dom ${fmt(c.trDom,1)} · Duty ${fmt(c.duty,0)} · Rental ${fmt(c.rental,1)} · MET ${fmt(c.metExp,1)}`;
   const peTrExpTot = document.getElementById('peTrExpTot');
