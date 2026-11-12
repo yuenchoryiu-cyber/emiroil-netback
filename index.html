@@ -168,6 +168,14 @@
   .report-table .num{text-align:right; font-variant-numeric:tabular-nums}
   .delta-up{color:#0f766e; font-weight:700}.delta-down{color:#9a3412; font-weight:700}
   #trendChart{min-height:360px; width:100%; margin-top:10px}
+
+  .param-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+  @media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}}
+  .preview-box{background:#eef6f4; border:1px solid #99f6e4; border-radius:12px; padding:12px; margin-top:10px}
+  .preview-box .kpi-grid{margin:0}
+  #singleChart,#driverChart,#diffChart{min-height:320px; width:100%; margin-top:10px}
+  .report-section{margin-top:16px}
+  .report-section h2{font-size:.95rem; margin:0 0 6px; color:var(--accent)}
   @media print{
     body{background:#fff}
     #gate,.topnav,.report-toolbar,.no-print{display:none !important}
@@ -194,6 +202,7 @@
     <button type="button" class="active" data-page="netback">Netback analysis</button>
     <button type="button" data-page="transport">Transport costs</button>
     <button type="button" data-page="profiles">Month profiles</button>
+    <button type="button" data-page="profile-edit">New / edit profile</button>
     <button type="button" data-page="reports">Reports</button>
   </nav>
 
@@ -345,14 +354,10 @@
       </div>
       <div class="section">
         <h2>2) Create / update month profile</h2>
-        <p class="lead">Uses the <b>current slider values</b> on Netback / Transport (including % adjustments).</p>
-        <div class="field"><label>Month</label><input id="pfMonth" type="month" value="2026-10"/></div>
-        <div class="field"><label>Label</label><input id="pfLabel" type="text" placeholder="e.g. Nov 2026 actuals"/></div>
-        <div class="field"><label>Author</label><input id="pfAuthor" type="text" placeholder="Your name"/></div>
-        <div class="field"><label>Notes</label><textarea id="pfNotes" placeholder="What changed vs prior month"></textarea></div>
+        <p class="lead">Open the editor to type parameters directly (Brent, FX, Skebco D6, Discount D7, local price, route, etc.), preview netbacks, then save.</p>
         <div class="btn-row">
-          <button type="button" class="ok" id="btnSaveProfile">Save profile online</button>
-          <button type="button" class="ghost" id="btnSaveLocalOnly">Save on this device only</button>
+          <button type="button" class="ok" id="btnOpenNewProfile">Create new month profile</button>
+          <button type="button" class="ghost" id="btnEditSelectedProfile">Edit selected profile</button>
         </div>
         <div class="status" id="saveStatus"></div>
       </div>
@@ -382,6 +387,64 @@
     </div>
   </div>
 
+
+  <!-- PROFILE EDIT PAGE -->
+  <div id="page-profile-edit" class="page">
+    <h1>New / edit month profile</h1>
+    <p class="lead">Type parameters directly. Live preview updates as you change values. Then save online or on this device.</p>
+    <div class="section">
+      <div class="param-grid">
+        <div class="field"><label>Month</label><input id="peMonth" type="month" value="2026-11"/></div>
+        <div class="field"><label>Label</label><input id="peLabel" type="text" placeholder="e.g. Nov 2026 actuals"/></div>
+        <div class="field"><label>Author</label><input id="peAuthor" type="text" placeholder="Your name"/></div>
+      </div>
+      <div class="field" style="margin-top:8px"><label>Notes</label><textarea id="peNotes" placeholder="What changed vs prior month"></textarea></div>
+    </div>
+    <div class="section">
+      <h2>Parameters</h2>
+      <div class="param-grid">
+        <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
+        <div class="field"><label>FX (KZT/USD)</label><input id="peFx" type="number" step="1" value="440"/></div>
+        <div class="field"><label>Skebco D6 ($/bbl)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
+        <div class="field"><label>Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="6.18"/></div>
+        <div class="field"><label>Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="130000"/></div>
+        <div class="field"><label>RUB→KZT</label><input id="peRu" type="number" step="0.01" value="6.83"/></div>
+        <div class="field"><label>Export bbl/t</label><input id="peKb" type="number" step="0.0001" value="7.2223"/></div>
+        <div class="field"><label>MET rate (e.g. 0.05)</label><input id="peMet" type="number" step="0.005" value="0.05"/></div>
+        <div class="field"><label>VAT factor</label><input id="peVat" type="number" step="0.01" value="1.16"/></div>
+        <div class="field">
+          <label>Domestic destination</label>
+          <select id="peRoute">
+            <option value="pkop">PKOP</option>
+            <option value="pavlodar">Pavlodar (PNHZ)</option>
+          </select>
+        </div>
+        <div class="field"><label>Bulk % EXPORT transport</label><input id="peBulkExp" type="number" step="0.5" value="0"/></div>
+        <div class="field"><label>Bulk % DOMESTIC transport</label><input id="peBulkDom" type="number" step="0.5" value="0"/></div>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button type="button" class="ghost" id="btnPeFillOct">Fill from Oct 2026 baseline</button>
+        <button type="button" class="ghost" id="btnPeFillActive">Fill from current Netback sliders</button>
+      </div>
+    </div>
+    <div class="preview-box">
+      <h2 style="margin:0 0 8px;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:#0f766e">Live preview</h2>
+      <div class="kpi-grid" id="pePreview">
+        <div class="k"><span>Export NB</span><b id="peNbExp">—</b></div>
+        <div class="k"><span>Domestic NB</span><b id="peNbDom">—</b></div>
+        <div class="k"><span>Δ Exp − Dom</span><b id="peSpread">—</b></div>
+        <div class="k"><span>Winner</span><b id="peWinner">—</b></div>
+      </div>
+      <div class="status" id="peCalcHint" style="margin-top:8px"></div>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button type="button" class="ok" id="btnPeSaveOnline">Save profile online</button>
+      <button type="button" class="ghost" id="btnPeSaveLocal">Save on this device only</button>
+      <button type="button" class="ghost" id="btnPeCancel">Back to profiles</button>
+    </div>
+    <div class="status" id="peSaveStatus"></div>
+  </div>
+
   <!-- REPORTS PAGE -->
   <div id="page-reports" class="page">
     <h1>Monthly reports</h1>
@@ -391,7 +454,7 @@
         <label>Report type</label>
         <select id="reportType">
           <option value="single">1-page monthly report</option>
-          <option value="trend">Trend report (3–6 months)</option>
+          <option value="trend">Compare months (2–6) with differences</option>
         </select>
       </div>
       <div class="field" id="singlePickWrap">
@@ -399,7 +462,7 @@
         <select id="reportSingle"></select>
       </div>
       <div class="field" id="multiPickWrap" style="display:none;min-width:260px">
-        <label>Select 3–6 profiles (Ctrl/Cmd-click)</label>
+        <label>Select 2–6 profiles (Ctrl/Cmd-click)</label>
         <select id="reportMulti" multiple size="6"></select>
       </div>
       <button type="button" class="ok" id="btnBuildReport">Build report</button>
@@ -743,6 +806,7 @@ function showPage(name) {
   document.getElementById('page-netback').classList.toggle('active', name==='netback');
   document.getElementById('page-transport').classList.toggle('active', name==='transport');
   const pp=document.getElementById('page-profiles'); if (pp) pp.classList.toggle('active', name==='profiles');
+  const pe=document.getElementById('page-profile-edit'); if (pe) pe.classList.toggle('active', name==='profile-edit');
   const pr=document.getElementById('page-reports'); if (pr) pr.classList.toggle('active', name==='reports');
   document.querySelectorAll('.topnav button').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.page===name);
@@ -750,6 +814,8 @@ function showPage(name) {
   location.hash = name;
   if (name==='netback') renderNetback();
   if (name==='transport') refreshTransportUI();
+  if (name==='profile-edit') refreshProfileEditorPreview();
+  if (name==='profiles') renderProfileUI();
 }
 
 // controls
@@ -835,6 +901,70 @@ function setStatus(id, msg, kind='') {
   el.className = 'status' + (kind ? ' ' + kind : '');
   el.textContent = msg || '';
 }
+
+
+function normalizeParams(p) {
+  p = p || {};
+  const route = p.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop';
+  const bulkExp = num(p.bulkExp, 0), bulkDom = num(p.bulkDom, 0);
+  let transportPct = (p.transportPct && typeof p.transportPct === 'object') ? { ...p.transportPct } : {};
+  // apply bulk % onto legs if provided (same as setBulk)
+  if (Math.abs(bulkExp) > 1e-9 || Math.abs(bulkDom) > 1e-9) {
+    for (const line of TR_LINES) {
+      if (line.channel === 'export') transportPct[line.id] = bulkExp;
+      else if (line.route === route) transportPct[line.id] = bulkDom;
+    }
+  }
+  return {
+    brent: num(p.brent, BASE.brent), fx: num(p.fx, BASE.fx), sk: num(p.sk, BASE.sk),
+    disc: num(p.disc, BASE.disc), localKzt: num(p.localKzt, BASE.localKzt),
+    ru: num(p.ru, BASE.ru), kb: num(p.kb, BASE.kb), metRate: num(p.metRate, BASE.metRate),
+    vat: num(p.vat, BASE.vat), domesticRoute: route,
+    transportPct, bulkExp, bulkDom
+  };
+}
+
+function computeFromParams(raw) {
+  const p = normalizeParams(raw);
+  const bak = {
+    brent: state.brent, fx: state.fx, sk: state.sk, disc: state.disc, localKzt: state.localKzt,
+    ru: state.ru, kb: state.kb, metRate: state.metRate, vat: state.vat,
+    domesticRoute: state.domesticRoute, transportPct: state.transportPct,
+    bulkExp: state.bulkExp, bulkDom: state.bulkDom
+  };
+  Object.assign(state, p);
+  const c = calcNetback();
+  Object.assign(state, bak);
+  state.transportPct = bak.transportPct;
+  return { params: p, calc: c };
+}
+
+function calcTableHtml(c, params) {
+  const route = domesticLabelFrom(params.domesticRoute);
+  return `<table class="report-table">
+    <thead><tr><th>Item</th><th>Formula / note</th><th class="num">Value</th></tr></thead>
+    <tbody>
+      <tr><td>Brent</td><td>L3</td><td class="num">${fmt(c.B,1)} $/bbl</td></tr>
+      <tr><td>FX</td><td>L2</td><td class="num">${fmt(c.FX,0)} KZT/USD</td></tr>
+      <tr><td>Skebco (D6)</td><td>D6</td><td class="num">${fmt(c.S,3)} $/bbl</td></tr>
+      <tr><td>Discount (D7)</td><td>D7</td><td class="num">${fmt(c.DISC,2)} $/bbl</td></tr>
+      <tr><td>Realized $/bbl</td><td>Brent − Skebco − Discount</td><td class="num">${fmt(c.priceBbl,3)}</td></tr>
+      <tr><td>Realized $/t</td><td>× bbl/t ${fmt(c.KB,4)}</td><td class="num">${fmt(c.priceTexp,2)}</td></tr>
+      <tr><td>Export transport</td><td>Tr.cost Novoros</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
+      <tr><td>Duty</td><td>GCA lookup</td><td class="num">${fmt(c.duty,0)} $/t</td></tr>
+      <tr><td>Rental</td><td>rate ${(c.rentRate*100).toFixed(0)}% × Brent × 7.5</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
+      <tr><td>Export MET</td><td>Brent × MET% × 7.5</td><td class="num">${fmt(c.metExp,2)} $/t</td></tr>
+      <tr><td><b>Export netback</b></td><td>D18</td><td class="num"><b>${fmt(c.nbExp,2)} $/t</b></td></tr>
+      <tr><td>Local price ex-VAT</td><td>KZT / FX / VAT</td><td class="num">${fmt(c.priceTdom,2)} $/t</td></tr>
+      <tr><td>Domestic transport (${route})</td><td>Tr.cost path</td><td class="num">${fmt(c.trDom,2)} $/t</td></tr>
+      <tr><td>Domestic MET</td><td>10% × export MET</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
+      <tr><td><b>Domestic netback</b></td><td>G18 / F18</td><td class="num"><b>${fmt(c.nbDom,2)} $/t</b></td></tr>
+      <tr><td><b>Δ Export − Domestic</b></td><td>export NB − domestic NB</td><td class="num"><b>${(c.spread>=0?'+':'')+fmt(c.spread,2)} $/t</b></td></tr>
+      <tr><td>Breakeven Skebco</td><td>Skebco where export = domestic</td><td class="num">${fmt(c.skStar,2)} $/bbl</td></tr>
+    </tbody>
+  </table>`;
+}
+
 
 function captureParams() {
   return {
@@ -1030,16 +1160,23 @@ function renderProfileUI() {
       <td class="num">${s.spread!=null?((s.spread>=0?'+':'')+fmt(s.spread,1)):'—'}</td>
       <td class="no-print">
         <button type="button" class="ghost" data-load="${p.id}">Load</button>
+        <button type="button" class="ghost" data-edit="${p.id}">Edit</button>
         ${p.id===CURRENT_MONTH_ID?'':`<button type="button" class="danger" data-del="${p.id}">Delete</button>`}
       </td>
     </tr>`;
   }).join('');
 }
 
-function upsertProfile({ month, label, author, notes, online }) {
+function upsertProfile({ month, label, author, notes, online, params, statusId }) {
   const id = String(month);
-  const params = captureParams();
-  const snap = snapshotNow();
+  const sid = statusId || 'saveStatus';
+  const norm = normalizeParams(params || captureParams());
+  const { calc } = computeFromParams(norm);
+  const snap = {
+    nbExp: calc.nbExp, nbDom: calc.nbDom, spread: calc.spread,
+    trExp: calc.trExp, trDom: calc.trDom, duty: calc.duty, rental: calc.rental, metExp: calc.metExp,
+    domesticRoute: norm.domesticRoute
+  };
   const existing = profileDb.profiles.find(p => p.id === id);
   const row = {
     id,
@@ -1049,23 +1186,27 @@ function upsertProfile({ month, label, author, notes, online }) {
     notes: notes || '',
     savedAt: new Date().toISOString(),
     isCurrent: id === CURRENT_MONTH_ID,
-    params,
+    params: norm,
     snapshot: snap
   };
-  if (existing) {
-    Object.assign(existing, row);
-  } else {
-    profileDb.profiles.push(row);
-  }
+  if (existing) Object.assign(existing, row);
+  else profileDb.profiles.push(row);
   ensureOctBaseline();
   sortProfiles();
   saveProfilesLocal();
   try { localStorage.setItem(ACTIVE_KEY, id); } catch {}
   renderProfileUI();
-  document.getElementById('profileSelect').value = id;
-  document.getElementById('activeProfileLbl').textContent = `${row.label} (${row.month})`;
-  if (online) return publishOnline();
-  setStatus('saveStatus', 'Saved on this device.', 'ok');
+  const sel = document.getElementById('profileSelect');
+  if (sel) sel.value = id;
+  const al = document.getElementById('activeProfileLbl');
+  if (al) al.textContent = `${row.label} (${row.month})`;
+  if (online) {
+    return publishOnline().then(ok => {
+      setStatus(sid, ok ? 'Saved online.' : (document.getElementById(sid)?.textContent || 'Saved on device; online publish needs token.'), ok ? 'ok' : 'err');
+      return ok;
+    });
+  }
+  setStatus(sid, 'Saved on this device.', 'ok');
   return Promise.resolve(true);
 }
 
@@ -1115,17 +1256,38 @@ function deltaClass(v) {
 
 function buildSingleReport(id) {
   const p = profileDb.profiles.find(x => x.id === id) || profileDb.profiles[0];
-  const params = p.params || {};
-  const s = p.snapshot || {};
-  // recompute with profile params temporarily
-  const bak = JSON.parse(JSON.stringify(state));
-  applyParams(params);
-  const c = calcNetback();
-  Object.assign(state, bak);
-  persist();
-  syncRouteToggle(); buildTransportTables(); refreshTransportUI(); renderNetback();
-
+  const { params, calc: c } = computeFromParams(p.params || {});
   const winner = Math.abs(c.spread)<0.5 ? 'Breakeven' : (c.spread>0 ? 'EXPORT wins' : 'DOMESTIC wins');
+  setTimeout(() => {
+    Plotly.newPlot('singleChart', [
+      {
+        type:'indicator', mode:'gauge+number+delta', value:c.spread,
+        domain:{x:[0,0.48], y:[0,1]},
+        number:{suffix:' $/t', valueformat:'.1f'},
+        title:{text:'Δ Export − Domestic'},
+        delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
+        gauge:{
+          axis:{range:[-150,150]},
+          bar:{color:c.spread>=0?'#0f766e':'#b45309'},
+          steps:[{range:[-150,0],color:'#ffedd5'},{range:[0,150],color:'#ccfbf1'}],
+          threshold:{line:{color:'#1e3a5f',width:3}, value:0}
+        }
+      },
+      {
+        type:'bar', orientation:'h',
+        x:[c.nbExp, c.nbDom, c.trExp, c.trDom, c.rental, c.metExp, c.duty],
+        y:['Export NB','Domestic NB','Export transport','Domestic transport','Rental','MET','Duty'],
+        marker:{color:['#0f766e','#b45309','#64748b','#a8a29e','#7c3aed','#0ea5e9','#f43f5e']},
+        text:[fmt(c.nbExp,1),fmt(c.nbDom,1),fmt(c.trExp,1),fmt(c.trDom,1),fmt(c.rental,1),fmt(c.metExp,1),fmt(c.duty,0)],
+        textposition:'auto', xaxis:'x2', yaxis:'y2'
+      }
+    ], {
+      margin:{t:40,r:20,b:40,l:140}, height:420,
+      xaxis:{domain:[0,0.48]},
+      xaxis2:{domain:[0.55,1], title:'$/t'}, yaxis2:{domain:[0,1]},
+      paper_bgcolor:'rgba(0,0,0,0)', showlegend:false
+    }, {responsive:true, displayModeBar:false});
+  }, 40);
   return `
     <h1>Netback monthly report — ${monthLabel(p.month)}</h1>
     <div class="meta">${p.label || ''} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'}<br>${p.notes || ''}</div>
@@ -1135,22 +1297,26 @@ function buildSingleReport(id) {
       <div class="k"><span>Domestic NB (${domesticLabelFrom(params.domesticRoute)})</span><b>${fmt(c.nbDom,1)} $/t</b></div>
       <div class="k"><span>Δ Export − Domestic</span><b>${(c.spread>=0?'+':'')+fmt(c.spread,1)} $/t</b></div>
     </div>
-    <h2 style="font-size:.95rem;margin:14px 0 6px">Drivers</h2>
-    <table class="report-table">
-      <thead><tr><th>Parameter</th><th class="num">Value</th></tr></thead>
-      <tbody>
-        <tr><td>Brent</td><td class="num">${fmt(params.brent,1)} $/bbl</td></tr>
-        <tr><td>FX</td><td class="num">${fmt(params.fx,0)} KZT/USD</td></tr>
-        <tr><td>Skebco</td><td class="num">${fmt(params.sk,3)} $/bbl</td></tr>
-        <tr><td>Discount</td><td class="num">${fmt(params.disc,2)} $/bbl</td></tr>
-        <tr><td>Local domestic VAT-incl</td><td class="num">${fmtInt(params.localKzt)} KZT/t</td></tr>
-        <tr><td>RUB→KZT</td><td class="num">${fmt(params.ru,2)}</td></tr>
-        <tr><td>Domestic route</td><td class="num">${domesticLabelFrom(params.domesticRoute)}</td></tr>
-        <tr><td>Export transport</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
-        <tr><td>Domestic transport</td><td class="num">${fmt(c.trDom,2)} $/t</td></tr>
-        <tr><td>Duty / Rental / MET</td><td class="num">${fmt(c.duty,0)} / ${fmt(c.rental,1)} / ${fmt(c.metExp,1)}</td></tr>
-      </tbody>
-    </table>
+    <div class="report-section"><h2>Graph</h2><div id="singleChart"></div></div>
+    <div class="report-section"><h2>Parameters</h2>
+      <table class="report-table">
+        <thead><tr><th>Parameter</th><th class="num">Value</th></tr></thead>
+        <tbody>
+          <tr><td>Brent</td><td class="num">${fmt(params.brent,1)} $/bbl</td></tr>
+          <tr><td>FX</td><td class="num">${fmt(params.fx,0)} KZT/USD</td></tr>
+          <tr><td>Skebco (D6)</td><td class="num">${fmt(params.sk,3)} $/bbl</td></tr>
+          <tr><td>Discount (D7)</td><td class="num">${fmt(params.disc,2)} $/bbl</td></tr>
+          <tr><td>Local domestic VAT-incl</td><td class="num">${fmtInt(params.localKzt)} KZT/t</td></tr>
+          <tr><td>RUB→KZT</td><td class="num">${fmt(params.ru,2)}</td></tr>
+          <tr><td>Export bbl/t</td><td class="num">${fmt(params.kb,4)}</td></tr>
+          <tr><td>MET rate</td><td class="num">${(params.metRate*100).toFixed(1)}%</td></tr>
+          <tr><td>VAT factor</td><td class="num">${fmt(params.vat,2)}</td></tr>
+          <tr><td>Domestic route</td><td class="num">${domesticLabelFrom(params.domesticRoute)}</td></tr>
+          <tr><td>Bulk % export / domestic</td><td class="num">${fmt(params.bulkExp,1)}% / ${fmt(params.bulkDom,1)}%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="report-section"><h2>Calculation</h2>${calcTableHtml(c, params)}</div>
   `;
 }
 
@@ -1161,29 +1327,35 @@ function domesticLabelFrom(route) {
 function buildTrendReport(ids) {
   const rows = ids.map(id => profileDb.profiles.find(p => p.id === id)).filter(Boolean);
   rows.sort((a,b) => String(a.month).localeCompare(String(b.month)));
-  if (rows.length < 3 || rows.length > 6) {
-    return `<p class="lead">Select between 3 and 6 month profiles.</p>`;
+  if (rows.length < 2 || rows.length > 6) {
+    return `<p class="lead">Select between 2 and 6 month profiles to compare.</p>`;
   }
   const computed = rows.map(p => {
-    const bak = JSON.parse(JSON.stringify(state));
-    applyParams(p.params || {});
-    const c = calcNetback();
-    Object.assign(state, bak);
-    return { p, c, params: p.params || {} };
+    const { params, calc: c } = computeFromParams(p.params || {});
+    return { p, c, params };
   });
-  persist(); syncRouteToggle(); buildTransportTables(); refreshTransportUI(); renderNetback();
-
   const first = computed[0], last = computed[computed.length-1];
-  const changes = [
-    ['Brent', first.params.brent, last.params.brent, '$/bbl'],
-    ['FX', first.params.fx, last.params.fx, 'KZT/USD'],
-    ['Skebco', first.params.sk, last.params.sk, '$/bbl'],
-    ['Discount', first.params.disc, last.params.disc, '$/bbl'],
-    ['Local KZT', first.params.localKzt, last.params.localKzt, 'KZT/t'],
-    ['Export NB', first.c.nbExp, last.c.nbExp, '$/t'],
-    ['Domestic NB', first.c.nbDom, last.c.nbDom, '$/t'],
-    ['Δ Exp−Dom', first.c.spread, last.c.spread, '$/t'],
-  ];
+
+  // month-to-month diffs
+  const momRows = [];
+  for (let i = 1; i < computed.length; i++) {
+    const a = computed[i-1], b = computed[i];
+    momRows.push({
+      from: a.p.month, to: b.p.month,
+      items: [
+        ['Brent', a.params.brent, b.params.brent, 1],
+        ['FX', a.params.fx, b.params.fx, 0],
+        ['Skebco (D6)', a.params.sk, b.params.sk, 3],
+        ['Discount (D7)', a.params.disc, b.params.disc, 2],
+        ['Local KZT', a.params.localKzt, b.params.localKzt, 0],
+        ['Export transport', a.c.trExp, b.c.trExp, 2],
+        ['Domestic transport', a.c.trDom, b.c.trDom, 2],
+        ['Export NB', a.c.nbExp, b.c.nbExp, 2],
+        ['Domestic NB', a.c.nbDom, b.c.nbDom, 2],
+        ['Δ Exp−Dom', a.c.spread, b.c.spread, 2],
+      ]
+    });
+  }
 
   setTimeout(() => {
     const x = computed.map(r => r.p.month);
@@ -1192,14 +1364,64 @@ function buildTrendReport(ids) {
       { x, y: computed.map(r => r.c.nbDom), name: 'Domestic NB', mode:'lines+markers', line:{color:'#b45309'} },
       { x, y: computed.map(r => r.c.spread), name: 'Δ Exp−Dom', mode:'lines+markers', line:{color:'#1e3a5f'}, yaxis:'y2' },
     ], {
-      margin:{t:30,r:50,b:40,l:50},
-      yaxis:{title:'$/t'}, yaxis2:{title:'Δ $/t', overlaying:'y', side:'right'},
+      margin:{t:30,r:50,b:40,l:50}, height:360,
+      yaxis:{title:'Netback $/t'}, yaxis2:{title:'Δ $/t', overlaying:'y', side:'right'},
       legend:{orientation:'h'}, paper_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
-  }, 30);
+
+    Plotly.newPlot('driverChart', [
+      { x, y: computed.map(r => r.params.brent), name: 'Brent', mode:'lines+markers' },
+      { x, y: computed.map(r => r.params.sk), name: 'Skebco D6', mode:'lines+markers' },
+      { x, y: computed.map(r => r.params.disc), name: 'Discount D7', mode:'lines+markers' },
+      { x, y: computed.map(r => r.params.fx/10), name: 'FX÷10', mode:'lines+markers', line:{dash:'dot'} },
+    ], {
+      margin:{t:30,r:20,b:40,l:50}, height:320,
+      yaxis:{title:'Drivers'}, legend:{orientation:'h'}, paper_bgcolor:'rgba(0,0,0,0)'
+    }, {responsive:true, displayModeBar:false});
+
+    // grouped bar of month-to-month Δ Exp−Dom
+    if (momRows.length) {
+      Plotly.newPlot('diffChart', [{
+        type:'bar',
+        x: momRows.map(r => monthLabel(r.from) + '→' + monthLabel(r.to)),
+        y: momRows.map(r => {
+          const item = r.items.find(it => it[0]==='Δ Exp−Dom');
+          return item ? (item[2]-item[1]) : 0;
+        }),
+        marker:{color: momRows.map(r => {
+          const item = r.items.find(it => it[0]==='Δ Exp−Dom');
+          const d = item ? (item[2]-item[1]) : 0;
+          return d>=0 ? '#0f766e' : '#b45309';
+        })},
+        text: momRows.map(r => {
+          const item = r.items.find(it => it[0]==='Δ Exp−Dom');
+          const d = item ? (item[2]-item[1]) : 0;
+          return (d>=0?'+':'')+fmt(d,1);
+        }),
+        textposition:'auto'
+      }], {
+        margin:{t:30,r:20,b:60,l:50}, height:280,
+        yaxis:{title:'Change in Δ Exp−Dom ($/t)'},
+        paper_bgcolor:'rgba(0,0,0,0)'
+      }, {responsive:true, displayModeBar:false});
+    }
+  }, 40);
+
+  const firstLast = [
+    ['Brent', first.params.brent, last.params.brent, '$/bbl'],
+    ['FX', first.params.fx, last.params.fx, 'KZT/USD'],
+    ['Skebco (D6)', first.params.sk, last.params.sk, '$/bbl'],
+    ['Discount (D7)', first.params.disc, last.params.disc, '$/bbl'],
+    ['Local KZT', first.params.localKzt, last.params.localKzt, 'KZT/t'],
+    ['Export transport', first.c.trExp, last.c.trExp, '$/t'],
+    ['Domestic transport', first.c.trDom, last.c.trDom, '$/t'],
+    ['Export NB', first.c.nbExp, last.c.nbExp, '$/t'],
+    ['Domestic NB', first.c.nbDom, last.c.nbDom, '$/t'],
+    ['Δ Exp−Dom', first.c.spread, last.c.spread, '$/t'],
+  ];
 
   return `
-    <h1>Netback trend report</h1>
+    <h1>Netback comparison report</h1>
     <div class="meta">${rows.map(r => monthLabel(r.month)).join(' → ')} · ${rows.length} months</div>
     <div class="kpi-grid">
       <div class="k"><span>From</span><b>${monthLabel(first.p.month)}</b></div>
@@ -1207,65 +1429,167 @@ function buildTrendReport(ids) {
       <div class="k"><span>Δ Export NB</span><b class="${deltaClass(last.c.nbExp-first.c.nbExp)}">${(last.c.nbExp-first.c.nbExp>=0?'+':'')+fmt(last.c.nbExp-first.c.nbExp,1)}</b></div>
       <div class="k"><span>Δ Domestic NB</span><b class="${deltaClass(last.c.nbDom-first.c.nbDom)}">${(last.c.nbDom-first.c.nbDom>=0?'+':'')+fmt(last.c.nbDom-first.c.nbDom,1)}</b></div>
     </div>
-    <div id="trendChart"></div>
-    <h2 style="font-size:.95rem;margin:14px 0 6px">Parameter &amp; result changes (first → last)</h2>
-    <table class="report-table">
-      <thead><tr><th>Item</th><th class="num">First</th><th class="num">Last</th><th class="num">Change</th></tr></thead>
-      <tbody>
-        ${changes.map(([n,a,b,u]) => {
-          const d = num(b)-num(a);
-          return `<tr><td>${n}</td><td class="num">${fmt(a, n.includes('KZT')&&!n.includes('NB')?0:2)} ${u}</td><td class="num">${fmt(b, n.includes('KZT')&&!n.includes('NB')?0:2)} ${u}</td><td class="num ${deltaClass(d)}">${(d>=0?'+':'')+fmt(d,2)}</td></tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <h2 style="font-size:.95rem;margin:14px 0 6px">Month detail</h2>
-    <table class="report-table">
-      <thead><tr><th>Month</th><th>Route</th><th class="num">Brent</th><th class="num">FX</th><th class="num">Skebco</th><th class="num">Disc</th><th class="num">Local</th><th class="num">Exp NB</th><th class="num">Dom NB</th><th class="num">Δ</th></tr></thead>
-      <tbody>
-        ${computed.map(({p,c,params}) => `<tr>
-          <td>${monthLabel(p.month)}</td>
-          <td>${domesticLabelFrom(params.domesticRoute)}</td>
-          <td class="num">${fmt(params.brent,1)}</td>
-          <td class="num">${fmt(params.fx,0)}</td>
-          <td class="num">${fmt(params.sk,2)}</td>
-          <td class="num">${fmt(params.disc,2)}</td>
-          <td class="num">${fmtInt(params.localKzt)}</td>
-          <td class="num">${fmt(c.nbExp,1)}</td>
-          <td class="num">${fmt(c.nbDom,1)}</td>
-          <td class="num">${(c.spread>=0?'+':'')+fmt(c.spread,1)}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
+    <div class="report-section"><h2>Netback trend</h2><div id="trendChart"></div></div>
+    <div class="report-section"><h2>Driver parameters</h2><div id="driverChart"></div></div>
+    <div class="report-section"><h2>Month-to-month change in Δ Exp−Dom</h2><div id="diffChart"></div></div>
+    <div class="report-section"><h2>Overall change (first → last)</h2>
+      <table class="report-table">
+        <thead><tr><th>Item</th><th class="num">First</th><th class="num">Last</th><th class="num">Difference</th></tr></thead>
+        <tbody>
+          ${firstLast.map(([n,a,b,u]) => {
+            const d = num(b)-num(a);
+            return `<tr><td>${n}</td><td class="num">${fmt(a,2)} ${u}</td><td class="num">${fmt(b,2)} ${u}</td><td class="num ${deltaClass(d)}">${(d>=0?'+':'')+fmt(d,2)}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${momRows.map(block => `
+      <div class="report-section">
+        <h2>Differences: ${monthLabel(block.from)} → ${monthLabel(block.to)}</h2>
+        <table class="report-table">
+          <thead><tr><th>Item</th><th class="num">${monthLabel(block.from)}</th><th class="num">${monthLabel(block.to)}</th><th class="num">Difference</th></tr></thead>
+          <tbody>
+            ${block.items.map(([n,a,b,dp]) => {
+              const d = num(b)-num(a);
+              return `<tr><td>${n}</td><td class="num">${fmt(a,dp)}</td><td class="num">${fmt(b,dp)}</td><td class="num ${deltaClass(d)}">${(d>=0?'+':'')+fmt(d,dp)}</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`).join('')}
+    <div class="report-section"><h2>All months — parameters &amp; results</h2>
+      <table class="report-table">
+        <thead><tr><th>Month</th><th>Route</th><th class="num">Brent</th><th class="num">FX</th><th class="num">Skebco</th><th class="num">Disc</th><th class="num">Local</th><th class="num">Tr Exp</th><th class="num">Tr Dom</th><th class="num">Exp NB</th><th class="num">Dom NB</th><th class="num">Δ</th></tr></thead>
+        <tbody>
+          ${computed.map(({p,c,params}) => `<tr>
+            <td>${monthLabel(p.month)}</td>
+            <td>${domesticLabelFrom(params.domesticRoute)}</td>
+            <td class="num">${fmt(params.brent,1)}</td>
+            <td class="num">${fmt(params.fx,0)}</td>
+            <td class="num">${fmt(params.sk,2)}</td>
+            <td class="num">${fmt(params.disc,2)}</td>
+            <td class="num">${fmtInt(params.localKzt)}</td>
+            <td class="num">${fmt(c.trExp,1)}</td>
+            <td class="num">${fmt(c.trDom,1)}</td>
+            <td class="num">${fmt(c.nbExp,1)}</td>
+            <td class="num">${fmt(c.nbDom,1)}</td>
+            <td class="num">${(c.spread>=0?'+':'')+fmt(c.spread,1)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="report-section"><h2>Calculation detail (latest month: ${monthLabel(last.p.month)})</h2>
+      ${calcTableHtml(last.c, last.params)}
+    </div>
   `;
+}
+
+
+function readEditorParams() {
+  return normalizeParams({
+    brent: document.getElementById('peBrent').value,
+    fx: document.getElementById('peFx').value,
+    sk: document.getElementById('peSk').value,
+    disc: document.getElementById('peDisc').value,
+    localKzt: document.getElementById('peLocal').value,
+    ru: document.getElementById('peRu').value,
+    kb: document.getElementById('peKb').value,
+    metRate: document.getElementById('peMet').value,
+    vat: document.getElementById('peVat').value,
+    domesticRoute: document.getElementById('peRoute').value,
+    bulkExp: document.getElementById('peBulkExp').value,
+    bulkDom: document.getElementById('peBulkDom').value,
+    transportPct: {}
+  });
+}
+
+function fillEditor(params, meta) {
+  params = normalizeParams(params || BASE);
+  meta = meta || {};
+  if (meta.month) document.getElementById('peMonth').value = meta.month;
+  if (meta.label != null) document.getElementById('peLabel').value = meta.label;
+  if (meta.author != null) document.getElementById('peAuthor').value = meta.author;
+  if (meta.notes != null) document.getElementById('peNotes').value = meta.notes;
+  document.getElementById('peBrent').value = params.brent;
+  document.getElementById('peFx').value = params.fx;
+  document.getElementById('peSk').value = params.sk;
+  document.getElementById('peDisc').value = params.disc;
+  document.getElementById('peLocal').value = params.localKzt;
+  document.getElementById('peRu').value = params.ru;
+  document.getElementById('peKb').value = params.kb;
+  document.getElementById('peMet').value = params.metRate;
+  document.getElementById('peVat').value = params.vat;
+  document.getElementById('peRoute').value = params.domesticRoute;
+  document.getElementById('peBulkExp').value = params.bulkExp;
+  document.getElementById('peBulkDom').value = params.bulkDom;
+  refreshProfileEditorPreview();
+}
+
+function refreshProfileEditorPreview() {
+  if (!document.getElementById('peBrent')) return;
+  const { params, calc: c } = computeFromParams(readEditorParams());
+  document.getElementById('peNbExp').textContent = fmt(c.nbExp,1) + ' $/t';
+  document.getElementById('peNbDom').textContent = fmt(c.nbDom,1) + ' $/t';
+  document.getElementById('peSpread').textContent = (c.spread>=0?'+':'') + fmt(c.spread,1) + ' $/t';
+  document.getElementById('peWinner').textContent = Math.abs(c.spread)<0.5 ? 'Breakeven' : (c.spread>0 ? 'EXPORT' : 'DOMESTIC');
+  document.getElementById('peCalcHint').textContent =
+    `Route ${domesticLabelFrom(params.domesticRoute)} · Tr exp ${fmt(c.trExp,1)} · Tr dom ${fmt(c.trDom,1)} · Duty ${fmt(c.duty,0)} · Rental ${fmt(c.rental,1)} · MET ${fmt(c.metExp,1)}`;
+}
+
+function openNewProfileEditor() {
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  fillEditor(OCT2026_PROFILE.params, {
+    month: ym === '2026-10' ? '2026-11' : ym,
+    label: '',
+    author: '',
+    notes: ''
+  });
+  showPage('profile-edit');
+}
+
+function openEditSelectedProfile() {
+  const id = document.getElementById('profileSelect').value;
+  const p = profileDb.profiles.find(x => x.id === id);
+  if (!p) { setStatus('saveStatus', 'Select a profile first.', 'err'); return; }
+  fillEditor(p.params, { month: p.month, label: p.label || '', author: p.author || '', notes: p.notes || '' });
+  showPage('profile-edit');
+}
+
+async function saveFromEditor(online) {
+  const month = document.getElementById('peMonth').value;
+  if (!month) { setStatus('peSaveStatus', 'Month is required.', 'err'); return; }
+  setStatus('peSaveStatus', 'Saving…');
+  await upsertProfile({
+    month,
+    label: document.getElementById('peLabel').value || (monthLabel(month) + ' profile'),
+    author: document.getElementById('peAuthor').value,
+    notes: document.getElementById('peNotes').value,
+    params: readEditorParams(),
+    online,
+    statusId: 'peSaveStatus'
+  });
+  // also apply to live netback view
+  applyParams(readEditorParams());
 }
 
 function wireProfilesReports() {
   document.getElementById('btnLoadProfile').onclick = () => loadProfileById(document.getElementById('profileSelect').value);
   document.getElementById('btnResetMonth').onclick = resetToCurrentMonth;
   document.getElementById('btnRefreshCloud').onclick = () => refreshFromCloud();
-  document.getElementById('btnSaveLocalOnly').onclick = () => {
-    upsertProfile({
-      month: document.getElementById('pfMonth').value || CURRENT_MONTH_ID,
-      label: document.getElementById('pfLabel').value,
-      author: document.getElementById('pfAuthor').value,
-      notes: document.getElementById('pfNotes').value,
-      online: false
-    });
-  };
-  document.getElementById('btnSaveProfile').onclick = async () => {
-    setStatus('saveStatus', 'Saving…');
-    await upsertProfile({
-      month: document.getElementById('pfMonth').value || CURRENT_MONTH_ID,
-      label: document.getElementById('pfLabel').value,
-      author: document.getElementById('pfAuthor').value,
-      notes: document.getElementById('pfNotes').value,
-      online: true
-    });
-  };
+  document.getElementById('btnOpenNewProfile').onclick = openNewProfileEditor;
+  document.getElementById('btnEditSelectedProfile').onclick = openEditSelectedProfile;
   document.getElementById('profileTable').addEventListener('click', (e) => {
     const load = e.target.closest('[data-load]');
+    const ed = e.target.closest('[data-edit]');
     const del = e.target.closest('[data-del]');
     if (load) loadProfileById(load.dataset.load);
+    if (ed) {
+      const p = profileDb.profiles.find(x => x.id === ed.dataset.edit);
+      if (p) {
+        fillEditor(p.params, { month: p.month, label: p.label || '', author: p.author || '', notes: p.notes || '' });
+        showPage('profile-edit');
+      }
+    }
     if (del && confirm('Delete profile ' + del.dataset.del + '?')) deleteProfile(del.dataset.del);
   });
   document.getElementById('btnExportProfiles').onclick = () => {
@@ -1319,6 +1643,27 @@ function wireProfilesReports() {
     }
   };
   document.getElementById('btnPrintReport').onclick = () => window.print();
+
+  ['peBrent','peFx','peSk','peDisc','peLocal','peRu','peKb','peMet','peVat','peRoute','peBulkExp','peBulkDom'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', refreshProfileEditorPreview);
+    if (el) el.addEventListener('change', refreshProfileEditorPreview);
+  });
+  document.getElementById('btnPeFillOct').onclick = () => fillEditor(OCT2026_PROFILE.params, {
+    month: document.getElementById('peMonth').value,
+    label: document.getElementById('peLabel').value,
+    author: document.getElementById('peAuthor').value,
+    notes: document.getElementById('peNotes').value
+  });
+  document.getElementById('btnPeFillActive').onclick = () => fillEditor(captureParams(), {
+    month: document.getElementById('peMonth').value,
+    label: document.getElementById('peLabel').value,
+    author: document.getElementById('peAuthor').value,
+    notes: document.getElementById('peNotes').value
+  });
+  document.getElementById('btnPeSaveOnline').onclick = () => saveFromEditor(true);
+  document.getElementById('btnPeSaveLocal').onclick = () => saveFromEditor(false);
+  document.getElementById('btnPeCancel').onclick = () => showPage('profiles');
 }
 
 async function initProfilesReports() {
@@ -1349,7 +1694,7 @@ function startApp() {
   renderNetback();
   initProfilesReports();
   const hash=(location.hash||'#netback').replace('#','');
-  showPage(['netback','transport','profiles','reports'].includes(hash)?hash:'netback');
+  showPage(['netback','transport','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
 }
 
 async function tryUnlock(pw) {
