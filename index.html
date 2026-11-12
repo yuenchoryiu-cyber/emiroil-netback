@@ -238,11 +238,11 @@
           <input id="fx" type="range" min="360" max="560" step="1" value="440"/>
         </div>
         <div>
-          <label>Skebco <span class="val" id="skLbl">20.1</span> $/bbl</label>
+          <label>Skebco (D6) <span class="val" id="skLbl">20.1</span> $/bbl</label>
           <input id="sk" type="range" min="0" max="30" step="0.1" value="20.1"/>
         </div>
         <div>
-          <label>Discount / skidka <span class="val" id="discLbl">6.18</span> $/bbl</label>
+          <label>Discount / skidka (D7) <span class="val" id="discLbl">6.18</span> $/bbl</label>
           <input id="disc" type="range" min="-20" max="20" step="0.01" value="6.18"/>
         </div>
         <div>
@@ -438,9 +438,7 @@ const TR_LINES = [
   { id:'e55', channel:'export', route:'export', group:'Export · Novorossiysk', name:'шесхарис шесхарис', kind:'rub', tariff:55.9256, row:'55' },
   { id:'e56', channel:'export', route:'export', group:'Export · Novorossiysk', name:'транспортно-экспедиционное', kind:'rub', tariff:3.64, row:'56' },
   { id:'e57', channel:'export', route:'export', group:'Export · Novorossiysk', name:'перевалка новороссийск', kind:'rub', tariff:292.72, row:'57' },
-  { id:'d4', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'псп 91 км - жетыбай', kind:'kzt', tariff:138.971, row:'4' },
   { id:'d5', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'5' },
-  { id:'d6', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'жетыбай - узень', kind:'kzt', tariff:305.4136, row:'6' },
   { id:'d7', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'7' },
   { id:'d8', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'8' },
   { id:'d9', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'9' },
@@ -449,9 +447,7 @@ const TR_LINES = [
   { id:'d12', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'операторская деятельность', kind:'kzt', tariff:7.23, row:'12' },
   { id:'d13', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'13' },
   { id:'d14', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'ккт', kind:'kzt', tariff:2931.21, row:'14' },
-  { id:'p16', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'псп 91 км - жетыбай', kind:'kzt', tariff:138.971, row:'16' },
   { id:'p17', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'17' },
-  { id:'p18', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'жетыбай - узень', kind:'kzt', tariff:305.4136, row:'18' },
   { id:'p19', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'19' },
   { id:'p20', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'20' },
   { id:'p21', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'21' },
@@ -575,7 +571,7 @@ function renderNetback() {
     Math.abs(c.B-105)<1e-9 && Math.abs(c.FX-440)<1e-9 && Math.abs(c.S-20.104)<1e-9 && Math.abs(c.DISC-6.18)<1e-9 &&
     Math.abs(c.LOC-130000)<1e-9 && Math.abs(c.RU-6.83)<1e-9 && Math.abs(c.KB-7.2223)<1e-9 &&
     Math.abs(c.MET-0.05)<1e-9 && Math.abs(c.VAT-1.16)<1e-9;
-  const excelPass = atBase && Math.abs(c.nbExp-181.81365650445457)<1e-6 && Math.abs(c.nbDom-216.73272640282133)<1e-6;
+  const excelPass = atBase && Math.abs(c.nbExp-181.81365650445457)<1e-6 && Math.abs(c.nbDom-217.74269140282132)<1e-6;
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
@@ -592,8 +588,8 @@ function renderNetback() {
     row('INPUTS','','','secIn'),
     row('Brent','L3', fmt(c.B,1)+' $/bbl'),
     row('FX','L2', fmt(c.FX,0)+' KZT/USD'),
-    row('Skebco','D6', fmt(c.S,3)+' $/bbl'),
-    row('Discount','D7', fmt(c.DISC,2)+' $/bbl'),
+    row('Skebco (D6)','D6', fmt(c.S,3)+' $/bbl'),
+    row('Discount (D7)','D7', fmt(c.DISC,2)+' $/bbl'),
     row('Local domestic','G5/F5 list', fmtInt(c.LOC)+' KZT/t'),
     row('Domestic destination','PKOP or Pavlodar/PNHZ', domesticLabel()),
     row('RUB→KZT','Tr.cost J3', fmt(c.RU,2)),
@@ -824,7 +820,7 @@ const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
 const CURRENT_MONTH_ID = '2026-10';
 
-const OCT2026_PROFILE = {"id": "2026-10", "label": "Oct 2026 (current)", "month": "2026-10", "author": "baseline", "notes": "Sale-comparison.xlsx 2026 base case — Brent 105, FX 440, Skebco 20.104, discount 6.18, local 130000 KZT/t", "savedAt": "2026-10-31T12:00:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 440, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 6.83, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 181.81365650445457, "nbDom": 216.73272640282133, "spread": -34.91906989836676, "trExp": 66.94691029554545, "trDom": 34.03196795454545, "duty": 115, "rental": 165.375, "metExp": 39.375}};
+const OCT2026_PROFILE = {"id": "2026-10", "label": "Oct 2026 (current)", "month": "2026-10", "author": "baseline", "notes": "Sale-comparison.xlsx 2026 base — D6 Skebco 20.104, D7 discount 6.18; domestic transport excludes rows 4 & 6", "savedAt": "2026-10-31T12:00:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 440, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 6.83, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 181.81365650445457, "nbDom": 217.74269140282132, "spread": -35.92903489836675, "trExp": 66.94691029554545, "trDom": 33.02200295454546, "duty": 115, "rental": 165.375, "metExp": 39.375}};
 
 let profileDb = {
   version: 1,
