@@ -279,28 +279,28 @@
       </div>
       <div class="row">
         <div>
-          <label>Brent <span class="val" id="brentLbl">108</span> $/bbl</label>
-          <input id="brent" type="range" min="20" max="200" step="0.5" value="108"/>
+          <label>Brent <span class="val" id="brentLbl">105</span> $/bbl</label>
+          <input id="brent" type="range" min="20" max="200" step="0.5" value="105"/>
         </div>
         <div>
           <label>FX <span class="val" id="fxLbl">440</span> KZT/USD</label>
           <input id="fx" type="range" min="360" max="560" step="1" value="440"/>
         </div>
         <div>
-          <label>Skebco (D6) <span class="val" id="skLbl">7.7</span> $/bbl</label>
-          <input id="sk" type="range" min="0" max="30" step="0.1" value="7.7"/>
+          <label>Skebco (D6) <span class="val" id="skLbl">20.1</span> $/bbl</label>
+          <input id="sk" type="range" min="0" max="30" step="0.1" value="20.104"/>
         </div>
         <div>
-          <label>Discount / skidka (D7) <span class="val" id="discLbl">8.15</span> $/bbl</label>
-          <input id="disc" type="range" min="-20" max="20" step="0.01" value="8.151"/>
+          <label>Discount / skidka (D7) <span class="val" id="discLbl">6.18</span> $/bbl</label>
+          <input id="disc" type="range" min="-20" max="20" step="0.01" value="6.18"/>
         </div>
         <div>
           <label>RUB→KZT <span class="val" id="ruLbl">6.83</span></label>
           <input id="ru" type="range" min="4" max="10" step="0.01" value="6.83"/>
         </div>
         <div>
-          <label>Local domestic VAT-incl <span class="val" id="locLbl">127,000</span> KZT/t</label>
-          <input id="localKzt" type="range" min="80000" max="180000" step="500" value="127000"/>
+          <label>Local domestic VAT-incl <span class="val" id="locLbl">130,000</span> KZT/t</label>
+          <input id="localKzt" type="range" min="80000" max="180000" step="500" value="130000"/>
         </div>
         <div class="reset-pick">
           <div>
@@ -315,8 +315,8 @@
         <div class="adv-title">Structural — usually unchanged short term</div>
         <div class="row2">
           <div>
-            <label>Export bbl/t <span class="val" id="kbLbl">7.2417</span></label>
-            <input id="kb" type="range" min="6.5" max="8" step="0.0001" value="7.2417"/>
+            <label>Export bbl/t <span class="val" id="kbLbl">7.2223</span></label>
+            <input id="kb" type="range" min="6.5" max="8" step="0.0001" value="7.2223"/>
           </div>
           <div>
             <label>MET rate <span class="val" id="metLbl">5.0%</span></label>
@@ -389,7 +389,7 @@
     <h1>Taxes / fiscal</h1>
     <p class="lead">Structural fiscal layer — usually unchanged month to month. Edits apply immediately to netback. Separate from monthly price profiles.</p>
     <div class="btn-row no-print" style="margin-bottom:10px">
-      <button type="button" class="ok" id="btnTaxResetAll">Reset all taxes to Oct 2026 baseline</button>
+      <button type="button" class="ok" id="btnTaxResetAll">Reset all taxes to baseline</button>
       <button type="button" class="ghost" id="btnTaxResetLadders">Reset ladders only</button>
     </div>
     <div class="status" id="taxStatus"></div>
@@ -428,7 +428,7 @@
         </div>
         <div class="field">
           <label>Export bbl/t</label>
-          <input id="taxKb" type="number" step="0.0001" min="5" max="10" value="7.2417"/>
+          <input id="taxKb" type="number" step="0.0001" min="5" max="10" value="7.2223"/>
         </div>
         <div class="field">
           <label>Rental bbl factor</label>
@@ -472,11 +472,11 @@
   <!-- PROFILES PAGE -->
   <div id="page-profiles" class="page">
     <h1>Month profiles</h1>
-    <p class="lead">Current baseline month is <b>Oct 2026</b>. Save scenarios online so colleagues can load or create other months later. Tax tables are shared under <b>Taxes / fiscal</b>.</p>
+    <p class="lead">Current baseline month is the <b>latest</b> profile (<b>Nov 2026</b>). Save scenarios online so colleagues can load or create other months later. Tax tables are shared under <b>Taxes / fiscal</b>.</p>
     <div class="two-col">
       <div class="section">
         <h2>1) Current month &amp; load</h2>
-        <p class="lead" style="margin-bottom:8px">Active profile: <b id="activeProfileLbl">Oct 2026 (current)</b></p>
+        <p class="lead" style="margin-bottom:8px">Active profile: <b id="activeProfileLbl">Nov 2026 (current)</b></p>
         <div class="field">
           <label>Choose profile to show</label>
           <select id="profileSelect"></select>
@@ -539,13 +539,13 @@
     <div class="section">
       <h2>Parameters</h2>
       <div class="param-grid">
-        <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="108"/></div>
+        <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
         <div class="field"><label>FX (KZT/USD)</label><input id="peFx" type="number" step="1" value="440"/></div>
-        <div class="field"><label>Skebco D6 ($/bbl)</label><input id="peSk" type="number" step="0.001" value="7.7"/></div>
-        <div class="field"><label>Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="8.151"/></div>
-        <div class="field"><label>Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="127000"/></div>
+        <div class="field"><label>Skebco D6 ($/bbl)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
+        <div class="field"><label>Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="6.18"/></div>
+        <div class="field"><label>Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="130000"/></div>
         <div class="field"><label>RUB→KZT</label><input id="peRu" type="number" step="0.01" value="6.83"/></div>
-        <div class="field"><label>Export bbl/t</label><input id="peKb" type="number" step="0.0001" value="7.2417"/></div>
+        <div class="field"><label>Export bbl/t</label><input id="peKb" type="number" step="0.0001" value="7.2223"/></div>
         <div class="field"><label>MET rate (e.g. 0.05)</label><input id="peMet" type="number" step="0.005" value="0.05"/></div>
         <div class="field"><label>VAT factor</label><input id="peVat" type="number" step="0.01" value="1.16"/></div>
         <div class="field">
@@ -559,7 +559,7 @@
         <div class="field"><label>Bulk % DOMESTIC transport</label><input id="peBulkDom" type="number" step="0.5" value="0"/></div>
       </div>
       <div class="btn-row" style="margin-top:8px">
-        <button type="button" class="ghost" id="btnPeFillOct">Fill from Oct 2026 baseline</button>
+        <button type="button" class="ghost" id="btnPeFillOct">Fill from current month baseline</button>
         <button type="button" class="ghost" id="btnPeFillActive">Fill from current Netback sliders</button>
         <button type="button" class="ghost" id="btnPeApplyBulk">Apply bulk % to all legs</button>
       </div>
@@ -642,7 +642,7 @@
 <script>
 const STORE = 'eo_netback_v2';
 const TAX_STORE = 'eo_tax_v1';
-const BASE = { brent:108, fx:440, sk:7.7, disc:8.151, localKzt:127000, ru:6.83, kb:7.2417, metRate:0.05, vat:1.16 };
+const BASE = { brent:105, fx:440, sk:20.104, disc:6.18, localKzt:130000, ru:6.83, kb:7.2223, metRate:0.05, vat:1.16 };
 const RENT_BASELINE = [[0,0],[41,0.07],[51,0.11],[61,0.14],[71,0.16],[81,0.17],[91,0.19],[101,0.21],[111,0.22],[121,0.23],[131,0.25],[141,0.26],[151,0.27],[161,0.29],[171,0.3],[181,0.32]];
 const DUTY_BASELINE = [[0,0],[25,10],[30,20],[35,35],[40,40],[45,45],[50,50],[55,55],[60,60],[65,65],[70,70],[75,75],[80,80],[85,85],[90,90],[95,95],[100,100],[105,115],[115,130],[125,145],[135,160],[145,176],[155,191],[165,206],[175,221],[185,236]];
 const TAX_BASELINE = {
@@ -861,10 +861,10 @@ function renderNetback() {
   const taxAtBase =
     Math.abs(c.kbRent-7.5)<1e-9 && Math.abs(c.kbMet-7.5)<1e-9 && Math.abs(c.domMetShare-0.1)<1e-9;
   const atBase = !c.trAdj && taxAtBase &&
-    Math.abs(c.B-108)<1e-9 && Math.abs(c.FX-440)<1e-9 && Math.abs(c.S-7.7)<1e-9 && Math.abs(c.DISC-8.151)<1e-9 &&
-    Math.abs(c.LOC-127000)<1e-9 && Math.abs(c.RU-6.83)<1e-9 && Math.abs(c.KB-7.2417)<1e-9 &&
+    Math.abs(c.B-105)<1e-9 && Math.abs(c.FX-440)<1e-9 && Math.abs(c.S-20.104)<1e-9 && Math.abs(c.DISC-6.18)<1e-9 &&
+    Math.abs(c.LOC-130000)<1e-9 && Math.abs(c.RU-6.83)<1e-9 && Math.abs(c.KB-7.2223)<1e-9 &&
     Math.abs(c.MET-0.05)<1e-9 && Math.abs(c.VAT-1.16)<1e-9;
-  const baselinePass = atBase && Math.abs(c.nbExp-274.7685030044545)<1e-6 && Math.abs(c.nbDom-211.75244845611286)<1e-6;
+  const baselinePass = atBase && Math.abs(c.nbExp-181.81365650445457)<1e-6 && Math.abs(c.nbDom-217.74269140282132)<1e-6;
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
@@ -877,7 +877,7 @@ function renderNetback() {
   document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmt(c.spread,1)+' $/t';
 
   document.getElementById('calcBody').innerHTML = [
-    row('BASELINE CHECK', atBase?'Oct 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
+    row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
     row('INPUTS','','','secIn'),
     row('Brent','L3', fmt(c.B,1)+' $/bbl'),
     row('FX','L2', fmt(c.FX,0)+' KZT/USD'),
@@ -1187,7 +1187,7 @@ function wireTaxPage() {
   });
   document.getElementById('btnTaxResetAll').onclick = () => {
     resetTaxAll();
-    setStatus('taxStatus', 'All tax factors and ladders reset to Oct 2026 baseline.', 'ok');
+    setStatus('taxStatus', 'All tax factors and ladders reset to baseline.', 'ok');
     renderTaxPage();
     renderNetback();
     refreshTransportUI();
@@ -1304,9 +1304,9 @@ const GIST_FILE = 'db.json';
 const PROFILES_LOCAL = 'eo_profiles_db_v1';
 const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
-const CURRENT_MONTH_ID = '2026-10';
+const CURRENT_MONTH_ID = '2026-11';
 
-const OCT2026_PROFILE = {"id": "2026-10", "label": "Oct 2026 (current)", "month": "2026-10", "author": "excel import", "notes": "From netback analysis.xlsx sheet 10-2026 — Brent 108, Skebco(D6) 7.7, Discount(D7) 8.151, FX 440, local VAT-incl 127000 KZT/t; domestic transport excl. rows 4 and 6", "savedAt": "2026-11-12T08:43:03.000Z", "isCurrent": true, "params": {"brent": 108, "fx": 440, "sk": 7.7, "disc": 8.151, "localKzt": 127000, "ru": 6.83, "kb": 7.2417, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 274.7685030044545, "nbDom": 211.75244845611286, "spread": 63.01605454834163, "trExp": 66.94691029554545, "trDom": 33.02200295454546, "duty": 115, "rental": 170.1, "metExp": 40.5, "domesticRoute": "pkop"}};
+const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026 (current)", "month": "2026-11", "author": "excel import", "notes": "Latest month baseline (prior workbook as Nov) — Brent 105, Skebco(D6) 20.104, Discount(D7) 6.18, FX 440, local VAT-incl 130000 KZT/t; domestic transport excl. rows 4 and 6", "savedAt": "2026-11-12T09:48:45.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 440, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 6.83, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 181.81365650445457, "nbDom": 217.74269140282132, "spread": -35.92903489836675, "trExp": 66.94691029554545, "trDom": 33.02200295454546, "duty": 115, "rental": 165.375, "metExp": 39.375, "domesticRoute": "pkop"}};
 
 let profileDb = {
   version: 1,
@@ -2203,7 +2203,7 @@ function openNewProfileEditor() {
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   fillEditor(OCT2026_PROFILE.params, {
-    month: ym === '2026-10' ? '2026-11' : ym,
+    month: ym,
     label: '',
     author: '',
     notes: ''

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-12T09:46:44.000Z",
-  "currentMonthId": "2026-10",
+  "updatedAt": "2026-11-12T09:48:45.000Z",
+  "currentMonthId": "2026-11",
   "profiles": [
     {
       "id": "2026-01",
@@ -320,12 +320,12 @@
     },
     {
       "id": "2026-10",
-      "label": "Oct 2026 (current)",
+      "label": "Oct 2026",
       "month": "2026-10",
       "author": "excel import",
       "notes": "From netback analysis.xlsx sheet 10-2026 — Brent 108.0, Skebco(D6) 7.7, Discount(D7) 8.151, FX 440.0, local VAT-incl 127000 KZT/t; domestic transport excl. rows 4 and 6",
       "savedAt": "2026-11-12T08:43:03.000Z",
-      "isCurrent": true,
+      "isCurrent": false,
       "params": {
         "brent": 108.0,
         "fx": 440.0,
@@ -355,12 +355,12 @@
     },
     {
       "id": "2026-11",
-      "label": "Nov 2026 (prior workbook)",
+      "label": "Nov 2026 (current)",
       "month": "2026-11",
       "author": "excel import",
       "notes": "Previous site/Excel baseline kept as Nov — Brent 105, Skebco(D6) 20.104, Discount(D7) 6.18, FX 440, local VAT-incl 130000 KZT/t; domestic transport excl. rows 4 and 6",
-      "savedAt": "2026-11-12T09:46:44.000Z",
-      "isCurrent": false,
+      "savedAt": "2026-11-12T09:48:45.000Z",
+      "isCurrent": true,
       "params": {
         "brent": 105,
         "fx": 440,
