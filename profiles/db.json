@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-12T08:43:03.000Z",
+  "updatedAt": "2026-11-12T09:46:44.000Z",
   "currentMonthId": "2026-10",
   "profiles": [
     {
@@ -350,6 +350,41 @@
         "duty": 115,
         "rental": 170.1,
         "metExp": 40.5,
+        "domesticRoute": "pkop"
+      }
+    },
+    {
+      "id": "2026-11",
+      "label": "Nov 2026 (prior workbook)",
+      "month": "2026-11",
+      "author": "excel import",
+      "notes": "Previous site/Excel baseline kept as Nov — Brent 105, Skebco(D6) 20.104, Discount(D7) 6.18, FX 440, local VAT-incl 130000 KZT/t; domestic transport excl. rows 4 and 6",
+      "savedAt": "2026-11-12T09:46:44.000Z",
+      "isCurrent": false,
+      "params": {
+        "brent": 105,
+        "fx": 440,
+        "sk": 20.104,
+        "disc": 6.18,
+        "localKzt": 130000,
+        "ru": 6.83,
+        "kb": 7.2223,
+        "metRate": 0.05,
+        "vat": 1.16,
+        "domesticRoute": "pkop",
+        "transportPct": {},
+        "bulkExp": 0,
+        "bulkDom": 0
+      },
+      "snapshot": {
+        "nbExp": 181.81365650445457,
+        "nbDom": 217.74269140282132,
+        "spread": -35.92903489836675,
+        "trExp": 66.94691029554545,
+        "trDom": 33.02200295454546,
+        "duty": 115,
+        "rental": 165.375,
+        "metExp": 39.375,
         "domesticRoute": "pkop"
       }
     }
