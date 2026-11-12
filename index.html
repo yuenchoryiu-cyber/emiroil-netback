@@ -60,6 +60,16 @@
   .adv-box{display:none; margin-top:8px; padding-top:8px; border-top:1px dashed var(--line)}
   .adv-box.open{display:block}
   .adv-title{font-size:.7rem; color:#7c3aed; text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px}
+  .month-head{
+    margin:-4px 0 10px; font-size:1.05rem; font-weight:700; color:var(--accent);
+    letter-spacing:.01em;
+  }
+  .month-head .muted{font-weight:500; color:var(--muted); font-size:.9rem}
+  .reset-pick{display:flex; gap:6px; align-items:end; flex-wrap:wrap}
+  .reset-pick select{
+    min-width:160px; max-width:220px; padding:8px 10px; border:1px solid var(--line);
+    border-radius:10px; background:#fff; font-size:.82rem;
+  }
   button.primary, #btnReset, #btnTrReset{
     border:0; background:var(--accent); color:#fff; border-radius:999px;
     padding:10px 14px; cursor:pointer; font-size:.82rem; white-space:nowrap;
@@ -208,8 +218,9 @@
 
   <!-- NETBACK PAGE -->
   <div id="page-netback" class="page active">
-    <h1>Netback analysis — Novorossiysk vs <span id="domTitle">PKOP</span></h1>
-    <p class="lead">Formulas from Sale-comparison.xlsx (2026 + Tr.cost 2026). Switch domestic destination PKOP / Pavlodar (PNHZ).</p>
+    <h1>Netback analysis — Novorossiysk vs <span id="domTitle">Shymkent (PKOP)</span></h1>
+    <div class="month-head" id="netbackMonthHead">—</div>
+    <p class="lead">Formulas from Sale-comparison.xlsx (2026 + Tr.cost 2026). Switch domestic destination Shymkent (PKOP) / Pavlodar (PNHZ).</p>
 
     <div class="sticky-top">
       <div id="verdict" class="verdict domestic">
@@ -234,7 +245,7 @@
 
     <div class="controls">
       <div class="route-toggle" id="domRoute" role="group" aria-label="Domestic destination">
-        <button type="button" data-route="pkop" class="active">Domestic: PKOP</button>
+        <button type="button" data-route="pkop" class="active">Domestic: Shymkent (PKOP)</button>
         <button type="button" data-route="pavlodar">Domestic: Pavlodar (PNHZ)</button>
       </div>
       <div class="row">
@@ -262,7 +273,13 @@
           <label>Local domestic VAT-incl <span class="val" id="locLbl">130,000</span> KZT/t</label>
           <input id="localKzt" type="range" min="80000" max="180000" step="500" value="130000"/>
         </div>
-        <div><button type="button" id="btnReset">Reset current</button></div>
+        <div class="reset-pick">
+          <div>
+            <label>Reset to month</label>
+            <select id="resetMonthSelect" aria-label="Month to reset to"></select>
+          </div>
+          <button type="button" id="btnReset">Reset</button>
+        </div>
       </div>
       <button type="button" class="adv-toggle" id="btnAdv">Show structural parameters (VAT, bbl/t, MET%)</button>
       <div class="adv-box" id="advBox">
@@ -302,9 +319,14 @@
   <!-- TRANSPORT PAGE -->
   <div id="page-transport" class="page">
     <h1>Netback analysis — Transport costs</h1>
-    <p class="lead">Tr.cost 2026 legs for Novoros export vs selected domestic path (PKOP or Pavlodar). Drag % bars — netback updates from the same state.</p>
-    <div style="margin-bottom:10px">
-      <button type="button" class="ghost" id="btnTrReset">Back to current (reset all %)</button>
+    <div class="month-head" id="transportMonthHead">—</div>
+    <p class="lead">Tr.cost 2026 legs for Novoros export vs selected domestic path (Shymkent / PKOP or Pavlodar). Drag % bars — netback updates from the same state.</p>
+    <div class="reset-pick" style="margin-bottom:10px">
+      <div>
+        <label>Reset to month</label>
+        <select id="trResetMonthSelect" aria-label="Month to reset transport to"></select>
+      </div>
+      <button type="button" id="btnTrReset">Reset</button>
     </div>
     <div class="tr-kpis">
       <div class="kpi export"><span>Export transport</span><b id="kExp">—</b></div>
@@ -347,7 +369,7 @@
         </div>
         <div class="btn-row no-print">
           <button type="button" class="ok" id="btnLoadProfile">Load selected</button>
-          <button type="button" id="btnResetMonth">Reset to Oct 2026 (current)</button>
+          <button type="button" id="btnResetMonth">Reset analysis to selected month</button>
           <button type="button" class="ghost" id="btnRefreshCloud">Refresh from online</button>
         </div>
         <div class="status" id="profileStatus"></div>
@@ -415,7 +437,7 @@
         <div class="field">
           <label>Domestic destination</label>
           <select id="peRoute">
-            <option value="pkop">PKOP</option>
+            <option value="pkop">Shymkent (PKOP)</option>
             <option value="pavlodar">Pavlodar (PNHZ)</option>
           </select>
         </div>
@@ -442,7 +464,7 @@
           <div id="peTrExp" style="overflow:auto; max-height:420px"></div>
         </div>
         <div>
-          <h2 style="font-size:.85rem">DOMESTIC · <span id="peTrDomTitle">PKOP</span></h2>
+          <h2 style="font-size:.85rem">DOMESTIC · <span id="peTrDomTitle">Shymkent (PKOP)</span></h2>
           <div id="peTrDom" style="overflow:auto; max-height:420px"></div>
         </div>
       </div>
@@ -529,15 +551,15 @@ const TR_LINES = [
   { id:'e55', channel:'export', route:'export', group:'Export · Novorossiysk', name:'шесхарис шесхарис', kind:'rub', tariff:55.9256, row:'55' },
   { id:'e56', channel:'export', route:'export', group:'Export · Novorossiysk', name:'транспортно-экспедиционное', kind:'rub', tariff:3.64, row:'56' },
   { id:'e57', channel:'export', route:'export', group:'Export · Novorossiysk', name:'перевалка новороссийск', kind:'rub', tariff:292.72, row:'57' },
-  { id:'d5', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'5' },
-  { id:'d7', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'7' },
-  { id:'d8', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'8' },
-  { id:'d9', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'9' },
-  { id:'d10', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'10' },
-  { id:'d11', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'джумагалиева - пкоп', kind:'kzt', tariff:2645.0549, row:'11' },
-  { id:'d12', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'операторская деятельность', kind:'kzt', tariff:7.23, row:'12' },
-  { id:'d13', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'13' },
-  { id:'d14', channel:'domestic', route:'pkop', group:'Domestic · PKOP', name:'ккт', kind:'kzt', tariff:2931.21, row:'14' },
+  { id:'d5', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'5' },
+  { id:'d7', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'7' },
+  { id:'d8', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'8' },
+  { id:'d9', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'кенкияк перевалка', kind:'kzt', tariff:144.05, row:'9' },
+  { id:'d10', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'кумколь - джумагалиева', kind:'kzt', tariff:987.1904, row:'10' },
+  { id:'d11', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'джумагалиева - пкоп', kind:'kzt', tariff:2645.0549, row:'11' },
+  { id:'d12', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'операторская деятельность', kind:'kzt', tariff:7.23, row:'12' },
+  { id:'d13', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'мунайтас', kind:'kzt', tariff:4101.6877, row:'13' },
+  { id:'d14', channel:'domestic', route:'pkop', group:'Domestic · Shymkent (PKOP)', name:'ккт', kind:'kzt', tariff:2931.21, row:'14' },
   { id:'p17', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'тасбулат - узень', kind:'kzt', tariff:213.4198, row:'17' },
   { id:'p19', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'узень - шманова', kind:'kzt', tariff:3362.3785, row:'19' },
   { id:'p20', channel:'domestic', route:'pavlodar', group:'Domestic · Pavlodar (PNHZ)', name:'шманова перевалка', kind:'kzt', tariff:137.46, row:'20' },
@@ -592,7 +614,7 @@ function activeDomesticRoute() {
   return state.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop';
 }
 function domesticLabel() {
-  return activeDomesticRoute() === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'PKOP';
+  return activeDomesticRoute() === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'Shymkent (PKOP)';
 }
 function domesticLines() {
   const route = activeDomesticRoute();
@@ -650,6 +672,7 @@ function renderNetback() {
   document.getElementById('metLbl').textContent = (num(state.metRate)*100).toFixed(1)+'%';
   document.getElementById('vatLbl').textContent = num(state.vat).toFixed(2);
   const dt=document.getElementById('domTitle'); if (dt) dt.textContent = domesticLabel();
+  try { updateMonthHeadlines(); } catch {}
 
   // keep transport page twin sliders in sync if not focused
   if (document.activeElement !== document.getElementById('trFx')) document.getElementById('trFx').value = state.fx;
@@ -682,7 +705,7 @@ function renderNetback() {
     row('Skebco (D6)','D6', fmt(c.S,3)+' $/bbl'),
     row('Discount (D7)','D7', fmt(c.DISC,2)+' $/bbl'),
     row('Local domestic','G5/F5 list', fmtInt(c.LOC)+' KZT/t'),
-    row('Domestic destination','PKOP or Pavlodar/PNHZ', domesticLabel()),
+    row('Domestic destination','Shymkent (PKOP) or Pavlodar/PNHZ', domesticLabel()),
     row('RUB→KZT','Tr.cost J3', fmt(c.RU,2)),
     row('EXPORT Novoros','','','sec'),
     row('Realized $/bbl',`D11=D5−D6−D7<br><span class="sub">${fmt(c.B,1)} − ${fmt(c.S,3)} − ${fmt(c.DISC,2)}</span>`, fmt(c.priceBbl,3)),
@@ -812,22 +835,81 @@ function setBulk(channel, b) {
   renderNetback();
 }
 
-function resetAll() {
-  state = { ...BASE, domesticRoute: 'pkop', transportPct: {}, bulkExp: 0, bulkDom: 0 };
-  persist();
-  // force all controls
-  for (const [k,v] of Object.entries(BASE)) {
-    const el = document.getElementById(k);
-    if (el) el.value = v;
+function getActiveProfileId() {
+  try {
+    return localStorage.getItem(ACTIVE_KEY) || CURRENT_MONTH_ID;
+  } catch {
+    return CURRENT_MONTH_ID;
   }
-  document.getElementById('trFx').value = BASE.fx;
-  document.getElementById('trRu').value = BASE.ru;
-  document.getElementById('bulkExp').value = 0;
-  document.getElementById('bulkDom').value = 0;
-  syncRouteToggle();
-  buildTransportTables();
-  refreshTransportUI();
-  renderNetback();
+}
+function getActiveProfile() {
+  const id = getActiveProfileId();
+  return (typeof profileDb !== 'undefined' && profileDb.profiles
+    ? (profileDb.profiles.find(p => p.id === id) || profileDb.profiles.find(p => p.id === CURRENT_MONTH_ID) || profileDb.profiles[0])
+    : null);
+}
+function monthHeadlineText(p) {
+  if (!p) return 'No month profile loaded';
+  const when = monthLabel(p.month);
+  const label = (p.label || '').trim();
+  const cur = p.id === CURRENT_MONTH_ID ? ' · current baseline' : '';
+  if (label && label.toLowerCase() !== when.toLowerCase()) {
+    return `${when} — ${label}${cur}`;
+  }
+  return `${when}${cur}`;
+}
+function updateMonthHeadlines() {
+  const p = getActiveProfile();
+  const text = monthHeadlineText(p);
+  const html = p
+    ? `${monthLabel(p.month)}${p.label ? ` <span class="muted">— ${p.label}</span>` : ''}${p.id===CURRENT_MONTH_ID?' <span class="muted">· current baseline</span>':''}`
+    : text;
+  const nb = document.getElementById('netbackMonthHead');
+  const tr = document.getElementById('transportMonthHead');
+  if (nb) nb.innerHTML = html;
+  if (tr) tr.innerHTML = html;
+  const al = document.getElementById('activeProfileLbl');
+  if (al && p) al.textContent = `${p.label || p.id} (${p.month})`;
+  document.title = p ? `Emir Oil Netback — ${monthLabel(p.month)}` : 'Emir Oil Netback';
+}
+function resetToMonthId(id) {
+  const p = (profileDb.profiles || []).find(x => x.id === id);
+  if (!p) {
+    // fallback to hard BASE if somehow missing
+    state = { ...BASE, domesticRoute: 'pkop', transportPct: {}, bulkExp: 0, bulkDom: 0 };
+    persist();
+    for (const [k,v] of Object.entries(BASE)) {
+      const el = document.getElementById(k);
+      if (el) el.value = v;
+    }
+    document.getElementById('trFx').value = BASE.fx;
+    document.getElementById('trRu').value = BASE.ru;
+    document.getElementById('bulkExp').value = 0;
+    document.getElementById('bulkDom').value = 0;
+    syncRouteToggle();
+    buildTransportTables();
+    refreshTransportUI();
+    renderNetback();
+    return;
+  }
+  applyParams(p.params || {});
+  try { localStorage.setItem(ACTIVE_KEY, p.id); } catch {}
+  updateMonthHeadlines();
+  const sel = document.getElementById('profileSelect');
+  if (sel && [...sel.options].some(o => o.value === p.id)) sel.value = p.id;
+  ['resetMonthSelect','trResetMonthSelect'].forEach(rid => {
+    const el = document.getElementById(rid);
+    if (el && [...el.options].some(o => o.value === p.id)) el.value = p.id;
+  });
+  setStatus('profileStatus', `Reset to ${p.label || monthLabel(p.month)}.`, 'ok');
+}
+function resetFromNetback() {
+  const id = (document.getElementById('resetMonthSelect') || {}).value || getActiveProfileId();
+  resetToMonthId(id);
+}
+function resetFromTransport() {
+  const id = (document.getElementById('trResetMonthSelect') || {}).value || getActiveProfileId();
+  resetToMonthId(id);
 }
 
 function showPage(name) {
@@ -869,8 +951,8 @@ document.getElementById('trRu').addEventListener('input', (e) => {
 });
 document.getElementById('bulkExp').addEventListener('input', (e) => setBulk('export', e.target.value));
 document.getElementById('bulkDom').addEventListener('input', (e) => setBulk('domestic', e.target.value));
-document.getElementById('btnReset').addEventListener('click', resetAll);
-document.getElementById('btnTrReset').addEventListener('click', resetAll);
+document.getElementById('btnReset').addEventListener('click', resetFromNetback);
+document.getElementById('btnTrReset').addEventListener('click', resetFromTransport);
 document.getElementById('btnAdv').addEventListener('click', () => {
   const box=document.getElementById('advBox');
   const open=box.classList.toggle('open');
@@ -1163,20 +1245,25 @@ function renderProfileUI() {
   const sel = document.getElementById('profileSelect');
   const single = document.getElementById('reportSingle');
   const start = document.getElementById('reportStart');
+  const resetSel = document.getElementById('resetMonthSelect');
+  const trResetSel = document.getElementById('trResetMonthSelect');
   if (!sel) return;
   const opts = profileDb.profiles.map(p => {
     const tag = p.id === CURRENT_MONTH_ID ? ' (current)' : '';
-    return `<option value="${p.id}">${p.month} — ${p.label || p.id}${tag}</option>`;
+    return `<option value="${p.id}">${monthLabel(p.month)} — ${p.label || p.id}${tag}</option>`;
   }).join('');
   sel.innerHTML = opts;
   if (single) single.innerHTML = opts;
   if (start) start.innerHTML = opts;
+  if (resetSel) resetSel.innerHTML = opts;
+  if (trResetSel) trResetSel.innerHTML = opts;
   try {
     const aid = localStorage.getItem(ACTIVE_KEY) || CURRENT_MONTH_ID;
     if ([...sel.options].some(o => o.value === aid)) sel.value = aid;
+    if (resetSel && [...resetSel.options].some(o => o.value === aid)) resetSel.value = aid;
+    if (trResetSel && [...trResetSel.options].some(o => o.value === aid)) trResetSel.value = aid;
   } catch {}
-  const active = profileDb.profiles.find(p => p.id === sel.value) || profileDb.profiles[0];
-  document.getElementById('activeProfileLbl').textContent = active ? `${active.label} (${active.month})` : '—';
+  updateMonthHeadlines();
 
   const tb = document.getElementById('profileTable');
   tb.innerHTML = profileDb.profiles.map(p => {
@@ -1276,22 +1363,18 @@ function loadProfileById(id) {
   if (!p) { setStatus('profileStatus', 'Profile not found.', 'err'); return; }
   applyParams(p.params || {});
   try { localStorage.setItem(ACTIVE_KEY, id); } catch {}
-  document.getElementById('activeProfileLbl').textContent = `${p.label} (${p.month})`;
+  updateMonthHeadlines();
+  ['resetMonthSelect','trResetMonthSelect','profileSelect'].forEach(rid => {
+    const el = document.getElementById(rid);
+    if (el && [...el.options].some(o => o.value === id)) el.value = id;
+  });
   setStatus('profileStatus', `Loaded ${p.label}.`, 'ok');
   showPage('netback');
 }
 
-function resetToCurrentMonth() {
-  const base = JSON.parse(JSON.stringify(OCT2026_PROFILE));
-  // restore baseline params into Oct slot
-  const i = profileDb.profiles.findIndex(p => p.id === CURRENT_MONTH_ID);
-  if (i >= 0) profileDb.profiles[i] = base;
-  else profileDb.profiles.unshift(base);
-  saveProfilesLocal();
-  applyParams(base.params);
-  try { localStorage.setItem(ACTIVE_KEY, CURRENT_MONTH_ID); } catch {}
-  renderProfileUI();
-  setStatus('profileStatus', 'Reset to Oct 2026 current baseline.', 'ok');
+function resetToSelectedMonth() {
+  const id = (document.getElementById('profileSelect') || {}).value || getActiveProfileId();
+  resetToMonthId(id);
   showPage('netback');
 }
 
@@ -1445,7 +1528,7 @@ function buildSingleReport(id) {
 }
 
 function domesticLabelFrom(route) {
-  return route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'PKOP';
+  return route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'Shymkent (PKOP)';
 }
 
 function buildTrendReport(endYm, nMonths) {
@@ -1645,7 +1728,7 @@ function buildPeTransportTables(pctMap) {
   const ru = peEditorRu();
   const route = peEditorRoute();
   const title = document.getElementById('peTrDomTitle');
-  if (title) title.textContent = route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'PKOP';
+  if (title) title.textContent = route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'Shymkent (PKOP)';
   for (const channel of ['export', 'domestic']) {
     const host = document.getElementById(channel === 'export' ? 'peTrExp' : 'peTrDom');
     if (!host) continue;
@@ -1857,7 +1940,7 @@ async function saveFromEditor(online) {
 
 function wireProfilesReports() {
   document.getElementById('btnLoadProfile').onclick = () => loadProfileById(document.getElementById('profileSelect').value);
-  document.getElementById('btnResetMonth').onclick = resetToCurrentMonth;
+  document.getElementById('btnResetMonth').onclick = resetToSelectedMonth;
   document.getElementById('btnRefreshCloud').onclick = () => refreshFromCloud();
   document.getElementById('btnOpenNewProfile').onclick = openNewProfileEditor;
   document.getElementById('btnEditSelectedProfile').onclick = openEditSelectedProfile;
