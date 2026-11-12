@@ -133,6 +133,50 @@
     border-radius:999px; padding:8px 14px; cursor:pointer; font-size:.84rem; font-weight:600;
   }
   .route-toggle button.active{background:var(--domestic); color:#fff; border-color:var(--domestic)}
+
+  .btn-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px}
+  button.danger{background:#9a3412; color:#fff; border:0; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:.82rem}
+  button.ok{background:var(--export); color:#fff; border:0; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:.82rem}
+  .field{margin-bottom:8px}
+  .field input, .field select, .field textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; font:inherit;
+  }
+  .field textarea{min-height:70px; resize:vertical}
+  .status{font-size:.82rem; color:var(--muted); margin-top:6px}
+  .status.err{color:#9a3412}.status.ok{color:var(--export)}
+  .profile-list{width:100%; border-collapse:collapse; font-size:.8rem}
+  .profile-list th{background:#1e3a5f; color:#fff; text-align:left; padding:7px 6px}
+  .profile-list td{padding:6px; border-bottom:1px solid #ece7dc; vertical-align:top}
+  .profile-list tr:nth-child(even) td{background:#faf7f0}
+  .chip{display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px; background:#e7e5e4}
+  .chip.cur{background:#0f766e; color:#fff}
+  .two-col{display:grid; grid-template-columns:1.1fr .9fr; gap:10px}
+  @media(max-width:980px){.two-col{grid-template-columns:1fr}}
+  .report-toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-bottom:10px}
+  .report-toolbar .field{margin:0; min-width:140px}
+  #reportOut{background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px}
+  .report-page h1{font-size:1.35rem; margin:0 0 4px}
+  .report-page .meta{color:var(--muted); font-size:.85rem; margin-bottom:12px}
+  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0}
+  @media(max-width:800px){.kpi-grid{grid-template-columns:1fr 1fr}}
+  .kpi-grid .k{border:1px solid var(--line); border-radius:10px; padding:10px}
+  .kpi-grid .k span{display:block; font-size:.68rem; color:var(--muted); text-transform:uppercase}
+  .kpi-grid .k b{font-size:1.15rem; font-variant-numeric:tabular-nums}
+  .report-table{width:100%; border-collapse:collapse; font-size:.78rem; margin-top:8px}
+  .report-table th,.report-table td{border:1px solid #ddd; padding:5px 6px}
+  .report-table th{background:#f5f5f4; text-align:left}
+  .report-table .num{text-align:right; font-variant-numeric:tabular-nums}
+  .delta-up{color:#0f766e; font-weight:700}.delta-down{color:#9a3412; font-weight:700}
+  #trendChart{min-height:360px; width:100%; margin-top:10px}
+  @media print{
+    body{background:#fff}
+    #gate,.topnav,.report-toolbar,.no-print{display:none !important}
+    #app{display:block !important}
+    .page{display:none !important}
+    #page-reports{display:block !important}
+    #reportOut{border:0; padding:0}
+  }
+
 </style>
 </head>
 <body>
@@ -149,6 +193,8 @@
   <nav class="topnav">
     <button type="button" class="active" data-page="netback">Netback analysis</button>
     <button type="button" data-page="transport">Transport costs</button>
+    <button type="button" data-page="profiles">Month profiles</button>
+    <button type="button" data-page="reports">Reports</button>
   </nav>
 
   <!-- NETBACK PAGE -->
@@ -277,6 +323,93 @@
     <div class="section export" id="secExp"></div>
     <div class="section domestic" id="secDom"></div>
   </div>
+
+  <!-- PROFILES PAGE -->
+  <div id="page-profiles" class="page">
+    <h1>Month profiles</h1>
+    <p class="lead">Current baseline is <b>Oct 2026</b> (Sale-comparison workbook). Save scenarios online so colleagues can load or create other months later.</p>
+    <div class="two-col">
+      <div class="section">
+        <h2>1) Current month &amp; load</h2>
+        <p class="lead" style="margin-bottom:8px">Active profile: <b id="activeProfileLbl">Oct 2026 (current)</b></p>
+        <div class="field">
+          <label>Choose profile to show</label>
+          <select id="profileSelect"></select>
+        </div>
+        <div class="btn-row no-print">
+          <button type="button" class="ok" id="btnLoadProfile">Load selected</button>
+          <button type="button" id="btnResetMonth">Reset to Oct 2026 (current)</button>
+          <button type="button" class="ghost" id="btnRefreshCloud">Refresh from online</button>
+        </div>
+        <div class="status" id="profileStatus"></div>
+      </div>
+      <div class="section">
+        <h2>2) Create / update month profile</h2>
+        <p class="lead">Uses the <b>current slider values</b> on Netback / Transport (including % adjustments).</p>
+        <div class="field"><label>Month</label><input id="pfMonth" type="month" value="2026-10"/></div>
+        <div class="field"><label>Label</label><input id="pfLabel" type="text" placeholder="e.g. Nov 2026 actuals"/></div>
+        <div class="field"><label>Author</label><input id="pfAuthor" type="text" placeholder="Your name"/></div>
+        <div class="field"><label>Notes</label><textarea id="pfNotes" placeholder="What changed vs prior month"></textarea></div>
+        <div class="btn-row">
+          <button type="button" class="ok" id="btnSaveProfile">Save profile online</button>
+          <button type="button" class="ghost" id="btnSaveLocalOnly">Save on this device only</button>
+        </div>
+        <div class="status" id="saveStatus"></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Saved profiles</h2>
+      <table class="profile-list">
+        <thead><tr><th>Month</th><th>Label</th><th>Author</th><th>Export NB</th><th>Domestic NB</th><th>Δ Exp−Dom</th><th></th></tr></thead>
+        <tbody id="profileTable"></tbody>
+      </table>
+      <div class="btn-row no-print" style="margin-top:10px">
+        <button type="button" class="ghost" id="btnExportProfiles">Export JSON</button>
+        <label class="ghost" style="display:inline-block;padding:9px 14px;border-radius:999px;border:1px solid var(--line);cursor:pointer">
+          Import JSON <input id="btnImportProfiles" type="file" accept="application/json,.json" style="display:none"/>
+        </label>
+      </div>
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;color:#5b21b6;font-size:.82rem">Online publish settings (optional GitHub token)</summary>
+        <p class="lead">To let this browser publish to the shared cloud file, paste a GitHub token with <b>gist</b> scope. Colleagues who only load profiles do not need a token.</p>
+        <div class="field"><label>GitHub token (gist)</label><input id="publishToken" type="password" placeholder="ghp_... or github_pat_..."/></div>
+        <div class="btn-row">
+          <button type="button" class="ghost" id="btnSaveToken">Remember token on this device</button>
+          <button type="button" class="danger" id="btnClearToken">Clear token</button>
+        </div>
+        <div class="status" id="tokenStatus"></div>
+      </details>
+    </div>
+  </div>
+
+  <!-- REPORTS PAGE -->
+  <div id="page-reports" class="page">
+    <h1>Monthly reports</h1>
+    <p class="lead">One-page month report, or pick 3–6 month profiles to compare parameter moves and netback trends.</p>
+    <div class="report-toolbar no-print controls">
+      <div class="field">
+        <label>Report type</label>
+        <select id="reportType">
+          <option value="single">1-page monthly report</option>
+          <option value="trend">Trend report (3–6 months)</option>
+        </select>
+      </div>
+      <div class="field" id="singlePickWrap">
+        <label>Month profile</label>
+        <select id="reportSingle"></select>
+      </div>
+      <div class="field" id="multiPickWrap" style="display:none;min-width:260px">
+        <label>Select 3–6 profiles (Ctrl/Cmd-click)</label>
+        <select id="reportMulti" multiple size="6"></select>
+      </div>
+      <button type="button" class="ok" id="btnBuildReport">Build report</button>
+      <button type="button" class="ghost" id="btnPrintReport">Print / Save PDF</button>
+    </div>
+    <div id="reportOut" class="report-page">
+      <p class="lead">Choose profiles and click <b>Build report</b>.</p>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -613,6 +746,8 @@ function resetAll() {
 function showPage(name) {
   document.getElementById('page-netback').classList.toggle('active', name==='netback');
   document.getElementById('page-transport').classList.toggle('active', name==='transport');
+  const pp=document.getElementById('page-profiles'); if (pp) pp.classList.toggle('active', name==='profiles');
+  const pr=document.getElementById('page-reports'); if (pr) pr.classList.toggle('active', name==='reports');
   document.querySelectorAll('.topnav button').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.page===name);
   });
@@ -680,6 +815,525 @@ document.getElementById('domRoute').addEventListener('click', (e) => {
 });
 
 
+
+/* ===== Month profiles + online DB + reports ===== */
+const GIST_ID = '1301e8baa9a5cd9d42ccb6a994aeb8d3';
+const GIST_FILE = 'db.json';
+const PROFILES_LOCAL = 'eo_profiles_db_v1';
+const TOKEN_KEY = 'eo_publish_token_v1';
+const ACTIVE_KEY = 'eo_active_profile_id';
+const CURRENT_MONTH_ID = '2026-10';
+
+const OCT2026_PROFILE = {"id": "2026-10", "label": "Oct 2026 (current)", "month": "2026-10", "author": "baseline", "notes": "Sale-comparison.xlsx 2026 base case — Brent 105, FX 440, Skebco 20.104, discount 6.18, local 130000 KZT/t", "savedAt": "2026-10-31T12:00:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 440, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 6.83, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 181.81365650445457, "nbDom": 216.73272640282133, "spread": -34.91906989836676, "trExp": 66.94691029554545, "trDom": 34.03196795454545, "duty": 115, "rental": 165.375, "metExp": 39.375}};
+
+let profileDb = {
+  version: 1,
+  updatedAt: new Date().toISOString(),
+  currentMonthId: CURRENT_MONTH_ID,
+  profiles: [JSON.parse(JSON.stringify(OCT2026_PROFILE))]
+};
+
+function setStatus(id, msg, kind='') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'status' + (kind ? ' ' + kind : '');
+  el.textContent = msg || '';
+}
+
+function captureParams() {
+  return {
+    brent: num(state.brent), fx: num(state.fx), sk: num(state.sk), disc: num(state.disc),
+    localKzt: num(state.localKzt), ru: num(state.ru), kb: num(state.kb),
+    metRate: num(state.metRate), vat: num(state.vat),
+    domesticRoute: activeDomesticRoute(),
+    transportPct: { ...(state.transportPct || {}) },
+    bulkExp: num(state.bulkExp), bulkDom: num(state.bulkDom)
+  };
+}
+
+function applyParams(p) {
+  if (!p) return;
+  Object.assign(state, {
+    brent: num(p.brent, BASE.brent), fx: num(p.fx, BASE.fx), sk: num(p.sk, BASE.sk),
+    disc: num(p.disc, BASE.disc), localKzt: num(p.localKzt, BASE.localKzt),
+    ru: num(p.ru, BASE.ru), kb: num(p.kb, BASE.kb), metRate: num(p.metRate, BASE.metRate),
+    vat: num(p.vat, BASE.vat),
+    domesticRoute: p.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop',
+    transportPct: (p.transportPct && typeof p.transportPct === 'object') ? { ...p.transportPct } : {},
+    bulkExp: num(p.bulkExp, 0), bulkDom: num(p.bulkDom, 0)
+  });
+  persist();
+  syncRouteToggle();
+  buildTransportTables();
+  refreshTransportUI();
+  renderNetback();
+}
+
+function snapshotNow() {
+  const c = calcNetback();
+  return {
+    nbExp: c.nbExp, nbDom: c.nbDom, spread: c.spread,
+    trExp: c.trExp, trDom: c.trDom, duty: c.duty, rental: c.rental, metExp: c.metExp,
+    domesticRoute: activeDomesticRoute()
+  };
+}
+
+function sortProfiles() {
+  profileDb.profiles.sort((a,b) => String(a.month).localeCompare(String(b.month)) || String(a.savedAt).localeCompare(String(b.savedAt)));
+}
+
+function ensureOctBaseline() {
+  if (!profileDb.profiles.some(p => p.id === CURRENT_MONTH_ID)) {
+    profileDb.profiles.unshift(JSON.parse(JSON.stringify(OCT2026_PROFILE)));
+  } else {
+    const i = profileDb.profiles.findIndex(p => p.id === CURRENT_MONTH_ID);
+    // keep user edits to Oct if any, but ensure isCurrent flag
+    profileDb.profiles[i].isCurrent = true;
+    if (!profileDb.profiles[i].label) profileDb.profiles[i].label = OCT2026_PROFILE.label;
+  }
+  profileDb.currentMonthId = CURRENT_MONTH_ID;
+}
+
+function saveProfilesLocal() {
+  profileDb.updatedAt = new Date().toISOString();
+  try { localStorage.setItem(PROFILES_LOCAL, JSON.stringify(profileDb)); } catch {}
+}
+
+function loadProfilesLocal() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PROFILES_LOCAL) || 'null');
+    if (raw && Array.isArray(raw.profiles)) profileDb = raw;
+  } catch {}
+  ensureOctBaseline();
+  sortProfiles();
+}
+
+async function fetchOnlineProfiles() {
+  const urls = [
+    `https://gist.githubusercontent.com/yuenchoryiu-cyber/${GIST_ID}/raw/${GIST_FILE}`,
+    `https://yuenchoryiu-cyber.github.io/emiroil-netback/profiles/db.json`,
+    'profiles/db.json'
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url + (url.startsWith('http') ? ('?t=' + Date.now()) : ''), { cache: 'no-store' });
+      if (!r.ok) continue;
+      const data = await r.json();
+      if (data && Array.isArray(data.profiles)) return data;
+    } catch {}
+  }
+  return null;
+}
+
+function mergeProfileDbs(remote, local) {
+  const map = new Map();
+  for (const p of (local.profiles || [])) map.set(p.id, p);
+  for (const p of (remote.profiles || [])) {
+    const cur = map.get(p.id);
+    if (!cur) map.set(p.id, p);
+    else {
+      const ta = Date.parse(cur.savedAt || 0) || 0;
+      const tb = Date.parse(p.savedAt || 0) || 0;
+      if (tb >= ta) map.set(p.id, p);
+    }
+  }
+  return {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    currentMonthId: CURRENT_MONTH_ID,
+    profiles: [...map.values()]
+  };
+}
+
+async function refreshFromCloud() {
+  setStatus('profileStatus', 'Refreshing from online…');
+  const remote = await fetchOnlineProfiles();
+  if (!remote) {
+    setStatus('profileStatus', 'Online refresh failed — using device copy.', 'err');
+    renderProfileUI();
+    return false;
+  }
+  profileDb = mergeProfileDbs(remote, profileDb);
+  ensureOctBaseline();
+  sortProfiles();
+  saveProfilesLocal();
+  renderProfileUI();
+  setStatus('profileStatus', 'Online profiles loaded (' + profileDb.profiles.length + ').', 'ok');
+  return true;
+}
+
+function getPublishToken() {
+  try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
+}
+
+async function publishOnline() {
+  const token = getPublishToken();
+  if (!token) {
+    setStatus('saveStatus', 'Saved on this device. Add a GitHub gist token under Online publish settings to share with everyone.', 'err');
+    return false;
+  }
+  const body = {
+    description: 'Emir Oil Netback month profiles (shared online DB)',
+    files: {
+      [GIST_FILE]: { content: JSON.stringify(profileDb, null, 2) }
+    }
+  };
+  try {
+    const r = await fetch('https://api.github.com/gists/' + GIST_ID, {
+      method: 'PATCH',
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      setStatus('saveStatus', 'Online publish failed (' + r.status + '). Check token gist scope. Device copy kept.', 'err');
+      console.warn(t);
+      return false;
+    }
+    setStatus('saveStatus', 'Saved online. Colleagues can Refresh from online.', 'ok');
+    return true;
+  } catch (e) {
+    setStatus('saveStatus', 'Online publish error. Device copy kept.', 'err');
+    return false;
+  }
+}
+
+function renderProfileUI() {
+  const sel = document.getElementById('profileSelect');
+  const single = document.getElementById('reportSingle');
+  const multi = document.getElementById('reportMulti');
+  if (!sel) return;
+  const opts = profileDb.profiles.map(p => {
+    const tag = p.id === CURRENT_MONTH_ID ? ' (current)' : '';
+    return `<option value="${p.id}">${p.month} — ${p.label || p.id}${tag}</option>`;
+  }).join('');
+  sel.innerHTML = opts;
+  if (single) single.innerHTML = opts;
+  if (multi) multi.innerHTML = opts;
+  try {
+    const aid = localStorage.getItem(ACTIVE_KEY) || CURRENT_MONTH_ID;
+    if ([...sel.options].some(o => o.value === aid)) sel.value = aid;
+  } catch {}
+  const active = profileDb.profiles.find(p => p.id === sel.value) || profileDb.profiles[0];
+  document.getElementById('activeProfileLbl').textContent = active ? `${active.label} (${active.month})` : '—';
+
+  const tb = document.getElementById('profileTable');
+  tb.innerHTML = profileDb.profiles.map(p => {
+    const s = p.snapshot || {};
+    return `<tr>
+      <td>${p.month}${p.id===CURRENT_MONTH_ID?' <span class="chip cur">current</span>':''}</td>
+      <td>${p.label || ''}<div class="sub">${(p.notes||'').slice(0,80)}</div></td>
+      <td>${p.author || ''}</td>
+      <td class="num">${s.nbExp!=null?fmt(s.nbExp,1):'—'}</td>
+      <td class="num">${s.nbDom!=null?fmt(s.nbDom,1):'—'}</td>
+      <td class="num">${s.spread!=null?((s.spread>=0?'+':'')+fmt(s.spread,1)):'—'}</td>
+      <td class="no-print">
+        <button type="button" class="ghost" data-load="${p.id}">Load</button>
+        ${p.id===CURRENT_MONTH_ID?'':`<button type="button" class="danger" data-del="${p.id}">Delete</button>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function upsertProfile({ month, label, author, notes, online }) {
+  const id = String(month);
+  const params = captureParams();
+  const snap = snapshotNow();
+  const existing = profileDb.profiles.find(p => p.id === id);
+  const row = {
+    id,
+    label: label || (month + ' profile'),
+    month: id,
+    author: author || '',
+    notes: notes || '',
+    savedAt: new Date().toISOString(),
+    isCurrent: id === CURRENT_MONTH_ID,
+    params,
+    snapshot: snap
+  };
+  if (existing) {
+    Object.assign(existing, row);
+  } else {
+    profileDb.profiles.push(row);
+  }
+  ensureOctBaseline();
+  sortProfiles();
+  saveProfilesLocal();
+  try { localStorage.setItem(ACTIVE_KEY, id); } catch {}
+  renderProfileUI();
+  document.getElementById('profileSelect').value = id;
+  document.getElementById('activeProfileLbl').textContent = `${row.label} (${row.month})`;
+  if (online) return publishOnline();
+  setStatus('saveStatus', 'Saved on this device.', 'ok');
+  return Promise.resolve(true);
+}
+
+function loadProfileById(id) {
+  const p = profileDb.profiles.find(x => x.id === id);
+  if (!p) { setStatus('profileStatus', 'Profile not found.', 'err'); return; }
+  applyParams(p.params || {});
+  try { localStorage.setItem(ACTIVE_KEY, id); } catch {}
+  document.getElementById('activeProfileLbl').textContent = `${p.label} (${p.month})`;
+  setStatus('profileStatus', `Loaded ${p.label}.`, 'ok');
+  showPage('netback');
+}
+
+function resetToCurrentMonth() {
+  const base = JSON.parse(JSON.stringify(OCT2026_PROFILE));
+  // restore baseline params into Oct slot
+  const i = profileDb.profiles.findIndex(p => p.id === CURRENT_MONTH_ID);
+  if (i >= 0) profileDb.profiles[i] = base;
+  else profileDb.profiles.unshift(base);
+  saveProfilesLocal();
+  applyParams(base.params);
+  try { localStorage.setItem(ACTIVE_KEY, CURRENT_MONTH_ID); } catch {}
+  renderProfileUI();
+  setStatus('profileStatus', 'Reset to Oct 2026 current baseline.', 'ok');
+  showPage('netback');
+}
+
+function deleteProfile(id) {
+  if (id === CURRENT_MONTH_ID) return;
+  profileDb.profiles = profileDb.profiles.filter(p => p.id !== id);
+  saveProfilesLocal();
+  renderProfileUI();
+  publishOnline();
+}
+
+function monthLabel(m) {
+  try {
+    const [y, mo] = m.split('-').map(Number);
+    return new Date(y, mo-1, 1).toLocaleString(undefined, { month:'short', year:'numeric' });
+  } catch { return m; }
+}
+
+function deltaClass(v) {
+  if (!Number.isFinite(v) || Math.abs(v) < 1e-9) return '';
+  return v > 0 ? 'delta-up' : 'delta-down';
+}
+
+function buildSingleReport(id) {
+  const p = profileDb.profiles.find(x => x.id === id) || profileDb.profiles[0];
+  const params = p.params || {};
+  const s = p.snapshot || {};
+  // recompute with profile params temporarily
+  const bak = JSON.parse(JSON.stringify(state));
+  applyParams(params);
+  const c = calcNetback();
+  Object.assign(state, bak);
+  persist();
+  syncRouteToggle(); buildTransportTables(); refreshTransportUI(); renderNetback();
+
+  const winner = Math.abs(c.spread)<0.5 ? 'Breakeven' : (c.spread>0 ? 'EXPORT wins' : 'DOMESTIC wins');
+  return `
+    <h1>Netback monthly report — ${monthLabel(p.month)}</h1>
+    <div class="meta">${p.label || ''} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'}<br>${p.notes || ''}</div>
+    <div class="kpi-grid">
+      <div class="k"><span>Winner</span><b>${winner}</b></div>
+      <div class="k"><span>Export NB</span><b>${fmt(c.nbExp,1)} $/t</b></div>
+      <div class="k"><span>Domestic NB (${domesticLabelFrom(params.domesticRoute)})</span><b>${fmt(c.nbDom,1)} $/t</b></div>
+      <div class="k"><span>Δ Export − Domestic</span><b>${(c.spread>=0?'+':'')+fmt(c.spread,1)} $/t</b></div>
+    </div>
+    <h2 style="font-size:.95rem;margin:14px 0 6px">Drivers</h2>
+    <table class="report-table">
+      <thead><tr><th>Parameter</th><th class="num">Value</th></tr></thead>
+      <tbody>
+        <tr><td>Brent</td><td class="num">${fmt(params.brent,1)} $/bbl</td></tr>
+        <tr><td>FX</td><td class="num">${fmt(params.fx,0)} KZT/USD</td></tr>
+        <tr><td>Skebco</td><td class="num">${fmt(params.sk,3)} $/bbl</td></tr>
+        <tr><td>Discount</td><td class="num">${fmt(params.disc,2)} $/bbl</td></tr>
+        <tr><td>Local domestic VAT-incl</td><td class="num">${fmtInt(params.localKzt)} KZT/t</td></tr>
+        <tr><td>RUB→KZT</td><td class="num">${fmt(params.ru,2)}</td></tr>
+        <tr><td>Domestic route</td><td class="num">${domesticLabelFrom(params.domesticRoute)}</td></tr>
+        <tr><td>Export transport</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
+        <tr><td>Domestic transport</td><td class="num">${fmt(c.trDom,2)} $/t</td></tr>
+        <tr><td>Duty / Rental / MET</td><td class="num">${fmt(c.duty,0)} / ${fmt(c.rental,1)} / ${fmt(c.metExp,1)}</td></tr>
+      </tbody>
+    </table>
+  `;
+}
+
+function domesticLabelFrom(route) {
+  return route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'PKOP';
+}
+
+function buildTrendReport(ids) {
+  const rows = ids.map(id => profileDb.profiles.find(p => p.id === id)).filter(Boolean);
+  rows.sort((a,b) => String(a.month).localeCompare(String(b.month)));
+  if (rows.length < 3 || rows.length > 6) {
+    return `<p class="lead">Select between 3 and 6 month profiles.</p>`;
+  }
+  const computed = rows.map(p => {
+    const bak = JSON.parse(JSON.stringify(state));
+    applyParams(p.params || {});
+    const c = calcNetback();
+    Object.assign(state, bak);
+    return { p, c, params: p.params || {} };
+  });
+  persist(); syncRouteToggle(); buildTransportTables(); refreshTransportUI(); renderNetback();
+
+  const first = computed[0], last = computed[computed.length-1];
+  const changes = [
+    ['Brent', first.params.brent, last.params.brent, '$/bbl'],
+    ['FX', first.params.fx, last.params.fx, 'KZT/USD'],
+    ['Skebco', first.params.sk, last.params.sk, '$/bbl'],
+    ['Discount', first.params.disc, last.params.disc, '$/bbl'],
+    ['Local KZT', first.params.localKzt, last.params.localKzt, 'KZT/t'],
+    ['Export NB', first.c.nbExp, last.c.nbExp, '$/t'],
+    ['Domestic NB', first.c.nbDom, last.c.nbDom, '$/t'],
+    ['Δ Exp−Dom', first.c.spread, last.c.spread, '$/t'],
+  ];
+
+  setTimeout(() => {
+    const x = computed.map(r => r.p.month);
+    Plotly.newPlot('trendChart', [
+      { x, y: computed.map(r => r.c.nbExp), name: 'Export NB', mode:'lines+markers', line:{color:'#0f766e'} },
+      { x, y: computed.map(r => r.c.nbDom), name: 'Domestic NB', mode:'lines+markers', line:{color:'#b45309'} },
+      { x, y: computed.map(r => r.c.spread), name: 'Δ Exp−Dom', mode:'lines+markers', line:{color:'#1e3a5f'}, yaxis:'y2' },
+    ], {
+      margin:{t:30,r:50,b:40,l:50},
+      yaxis:{title:'$/t'}, yaxis2:{title:'Δ $/t', overlaying:'y', side:'right'},
+      legend:{orientation:'h'}, paper_bgcolor:'rgba(0,0,0,0)'
+    }, {responsive:true, displayModeBar:false});
+  }, 30);
+
+  return `
+    <h1>Netback trend report</h1>
+    <div class="meta">${rows.map(r => monthLabel(r.month)).join(' → ')} · ${rows.length} months</div>
+    <div class="kpi-grid">
+      <div class="k"><span>From</span><b>${monthLabel(first.p.month)}</b></div>
+      <div class="k"><span>To</span><b>${monthLabel(last.p.month)}</b></div>
+      <div class="k"><span>Δ Export NB</span><b class="${deltaClass(last.c.nbExp-first.c.nbExp)}">${(last.c.nbExp-first.c.nbExp>=0?'+':'')+fmt(last.c.nbExp-first.c.nbExp,1)}</b></div>
+      <div class="k"><span>Δ Domestic NB</span><b class="${deltaClass(last.c.nbDom-first.c.nbDom)}">${(last.c.nbDom-first.c.nbDom>=0?'+':'')+fmt(last.c.nbDom-first.c.nbDom,1)}</b></div>
+    </div>
+    <div id="trendChart"></div>
+    <h2 style="font-size:.95rem;margin:14px 0 6px">Parameter &amp; result changes (first → last)</h2>
+    <table class="report-table">
+      <thead><tr><th>Item</th><th class="num">First</th><th class="num">Last</th><th class="num">Change</th></tr></thead>
+      <tbody>
+        ${changes.map(([n,a,b,u]) => {
+          const d = num(b)-num(a);
+          return `<tr><td>${n}</td><td class="num">${fmt(a, n.includes('KZT')&&!n.includes('NB')?0:2)} ${u}</td><td class="num">${fmt(b, n.includes('KZT')&&!n.includes('NB')?0:2)} ${u}</td><td class="num ${deltaClass(d)}">${(d>=0?'+':'')+fmt(d,2)}</td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <h2 style="font-size:.95rem;margin:14px 0 6px">Month detail</h2>
+    <table class="report-table">
+      <thead><tr><th>Month</th><th>Route</th><th class="num">Brent</th><th class="num">FX</th><th class="num">Skebco</th><th class="num">Disc</th><th class="num">Local</th><th class="num">Exp NB</th><th class="num">Dom NB</th><th class="num">Δ</th></tr></thead>
+      <tbody>
+        ${computed.map(({p,c,params}) => `<tr>
+          <td>${monthLabel(p.month)}</td>
+          <td>${domesticLabelFrom(params.domesticRoute)}</td>
+          <td class="num">${fmt(params.brent,1)}</td>
+          <td class="num">${fmt(params.fx,0)}</td>
+          <td class="num">${fmt(params.sk,2)}</td>
+          <td class="num">${fmt(params.disc,2)}</td>
+          <td class="num">${fmtInt(params.localKzt)}</td>
+          <td class="num">${fmt(c.nbExp,1)}</td>
+          <td class="num">${fmt(c.nbDom,1)}</td>
+          <td class="num">${(c.spread>=0?'+':'')+fmt(c.spread,1)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function wireProfilesReports() {
+  document.getElementById('btnLoadProfile').onclick = () => loadProfileById(document.getElementById('profileSelect').value);
+  document.getElementById('btnResetMonth').onclick = resetToCurrentMonth;
+  document.getElementById('btnRefreshCloud').onclick = () => refreshFromCloud();
+  document.getElementById('btnSaveLocalOnly').onclick = () => {
+    upsertProfile({
+      month: document.getElementById('pfMonth').value || CURRENT_MONTH_ID,
+      label: document.getElementById('pfLabel').value,
+      author: document.getElementById('pfAuthor').value,
+      notes: document.getElementById('pfNotes').value,
+      online: false
+    });
+  };
+  document.getElementById('btnSaveProfile').onclick = async () => {
+    setStatus('saveStatus', 'Saving…');
+    await upsertProfile({
+      month: document.getElementById('pfMonth').value || CURRENT_MONTH_ID,
+      label: document.getElementById('pfLabel').value,
+      author: document.getElementById('pfAuthor').value,
+      notes: document.getElementById('pfNotes').value,
+      online: true
+    });
+  };
+  document.getElementById('profileTable').addEventListener('click', (e) => {
+    const load = e.target.closest('[data-load]');
+    const del = e.target.closest('[data-del]');
+    if (load) loadProfileById(load.dataset.load);
+    if (del && confirm('Delete profile ' + del.dataset.del + '?')) deleteProfile(del.dataset.del);
+  });
+  document.getElementById('btnExportProfiles').onclick = () => {
+    const blob = new Blob([JSON.stringify(profileDb, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'emiroil-netback-profiles.json';
+    a.click();
+  };
+  document.getElementById('btnImportProfiles').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!data || !Array.isArray(data.profiles)) throw new Error('bad file');
+      profileDb = mergeProfileDbs(data, profileDb);
+      ensureOctBaseline(); sortProfiles(); saveProfilesLocal(); renderProfileUI();
+      setStatus('profileStatus', 'Imported profiles.', 'ok');
+    } catch {
+      setStatus('profileStatus', 'Import failed.', 'err');
+    }
+  });
+  document.getElementById('btnSaveToken').onclick = () => {
+    const t = document.getElementById('publishToken').value.trim();
+    try { if (t) localStorage.setItem(TOKEN_KEY, t); } catch {}
+    setStatus('tokenStatus', t ? 'Token saved on this device.' : 'No token entered.', t?'ok':'err');
+  };
+  document.getElementById('btnClearToken').onclick = () => {
+    try { localStorage.removeItem(TOKEN_KEY); } catch {}
+    document.getElementById('publishToken').value = '';
+    setStatus('tokenStatus', 'Token cleared.', 'ok');
+  };
+  try {
+    const t = getPublishToken();
+    if (t) document.getElementById('publishToken').value = t;
+  } catch {}
+
+  document.getElementById('reportType').onchange = () => {
+    const trend = document.getElementById('reportType').value === 'trend';
+    document.getElementById('singlePickWrap').style.display = trend ? 'none' : 'block';
+    document.getElementById('multiPickWrap').style.display = trend ? 'block' : 'none';
+  };
+  document.getElementById('btnBuildReport').onclick = () => {
+    const type = document.getElementById('reportType').value;
+    const out = document.getElementById('reportOut');
+    if (type === 'single') {
+      out.innerHTML = buildSingleReport(document.getElementById('reportSingle').value);
+    } else {
+      const ids = [...document.getElementById('reportMulti').selectedOptions].map(o => o.value);
+      out.innerHTML = buildTrendReport(ids);
+    }
+  };
+  document.getElementById('btnPrintReport').onclick = () => window.print();
+}
+
+async function initProfilesReports() {
+  loadProfilesLocal();
+  wireProfilesReports();
+  renderProfileUI();
+  await refreshFromCloud();
+  // if active profile remembered and not default state conflict, keep current sliders unless first run
+}
+
+
 const PASS_HASH = 'f37fb3b334b91963156688425d552579f952550568f8ae9472e401fc9ce2767c';
 const AUTH_KEY = 'eo_netback_auth_v1';
 
@@ -697,7 +1351,9 @@ function startApp() {
   buildTransportTables();
   refreshTransportUI();
   renderNetback();
-  showPage((location.hash||'#netback').replace('#','') === 'transport' ? 'transport' : 'netback');
+  initProfilesReports();
+  const hash=(location.hash||'#netback').replace('#','');
+  showPage(['netback','transport','profiles','reports'].includes(hash)?hash:'netback');
 }
 
 async function tryUnlock(pw) {
