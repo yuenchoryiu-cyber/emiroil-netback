@@ -330,11 +330,11 @@
           <div class="nb-val" id="verdictSpread">—</div>
         </div>
         <div>
-          <span class="nb-label">USD→KZT (FX)</span>
+          <span class="nb-label">FX (KZT / 1 USD)</span>
           <div class="nb-val" id="verdictFx">—</div>
         </div>
         <div>
-          <span class="nb-label">RUB→KZT</span>
+          <span class="nb-label">RUB→KZT (KZT / 1 RUB)</span>
           <div class="nb-val" id="verdictRu">—</div>
         </div>
       </div>
@@ -351,8 +351,8 @@
           <input id="brent" type="range" min="20" max="200" step="0.5" value="105"/>
         </div>
         <div>
-          <label>FX <span class="val" id="fxLbl">450</span> KZT/USD</label>
-          <input id="fx" type="range" min="360" max="560" step="1" value="450"/>
+          <label>FX <span class="val" id="fxLbl">450.18</span> KZT per 1 USD</label>
+          <input id="fx" type="range" min="360" max="560" step="0.01" value="450.18"/>
         </div>
         <div>
           <label>Skebco (D6) <span class="val" id="skLbl">20.1</span> $/bbl</label>
@@ -363,8 +363,8 @@
           <input id="disc" type="range" min="-20" max="20" step="0.01" value="6.18"/>
         </div>
         <div>
-          <label>RUB→KZT (Novoros legs) <span class="val" id="ruLbl">5.56</span></label>
-          <input id="ru" type="range" min="4" max="10" step="0.01" value="5.56"/>
+          <label>RUB→KZT (Novoros) <span class="val" id="ruLbl">5.56</span> KZT per 1 RUB</label>
+          <input id="ru" type="range" min="4" max="10" step="0.01" value="5.5606"/>
         </div>
         <div>
           <label>Local domestic VAT-incl <span class="val" id="locLbl">130,000</span> KZT/t</label>
@@ -432,12 +432,12 @@
     </div>
     <div class="controls tr-controls">
       <div>
-        <label>FX <span class="val" id="trFxLbl">440</span></label>
-        <input id="trFx" type="range" min="360" max="560" step="1" value="450"/>
+        <label>FX (KZT/USD) <span class="val" id="trFxLbl">450.18</span></label>
+        <input id="trFx" type="range" min="360" max="560" step="0.01" value="450.18"/>
       </div>
       <div>
-        <label>RUB→KZT <span class="val" id="trRuLbl">6.83</span></label>
-        <input id="trRu" type="range" min="4" max="10" step="0.01" value="5.56"/>
+        <label>RUB→KZT (KZT/RUB) <span class="val" id="trRuLbl">5.56</span></label>
+        <input id="trRu" type="range" min="4" max="10" step="0.01" value="5.5606"/>
       </div>
       <div>
         <label>Bulk % EXPORT <span class="val" id="bulkExpLbl">0%</span></label>
@@ -490,7 +490,8 @@
         <div><b>Export MET</b> = Brent × MET% × MET bbl factor</div>
         <div><b>Export duty</b> = GCA duty ladder(Brent) $/t</div>
         <div><b>Domestic MET</b> = domestic MET share × export MET</div>
-        <div><b>Local price ex-VAT</b> = local KZT / FX / VAT factor</div>
+        <div><b>Local price ex-VAT</b> = local KZT ÷ FX (KZT per USD) ÷ VAT factor</div>
+        <div><b>Transport $/t</b> = Σ(KZT legs + RUB legs × RUB→KZT) ÷ FX</div>
       </div>
       <div class="kpi-grid" style="margin-top:10px" id="taxLiveKpis">
         <div class="k"><span>Rental rate @ Brent</span><b id="taxKpiRentRate">—</b></div>
@@ -629,11 +630,11 @@
       <h2>Parameters</h2>
       <div class="param-grid">
         <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
-        <div class="field"><label>FX (KZT/USD)</label><input id="peFx" type="number" step="0.01" value="450.18"/></div>
+        <div class="field"><label>FX (KZT per 1 USD)</label><input id="peFx" type="number" step="0.01" value="450.18"/></div>
         <div class="field"><label>Skebco D6 ($/bbl)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
         <div class="field"><label>Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="6.18"/></div>
         <div class="field"><label>Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="130000"/></div>
-        <div class="field"><label>RUB→KZT</label><input id="peRu" type="number" step="0.01" value="5.5606"/></div>
+        <div class="field"><label>RUB→KZT (KZT per 1 RUB)</label><input id="peRu" type="number" step="0.0001" value="5.5606"/></div>
         <div class="field"><label>Export bbl/t</label><input id="peKb" type="number" step="0.0001" value="7.2223"/></div>
         <div class="field"><label>MET rate (e.g. 0.05)</label><input id="peMet" type="number" step="0.005" value="0.05"/></div>
         <div class="field"><label>VAT factor</label><input id="peVat" type="number" step="0.01" value="1.16"/></div>
@@ -873,9 +874,14 @@ function hydrate() {
   } catch {}
 }
 
+function safeRate(v, fb, floor=1e-9) {
+  const n = num(v, fb);
+  return n > floor ? n : floor;
+}
 function lineKzt(line, pct, ru) {
   const tariff = line.tariff * (1 + num(pct,0)/100);
-  return line.kind === 'rub' ? tariff * num(ru, BASE.ru) : tariff;
+  // RUB tariffs × (KZT per 1 RUB) → KZT; KZT tariffs pass through
+  return line.kind === 'rub' ? tariff * safeRate(ru, BASE.ru) : tariff;
 }
 function activeDomesticRoute() {
   return state.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop';
@@ -888,7 +894,8 @@ function domesticLines() {
   return TR_LINES.filter(l => l.channel === 'domestic' && l.route === route);
 }
 function transportTotals() {
-  const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
+  // FX = KZT per 1 USD; RU = KZT per 1 RUB (X-Rates / profile month avg)
+  const ru = safeRate(state.ru, BASE.ru), fx = safeRate(state.fx, BASE.fx);
   let expK=0, domK=0, expRubTariff=0, expRubKzt=0;
   for (const line of TR_LINES) {
     if (line.channel === 'domestic' && line.route !== activeDomesticRoute()) continue;
@@ -910,14 +917,15 @@ function trAdjusted() {
 }
 
 function calcNetback() {
-  const B=num(state.brent), FX=num(state.fx), S=num(state.sk), DISC=num(state.disc);
-  const LOC=num(state.localKzt), RU=num(state.ru), KB=num(state.kb), MET=num(state.metRate), VAT=num(state.vat);
-  const kbRent = num(taxState.kbRent, 7.5), kbMet = num(taxState.kbMet, 7.5);
-  const domMetShare = num(taxState.domMetShare, 0.1);
-  const { expK, domK, expRubTariff, expRubKzt } = transportTotals();
+  const B=num(state.brent), S=num(state.sk), DISC=num(state.disc);
+  const LOC=num(state.localKzt), KB=num(state.kb), MET=num(state.metRate), VAT=safeRate(state.vat, BASE.vat);
+  // FX: KZT per USD — divide KZT amounts to get $/t. RU: KZT per RUB for Novoros legs.
+  const { expK, domK, expRubTariff, expRubKzt, fx: FX, ru: RU } = transportTotals();
   const trExp = expK/FX, trDom = domK/FX;
   const rentRate = vlookup(B, taxState.rent), duty = vlookup(B, taxState.duty);
   const priceBbl = B - S - DISC, priceTexp = priceBbl * KB;
+  const kbRent = num(taxState.kbRent, 7.5), kbMet = num(taxState.kbMet, 7.5);
+  const domMetShare = num(taxState.domMetShare, 0.1);
   const rental = rentRate * B * kbRent, metExp = B * MET * kbMet;
   const nbExp = priceTexp - trExp - duty - rental - metExp;
   const priceTdom = LOC/FX/VAT, metDom = domMetShare * metExp;
@@ -943,10 +951,10 @@ function renderNetback() {
     if (el && document.activeElement !== el) el.value = state[id];
   }
   document.getElementById('brentLbl').textContent = num(state.brent).toFixed(1).replace(/\.0$/,'');
-  document.getElementById('fxLbl').textContent = String(num(state.fx));
+  document.getElementById('fxLbl').textContent = num(state.fx).toFixed(2);
   document.getElementById('skLbl').textContent = num(state.sk).toFixed(1);
   document.getElementById('discLbl').textContent = num(state.disc).toFixed(2);
-  document.getElementById('ruLbl').textContent = num(state.ru).toFixed(2);
+  document.getElementById('ruLbl').textContent = num(state.ru).toFixed(4);
   document.getElementById('locLbl').textContent = fmtInt(state.localKzt);
   document.getElementById('kbLbl').textContent = num(state.kb).toFixed(4);
   document.getElementById('metLbl').textContent = (num(state.metRate)*100).toFixed(1)+'%';
@@ -957,8 +965,8 @@ function renderNetback() {
   // keep transport page twin sliders in sync if not focused
   if (document.activeElement !== document.getElementById('trFx')) document.getElementById('trFx').value = state.fx;
   if (document.activeElement !== document.getElementById('trRu')) document.getElementById('trRu').value = state.ru;
-  document.getElementById('trFxLbl').textContent = String(num(state.fx));
-  document.getElementById('trRuLbl').textContent = num(state.ru).toFixed(2);
+  document.getElementById('trFxLbl').textContent = num(state.fx).toFixed(2);
+  document.getElementById('trRuLbl').textContent = num(state.ru).toFixed(4);
 
   const c = calcNetback();
   const taxAtBase =
@@ -988,8 +996,8 @@ function renderNetback() {
     row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
     row('INPUTS','','','secIn'),
     row('Brent','L3', fmt(c.B,1)+' $/bbl'),
-    row('FX (USD→KZT)','Converts all transport KZT → $/t', fmt(c.FX,2)+' KZT/USD'),
-    row('RUB→KZT','Converts Novoros RUB legs → KZT (live)', fmt(c.RU,4)),
+    row('FX (KZT per 1 USD)','All KZT totals ÷ FX → $/t', fmt(c.FX,2)+' KZT/USD'),
+    row('RUB→KZT (KZT per 1 RUB)','Novoros RUB legs × rate → KZT', fmt(c.RU,4)),
     row('Skebco (D6)','D6', fmt(c.S,3)+' $/bbl'),
     row('Discount (D7)','D7', fmt(c.DISC,2)+' $/bbl'),
     row('Local domestic','G5/F5 list', fmtInt(c.LOC)+' KZT/t'),
@@ -1056,7 +1064,7 @@ function buildTransportTables() {
     for (const line of lines) {
       if (line.group!==last){ html += `<tr><td colspan="6" style="background:#eef2ff;font-weight:700">${line.group}</td></tr>`; last=line.group; }
       html += `<tr class="${line.kind==='rub'?'rub':''}">
-        <td>${line.row}</td><td>${line.name}</td><td>${line.kind==='rub'?'RUB×J3':'KZT'}</td>
+        <td>${line.row}</td><td>${line.name}</td><td>${line.kind==='rub'?'RUB×(RUB→KZT)':'KZT'}</td>
         <td class="num">${fmt(line.tariff, line.kind==='rub'?4:2)}</td>
         <td class="pct-cell">
           <span class="pct-lbl" data-lbl="${line.id}">0.0%</span>
@@ -1089,7 +1097,10 @@ function refreshTransportUI() {
   const { expUsd, domUsd, expK, domK, fx, ru } = transportTotals();
   document.getElementById('kExp').textContent = `${fmt(expUsd,2)} $/t (${fmt(expK,0)} KZT)`;
   document.getElementById('kDom').textContent = `${fmt(domUsd,2)} $/t (${fmt(domK,0)} KZT)`;
-  document.getElementById('kFx').textContent = `${fx} / ${ru.toFixed(2)}`;
+  document.getElementById('kFx').textContent = `${fmt(fx,2)} / ${fmt(ru,4)}`;
+  if (document.getElementById('page-route-map')?.classList.contains('active')) {
+    renderRouteMap();
+  }
   document.getElementById('bulkExpLbl').textContent = num(state.bulkExp)+'%';
   document.getElementById('bulkDomLbl').textContent = num(state.bulkDom)+'%';
   if (document.activeElement !== document.getElementById('bulkExp')) document.getElementById('bulkExp').value = num(state.bulkExp);
@@ -1249,7 +1260,7 @@ const ROUTE_EDGES = {
   e29: ['tasbulat','uzen'],
   e30: ['uzen','kasymova'],
   e31: ['kasymova','border'],
-  e43: ['border','samara'],
+  e43: ['samara','samara'],          // operator activity at Samara
   e44: ['border','samara'],
   e45: ['samara','krasno'],
   e46: ['krasno','tikhoretsk'],
@@ -1267,7 +1278,7 @@ const ROUTE_EDGES = {
   d5: ['tasbulat','uzen'],
   d7: ['uzen','shmanova'],
   d8: ['shmanova','shmanova'],
-  d9: ['kenkiyak','kenkiyak'],
+  d9: ['shmanova','kenkiyak'],       // connect path into Kenkiyak
   d10: ['kumkol','dzhuma'],
   d11: ['dzhuma','pkop'],
   d12: ['pkop','pkop'],
@@ -1276,7 +1287,7 @@ const ROUTE_EDGES = {
   p17: ['tasbulat','uzen'],
   p19: ['uzen','shmanova'],
   p20: ['shmanova','shmanova'],
-  p21: ['kenkiyak','kenkiyak'],
+  p21: ['shmanova','kenkiyak'],
   p22: ['kumkol','dzhuma'],
   p23: ['dzhuma','atasu'],
   p24: ['atasu','pavlodar'],
@@ -1290,98 +1301,141 @@ let routeLayers = { export: null, pkop: null, pavlodar: null };
 let routeMarkers = [];
 let routeLegLayers = {};   // id → { layer, color, nodes, line }
 let routeHighlight = null; // temporary highlight layer group
+let routeHighlightClearTimer = null;
 let routeLastMode = 'all';
 
 function legNativeTariff(line) {
   const pct = num(state.transportPct[line.id], 0);
   return line.tariff * (1 + pct / 100);
 }
-function legPriceHtml(line) {
-  const pct = num(state.transportPct[line.id], 0);
+function legNativeLabel(line) {
   const native = legNativeTariff(line);
   const ccy = line.kind === 'rub' ? 'RUB' : 'KZT';
   const dp = line.kind === 'rub' ? 3 : 2;
+  return `${fmt(native, dp)} ${ccy}/t`;
+}
+function legPriceHtml(line) {
+  const pct = num(state.transportPct[line.id], 0);
+  const ccy = line.kind === 'rub' ? 'RUB' : 'KZT';
+  const dp = line.kind === 'rub' ? 3 : 2;
   return `<b>${line.name}</b><br>` +
-    `Route row ${line.row} · <b>${fmt(native, dp)} ${ccy}/t</b>` +
+    `Route row ${line.row} · <b>${legNativeLabel(line)}</b>` +
     (Math.abs(pct) > 1e-9
       ? `<br>Base ${fmt(line.tariff, dp)} ${ccy}/t · % adj ${(pct > 0 ? '+' : '') + fmt(pct, 1)}%`
       : '');
 }
 
+/** Perpendicular / radial offset so stacked tariffs on the same corridor stay pickable. */
+function offsetEdgeLatLngs(fromKey, toKey, slot, total) {
+  const a = ROUTE_NODES[fromKey], b = ROUTE_NODES[toKey];
+  if (!a || !b) return null;
+  const mid = (total - 1) / 2;
+  const k = (slot - mid) * 0.22; // degrees ≈ 20–25 km
+  if (fromKey === toKey) {
+    return {
+      isPoint: true,
+      latlngs: [[a.lat + k * 0.35, a.lng + k]],
+      nodes: [fromKey]
+    };
+  }
+  const dx = b.lng - a.lng, dy = b.lat - a.lat;
+  const len = Math.hypot(dx, dy) || 1;
+  const ox = (-dy / len) * k;
+  const oy = (dx / len) * k;
+  return {
+    isPoint: false,
+    latlngs: [[a.lat + oy, a.lng + ox], [b.lat + oy, b.lng + ox]],
+    nodes: [fromKey, toKey]
+  };
+}
+
 function clearRouteHighlight() {
+  if (routeHighlightClearTimer) {
+    clearTimeout(routeHighlightClearTimer);
+    routeHighlightClearTimer = null;
+  }
   if (routeHighlight && routeMap) {
     routeMap.removeLayer(routeHighlight);
     routeHighlight = null;
   }
   document.querySelectorAll('#routeLegList .leg.is-active').forEach(el => el.classList.remove('is-active'));
-  // restore dimmed base legs
   Object.values(routeLegLayers).forEach(info => {
-    if (!info || !info.layer) return;
-    if (info.layer.setStyle) {
+    if (!info || !info.layer || !info.layer.setStyle) return;
+    if (info.isPoint) {
+      info.layer.setStyle({
+        opacity: 1, fillOpacity: info.baseOpacity, fillColor: info.color, color: info.color,
+        radius: info.baseRadius || 9, weight: 2
+      });
+    } else {
       info.layer.setStyle({ opacity: info.baseOpacity, weight: info.baseWeight, color: info.color });
-    } else if (info.layer.setRadius) {
-      info.layer.setStyle({ fillOpacity: 0.85, radius: info.baseRadius || 9, weight: 2 });
     }
   });
   routeMarkers.forEach(m => {
-    if (m.setStyle) m.setStyle({ opacity: 1, fillOpacity: 0.95, radius: 7, weight: 2 });
+    if (m.setStyle) m.setStyle({ opacity: 1, fillOpacity: 0.95, radius: 6, weight: 2 });
   });
 }
 
+function scheduleClearRouteHighlight() {
+  if (routeHighlightClearTimer) clearTimeout(routeHighlightClearTimer);
+  routeHighlightClearTimer = setTimeout(() => clearRouteHighlight(), 120);
+}
+
 function highlightRouteLeg(id, listEl) {
+  if (routeHighlightClearTimer) {
+    clearTimeout(routeHighlightClearTimer);
+    routeHighlightClearTimer = null;
+  }
   clearRouteHighlight();
   const info = routeLegLayers[id];
   if (!info || !routeMap) return;
   if (listEl) listEl.classList.add('is-active');
 
-  // dim everything else
   Object.entries(routeLegLayers).forEach(([lid, other]) => {
     if (!other || !other.layer || lid === id) return;
-    if (other.layer.setStyle) {
-      if (other.isPoint) other.layer.setStyle({ fillOpacity: 0.25, opacity: 0.3, radius: 6 });
-      else other.layer.setStyle({ opacity: 0.18, weight: 2 });
-    }
+    if (other.isPoint) other.layer.setStyle({ fillOpacity: 0.2, opacity: 0.25, radius: 5 });
+    else other.layer.setStyle({ opacity: 0.15, weight: 2 });
   });
   routeMarkers.forEach(m => {
     const nk = m._routeNodeKey;
     if (info.nodes.includes(nk)) return;
-    if (m.setStyle) m.setStyle({ opacity: 0.25, fillOpacity: 0.25, radius: 5 });
+    if (m.setStyle) m.setStyle({ opacity: 0.2, fillOpacity: 0.2, radius: 4 });
   });
 
+  // interactive:false so highlight glow does not steal mouse and flicker
   routeHighlight = L.layerGroup().addTo(routeMap);
   const glowColor = '#f59e0b';
+  const tip = `${info.line.name} · ${legNativeLabel(info.line)}`;
+  const latlngs = info.latlngs;
 
   if (info.isPoint) {
-    const n = ROUTE_NODES[info.nodes[0]];
-    if (n) {
-      L.circleMarker([n.lat, n.lng], {
-        radius: 18, color: glowColor, weight: 3, fillColor: glowColor, fillOpacity: 0.4
-      }).addTo(routeHighlight);
-      L.circleMarker([n.lat, n.lng], {
-        radius: 10, color: '#fff', weight: 2, fillColor: info.color, fillOpacity: 1
-      }).addTo(routeHighlight).bindTooltip(info.line.name, { permanent:true, direction:'top', className:'route-hl-tip' }).openTooltip();
-    }
-  } else {
-    const latlngs = info.nodes.map(k => {
-      const n = ROUTE_NODES[k];
-      return n ? [n.lat, n.lng] : null;
-    }).filter(Boolean);
-    if (latlngs.length >= 2) {
-      L.polyline(latlngs, { color: glowColor, weight: 14, opacity: 0.4, lineCap:'round' }).addTo(routeHighlight);
-      L.polyline(latlngs, { color: info.color, weight: 7, opacity: 1, lineCap:'round' })
-        .addTo(routeHighlight)
-        .bindTooltip(info.line.name, { permanent:true, direction:'center', className:'route-hl-tip' })
-        .openTooltip();
-      info.nodes.forEach(nk => {
-        const n = ROUTE_NODES[nk];
-        if (!n) return;
-        L.circleMarker([n.lat, n.lng], {
-          radius: 11, color: '#fff', weight: 2, fillColor: glowColor, fillOpacity: 1
-        }).addTo(routeHighlight).bindTooltip(n.name, { permanent:true, direction:'top', offset:[0,-8] });
-      });
-    }
+    const ll = latlngs[0];
+    L.circleMarker(ll, {
+      radius: 18, color: glowColor, weight: 3, fillColor: glowColor, fillOpacity: 0.4, interactive: false
+    }).addTo(routeHighlight);
+    L.circleMarker(ll, {
+      radius: 10, color: '#fff', weight: 2, fillColor: info.color, fillOpacity: 1, interactive: false
+    }).addTo(routeHighlight)
+      .bindTooltip(tip, { permanent:true, direction:'top', className:'route-hl-tip' })
+      .openTooltip();
+  } else if (latlngs && latlngs.length >= 2) {
+    L.polyline(latlngs, {
+      color: glowColor, weight: 14, opacity: 0.4, lineCap:'round', interactive: false
+    }).addTo(routeHighlight);
+    L.polyline(latlngs, {
+      color: info.color, weight: 7, opacity: 1, lineCap:'round', interactive: false
+    }).addTo(routeHighlight)
+      .bindTooltip(tip, { permanent:true, direction:'center', className:'route-hl-tip' })
+      .openTooltip();
+    info.nodes.forEach((nk, i) => {
+      const n = ROUTE_NODES[nk];
+      if (!n) return;
+      L.circleMarker(latlngs[i] || [n.lat, n.lng], {
+        radius: 10, color: '#fff', weight: 2, fillColor: glowColor, fillOpacity: 1, interactive: false
+      }).addTo(routeHighlight)
+        .bindTooltip(n.name, { permanent:true, direction:'top', offset:[0,-8], className:'route-hl-tip' });
+    });
   }
-  // keep camera fixed — no pan / re-fit on highlight
+  // camera stays fixed
 }
 
 function renderRouteMap(mode) {
@@ -1390,12 +1444,10 @@ function renderRouteMap(mode) {
   const host = document.getElementById('routeMap');
   if (!host || typeof L === 'undefined') return;
   if (!routeMap) {
-    // Fixed framing: Caspian → Black Sea corridor, north-up, no rotation
     routeMap = L.map('routeMap', {
-      scrollWheelZoom:true,
+      scrollWheelZoom: true,
       zoomSnap: 0.25,
-      zoomDelta: 0.5,
-      preferCanvas: true
+      zoomDelta: 0.5
     }).setView([47.2, 55.5], 5.25);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 12,
@@ -1415,77 +1467,93 @@ function renderRouteMap(mode) {
     pavlodar: { color:'#7c3aed', lines: TR_LINES.filter(l => l.channel==='domestic' && l.route==='pavlodar'), layer: routeLayers.pavlodar }
   };
 
-  const list = document.getElementById('routeLegList');
-  let listHtml = `<h2 style="margin-top:0">Legs · original currency</h2>
-    <p class="lead" style="margin:0 0 8px">Hover a leg to highlight it. Prices shown in tariff currency (KZT or RUB/t). Route ${domesticLabel()}</p>`;
+  // visible groups for this mode
+  const visible = Object.entries(groups).filter(([key]) => {
+    if (mode === 'export' && key !== 'export') return false;
+    if (mode === 'dom' && key === 'export') return false;
+    if (mode === 'dom' && key !== activeDomesticRoute()) return false;
+    return true;
+  });
 
-  for (const [key, g] of Object.entries(groups)) {
-    if (mode === 'export' && key !== 'export') continue;
-    if (mode === 'dom' && key === 'export') continue;
-    if (mode === 'dom' && key !== activeDomesticRoute()) continue;
-
-    // one polyline / point marker per tariff leg
+  // count overlapping corridors so we can offset
+  const edgeBuckets = {};
+  visible.forEach(([, g]) => {
     g.lines.forEach(line => {
       const edge = ROUTE_EDGES[line.id];
       if (!edge) return;
-      const a = ROUTE_NODES[edge[0]], b = ROUTE_NODES[edge[1]];
-      if (!a || !b) return;
-      const isPoint = edge[0] === edge[1];
-      let layer;
-      if (isPoint) {
-        layer = L.circleMarker([a.lat, a.lng], {
-          radius: 9, color: g.color, weight: 2, fillColor: g.color, fillOpacity: 0.85
-        }).bindTooltip(line.name).bindPopup(legPriceHtml(line), { maxWidth:280 });
-        layer.addTo(g.layer);
-        routeLegLayers[line.id] = {
-          layer, color: g.color, nodes: [edge[0]], line, isPoint: true,
-          baseOpacity: 0.85, baseWeight: 2, baseRadius: 9
-        };
-      } else {
-        layer = L.polyline([[a.lat, a.lng], [b.lat, b.lng]], {
-          color: g.color, weight: 4, opacity: 0.8, lineCap: 'round'
-        }).bindTooltip(line.name).bindPopup(legPriceHtml(line), { maxWidth:280 });
-        layer.addTo(g.layer);
-        routeLegLayers[line.id] = {
-          layer, color: g.color, nodes: [edge[0], edge[1]], line, isPoint: false,
-          baseOpacity: 0.8, baseWeight: 4
-        };
-      }
-      layer.on('mouseover', () => {
-        const el = document.querySelector(`#routeLegList [data-map-leg="${line.id}"]`);
-        highlightRouteLeg(line.id, el);
-        if (el) el.scrollIntoView({ block:'nearest', behavior:'smooth' });
-      });
-      layer.on('mouseout', () => clearRouteHighlight());
-      layer.on('click', () => {
-        const el = document.querySelector(`#routeLegList [data-map-leg="${line.id}"]`);
-        highlightRouteLeg(line.id, el);
-        if (el) el.scrollIntoView({ block:'nearest', behavior:'smooth' });
-      });
+      const key = edge[0] + '>' + edge[1];
+      (edgeBuckets[key] || (edgeBuckets[key] = [])).push(line.id);
     });
+  });
+  const edgeSlot = {};
+  Object.values(edgeBuckets).forEach(ids => {
+    ids.forEach((id, i) => { edgeSlot[id] = { slot: i, total: ids.length }; });
+  });
 
-    // node markers
+  const list = document.getElementById('routeLegList');
+  let listHtml = `<h2 style="margin-top:0">Legs · original currency</h2>
+    <p class="lead" style="margin:0 0 8px">Hover a leg to highlight it (map stays put). Prices in tariff currency (KZT or RUB/t). Route ${domesticLabel()}</p>`;
+
+  for (const [key, g] of visible) {
+    // station markers under legs so line hover wins
     const nodeKeys = new Set();
-    g.lines.forEach(l => (ROUTE_EDGES[l.id]||[]).forEach(k => nodeKeys.add(k)));
+    g.lines.forEach(l => (ROUTE_EDGES[l.id] || []).forEach(k => nodeKeys.add(k)));
     [...nodeKeys].forEach(nk => {
       const n = ROUTE_NODES[nk];
       if (!n) return;
-      const related = g.lines.filter(l => (ROUTE_EDGES[l.id]||[]).includes(nk));
+      const related = g.lines.filter(l => (ROUTE_EDGES[l.id] || []).includes(nk));
       const html = `<b>${n.name}</b><br>` + related.map(l => legPriceHtml(l)).join('<hr style="margin:6px 0;border:0;border-top:1px solid #ddd">');
       const m = L.circleMarker([n.lat, n.lng], {
-        radius:7, color:'#fff', weight:2, fillColor:g.color, fillOpacity:0.95
-      }).bindPopup(html, { maxWidth:280 }).bindTooltip(n.name);
+        radius: 6, color: '#fff', weight: 2, fillColor: g.color, fillOpacity: 0.95
+      }).bindPopup(html, { maxWidth: 300 }).bindTooltip(n.name);
       m._routeNodeKey = nk;
       m.addTo(g.layer);
       routeMarkers.push(m);
     });
 
-    listHtml += `<div style="margin:8px 0 4px;font-weight:700;color:${g.color}">${key==='export'?'EXPORT':(key==='pkop'?'DOMESTIC Shymkent':'DOMESTIC Pavlodar')}</div>`;
     g.lines.forEach(line => {
-      const native = legNativeTariff(line);
-      const ccy = line.kind === 'rub' ? 'RUB' : 'KZT';
-      const dp = line.kind === 'rub' ? 3 : 2;
-      listHtml += `<div class="leg" data-map-leg="${line.id}"><span>${line.row}. ${line.name}</span><b>${fmt(native, dp)} ${ccy}/t</b></div>`;
+      const edge = ROUTE_EDGES[line.id];
+      if (!edge) return;
+      const pack = edgeSlot[line.id] || { slot: 0, total: 1 };
+      const geo = offsetEdgeLatLngs(edge[0], edge[1], pack.slot, pack.total);
+      if (!geo) return;
+      let layer;
+      if (geo.isPoint) {
+        layer = L.circleMarker(geo.latlngs[0], {
+          radius: 9, color: g.color, weight: 2, fillColor: g.color, fillOpacity: 0.85
+        });
+        routeLegLayers[line.id] = {
+          layer, color: g.color, nodes: geo.nodes, line, isPoint: true,
+          latlngs: geo.latlngs, baseOpacity: 0.85, baseWeight: 2, baseRadius: 9
+        };
+      } else {
+        layer = L.polyline(geo.latlngs, {
+          color: g.color, weight: 5, opacity: 0.85, lineCap: 'round'
+        });
+        routeLegLayers[line.id] = {
+          layer, color: g.color, nodes: geo.nodes, line, isPoint: false,
+          latlngs: geo.latlngs, baseOpacity: 0.85, baseWeight: 5
+        };
+      }
+      layer.bindTooltip(`${line.name}<br><b>${legNativeLabel(line)}</b>`, { sticky: true })
+        .bindPopup(legPriceHtml(line), { maxWidth: 300 });
+      layer.on('mouseover', () => {
+        const el = document.querySelector(`#routeLegList [data-map-leg="${line.id}"]`);
+        highlightRouteLeg(line.id, el);
+        if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+      layer.on('mouseout', () => scheduleClearRouteHighlight());
+      layer.on('click', () => {
+        const el = document.querySelector(`#routeLegList [data-map-leg="${line.id}"]`);
+        highlightRouteLeg(line.id, el);
+        if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+      layer.addTo(g.layer);
+    });
+
+    listHtml += `<div style="margin:8px 0 4px;font-weight:700;color:${g.color}">${key === 'export' ? 'EXPORT' : (key === 'pkop' ? 'DOMESTIC Shymkent' : 'DOMESTIC Pavlodar')}</div>`;
+    g.lines.forEach(line => {
+      listHtml += `<div class="leg" data-map-leg="${line.id}"><span>${line.row}. ${line.name}</span><b>${legNativeLabel(line)}</b></div>`;
     });
 
     g.layer.addTo(routeMap);
@@ -1494,21 +1562,18 @@ function renderRouteMap(mode) {
     list.innerHTML = listHtml;
     list.querySelectorAll('[data-map-leg]').forEach(el => {
       el.addEventListener('mouseenter', () => highlightRouteLeg(el.dataset.mapLeg, el));
-      el.addEventListener('mouseleave', () => clearRouteHighlight());
-      el.addEventListener('click', () => {
-        highlightRouteLeg(el.dataset.mapLeg, el);
-      });
+      el.addEventListener('mouseleave', () => scheduleClearRouteHighlight());
+      el.addEventListener('click', () => highlightRouteLeg(el.dataset.mapLeg, el));
     });
   }
   setTimeout(() => {
     routeMap.invalidateSize();
-    // Fixed angle/zoom once — tighter than before, north-up; Fit button still overrides
     if (!routeMap._eoFramed) {
       const layers = Object.values(routeLayers).filter(Boolean);
       if (layers.length) {
         const fg = L.featureGroup(layers);
         try {
-          routeMap.fitBounds(fg.getBounds().pad(0.06), { maxZoom: 5.75, animate:false });
+          routeMap.fitBounds(fg.getBounds().pad(0.06), { maxZoom: 5.75, animate: false });
           routeMap._eoFramed = true;
         } catch {}
       }
@@ -1795,8 +1860,8 @@ function calcTableHtml(c, params) {
     <thead><tr><th>Item</th><th>Formula / note</th><th class="num">Value</th></tr></thead>
     <tbody>
       <tr><td>Brent</td><td>L3</td><td class="num">${fmt(c.B,1)} $/bbl</td></tr>
-      <tr><td>FX (USD→KZT)</td><td>transport KZT → $/t</td><td class="num">${fmt(c.FX,2)} KZT/USD</td></tr>
-      <tr><td>RUB→KZT</td><td>Novoros RUB legs → KZT</td><td class="num">${fmt(c.RU,4)}</td></tr>
+      <tr><td>FX (KZT per 1 USD)</td><td>Σ KZT ÷ FX → $/t</td><td class="num">${fmt(c.FX,2)} KZT/USD</td></tr>
+      <tr><td>RUB→KZT (KZT per 1 RUB)</td><td>Novoros RUB × rate → KZT</td><td class="num">${fmt(c.RU,4)}</td></tr>
       <tr><td>Skebco (D6)</td><td>D6</td><td class="num">${fmt(c.S,3)} $/bbl</td></tr>
       <tr><td>Discount (D7)</td><td>D7</td><td class="num">${fmt(c.DISC,2)} $/bbl</td></tr>
       <tr><td>Realized $/bbl</td><td>Brent − Skebco − Discount</td><td class="num">${fmt(c.priceBbl,3)}</td></tr>
@@ -2173,7 +2238,7 @@ function monthWindowEndingAt(endYm, nMonths) {
 function diffItemsFromComputed(a, b) {
   return [
     ['Brent', a.params.brent, b.params.brent, 1, '$/bbl'],
-    ['FX', a.params.fx, b.params.fx, 0, 'KZT/USD'],
+    ['FX', a.params.fx, b.params.fx, 2, 'KZT/USD'],
     ['Skebco (D6)', a.params.sk, b.params.sk, 3, '$/bbl'],
     ['Discount (D7)', a.params.disc, b.params.disc, 2, '$/bbl'],
     ['Local KZT', a.params.localKzt, b.params.localKzt, 0, 'KZT/t'],
@@ -2272,11 +2337,11 @@ function buildSingleReport(id) {
         <thead><tr><th>Parameter</th><th class="num">Value</th></tr></thead>
         <tbody>
           <tr><td>Brent</td><td class="num">${fmt(params.brent,1)} $/bbl</td></tr>
-          <tr><td>FX</td><td class="num">${fmt(params.fx,0)} KZT/USD</td></tr>
+          <tr><td>FX (KZT per 1 USD)</td><td class="num">${fmt(params.fx,2)} KZT/USD</td></tr>
           <tr><td>Skebco (D6)</td><td class="num">${fmt(params.sk,3)} $/bbl</td></tr>
           <tr><td>Discount (D7)</td><td class="num">${fmt(params.disc,2)} $/bbl</td></tr>
           <tr><td>Local domestic VAT-incl</td><td class="num">${fmtInt(params.localKzt)} KZT/t</td></tr>
-          <tr><td>RUB→KZT</td><td class="num">${fmt(params.ru,2)}</td></tr>
+          <tr><td>RUB→KZT (KZT per 1 RUB)</td><td class="num">${fmt(params.ru,4)}</td></tr>
           <tr><td>Export bbl/t</td><td class="num">${fmt(params.kb,4)}</td></tr>
           <tr><td>MET rate</td><td class="num">${(params.metRate*100).toFixed(1)}%</td></tr>
           <tr><td>VAT factor</td><td class="num">${fmt(params.vat,2)}</td></tr>
@@ -2347,7 +2412,7 @@ function buildTrendReport(endYm, nMonths) {
       { id:'driverBrent', title:'Brent ($/bbl)', color:'#0ea5e9', fn:s => s.params.brent, dp:1 },
       { id:'driverSk', title:'Skebco D6 ($/bbl)', color:'#7c3aed', fn:s => s.params.sk, dp:2 },
       { id:'driverDisc', title:'Discount D7 ($/bbl)', color:'#f43f5e', fn:s => s.params.disc, dp:2 },
-      { id:'driverFx', title:'FX USD→KZT', color:'#64748b', fn:s => s.params.fx, dp:0 },
+      { id:'driverFx', title:'FX KZT/USD', color:'#64748b', fn:s => s.params.fx, dp:2 },
       { id:'driverRu', title:'RUB→KZT', color:'#0f766e', fn:s => s.params.ru, dp:2 },
       { id:'driverLocal', title:'Local KZT/t', color:'#b45309', fn:s => s.params.localKzt, dp:0 },
     ];
@@ -2565,7 +2630,7 @@ function buildTrendReport(endYm, nMonths) {
         <div class="driver-pane"><h3>Brent</h3><div class="dc" id="driverBrent"></div></div>
         <div class="driver-pane"><h3>Skebco (D6)</h3><div class="dc" id="driverSk"></div></div>
         <div class="driver-pane"><h3>Discount (D7)</h3><div class="dc" id="driverDisc"></div></div>
-        <div class="driver-pane"><h3>FX USD→KZT</h3><div class="dc" id="driverFx"></div></div>
+        <div class="driver-pane"><h3>FX (KZT per 1 USD)</h3><div class="dc" id="driverFx"></div></div>
         <div class="driver-pane"><h3>RUB→KZT</h3><div class="dc" id="driverRu"></div></div>
         <div class="driver-pane"><h3>Local domestic KZT/t</h3><div class="dc" id="driverLocal"></div></div>
       </div>
@@ -2614,7 +2679,7 @@ function buildTrendReport(endYm, nMonths) {
             <td>Saved</td>
             <td>${domesticLabelFrom(s.params.domesticRoute)}</td>
             <td class="num">${fmt(s.params.brent,1)}</td>
-            <td class="num">${fmt(s.params.fx,0)}</td>
+            <td class="num">${fmt(s.params.fx,2)}</td>
             <td class="num">${fmt(s.params.sk,2)}</td>
             <td class="num">${fmt(s.params.disc,2)}</td>
             <td class="num">${fmtInt(s.params.localKzt)}</td>
@@ -2670,7 +2735,7 @@ function buildPeTransportTables(pctMap) {
       html += `<tr class="${line.kind==='rub'?'rub':''}">
         <td>${line.row}</td>
         <td>${line.name}</td>
-        <td>${line.kind==='rub'?'RUB×J3':'KZT'}</td>
+        <td>${line.kind==='rub'?'RUB×(RUB→KZT)':'KZT'}</td>
         <td class="num" data-pe-base="${line.id}">${fmt(base,2)}</td>
         <td class="num"><input data-pe-kzt="${line.id}" type="number" step="0.01" value="${adj.toFixed(2)}" style="width:110px;text-align:right;padding:4px 6px;border:1px solid var(--line);border-radius:6px"></td>
         <td class="num" data-pe-pct="${line.id}">${(pct>0?'+':'')+fmt(pct,1)}%</td>
