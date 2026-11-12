@@ -1,0 +1,23 @@
+name: Sync profiles from gist
+on:
+  schedule:
+    - cron: "15 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull gist db.json
+        run: |
+          curl -fsSL "https://gist.githubusercontent.com/yuenchoryiu-cyber/1301e8baa9a5cd9d42ccb6a994aeb8d3/raw/db.json" -o profiles/db.json
+          python -c "import json; json.load(open('profiles/db.json',encoding='utf-8')); print('ok')"
+      - name: Commit if changed
+        run: |
+          git config user.name "netback-bot"
+          git config user.email "netback-bot@users.noreply.github.com"
+          git add profiles/db.json
+          git diff --cached --quiet || git commit -m "Sync month profiles from shared gist"
+          git push
