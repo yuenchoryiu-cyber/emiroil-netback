@@ -455,7 +455,7 @@
   <!-- ROUTE MAP PAGE -->
   <div id="page-route-map" class="page">
     <h1>Transportation route map</h1>
-    <p class="lead">Approximate pipeline/rail path for Novoros export and domestic Shymkent / Pavlodar. Hover a leg in the list (or on the map) to highlight that exact segment and see live tariff from current Analysis rates (RUB×RUB→KZT, then ÷FX).</p>
+    <p class="lead">Approximate pipeline/rail path for Novoros export and domestic Shymkent / Pavlodar. Hover a leg to highlight that segment. Prices are shown in the leg’s original tariff currency (KZT/t or RUB/t).</p>
     <div class="route-legend">
       <span><i style="background:#0f766e"></i> Export → Novorossiysk</span>
       <span><i style="background:#b45309"></i> Domestic → Shymkent (PKOP)</span>
@@ -1292,16 +1292,20 @@ let routeLegLayers = {};   // id → { layer, color, nodes, line }
 let routeHighlight = null; // temporary highlight layer group
 let routeLastMode = 'all';
 
-function legPriceHtml(line) {
-  const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
+function legNativeTariff(line) {
   const pct = num(state.transportPct[line.id], 0);
-  const kzt = lineKzt(line, pct, ru);
-  const usd = kzt / fx;
+  return line.tariff * (1 + pct / 100);
+}
+function legPriceHtml(line) {
+  const pct = num(state.transportPct[line.id], 0);
+  const native = legNativeTariff(line);
+  const ccy = line.kind === 'rub' ? 'RUB' : 'KZT';
+  const dp = line.kind === 'rub' ? 3 : 2;
   return `<b>${line.name}</b><br>` +
-    `Route row ${line.row} · ${line.kind==='rub'?'RUB tariff':'KZT tariff'} ${fmt(line.tariff, line.kind==='rub'?3:2)}<br>` +
-    (line.kind==='rub' ? `× RUB→KZT ${fmt(ru,2)} → ${fmt(kzt,0)} KZT<br>` : `Adj ${fmt(kzt,0)} KZT<br>`) +
-    `= <b>${fmt(usd,2)} $/t</b> at FX ${fmt(fx,2)}` +
-    (Math.abs(pct)>1e-9 ? `<br>% adj ${(pct>0?'+':'')+fmt(pct,1)}%` : '');
+    `Route row ${line.row} · <b>${fmt(native, dp)} ${ccy}/t</b>` +
+    (Math.abs(pct) > 1e-9
+      ? `<br>Base ${fmt(line.tariff, dp)} ${ccy}/t · % adj ${(pct > 0 ? '+' : '') + fmt(pct, 1)}%`
+      : '');
 }
 
 function clearRouteHighlight() {
@@ -1412,8 +1416,8 @@ function renderRouteMap(mode) {
   };
 
   const list = document.getElementById('routeLegList');
-  let listHtml = `<h2 style="margin-top:0">Legs · live prices</h2>
-    <p class="lead" style="margin:0 0 8px">Hover a leg to highlight it on the map. FX ${fmt(state.fx,2)} · RUB→KZT ${fmt(state.ru,2)} · route ${domesticLabel()}</p>`;
+  let listHtml = `<h2 style="margin-top:0">Legs · original currency</h2>
+    <p class="lead" style="margin:0 0 8px">Hover a leg to highlight it. Prices shown in tariff currency (KZT or RUB/t). Route ${domesticLabel()}</p>`;
 
   for (const [key, g] of Object.entries(groups)) {
     if (mode === 'export' && key !== 'export') continue;
@@ -1478,9 +1482,10 @@ function renderRouteMap(mode) {
 
     listHtml += `<div style="margin:8px 0 4px;font-weight:700;color:${g.color}">${key==='export'?'EXPORT':(key==='pkop'?'DOMESTIC Shymkent':'DOMESTIC Pavlodar')}</div>`;
     g.lines.forEach(line => {
-      const ru = num(state.ru, BASE.ru), fx = num(state.fx, BASE.fx);
-      const usd = lineKzt(line, state.transportPct[line.id], ru) / fx;
-      listHtml += `<div class="leg" data-map-leg="${line.id}"><span>${line.row}. ${line.name}</span><b>${fmt(usd,2)} $/t</b></div>`;
+      const native = legNativeTariff(line);
+      const ccy = line.kind === 'rub' ? 'RUB' : 'KZT';
+      const dp = line.kind === 'rub' ? 3 : 2;
+      listHtml += `<div class="leg" data-map-leg="${line.id}"><span>${line.row}. ${line.name}</span><b>${fmt(native, dp)} ${ccy}/t</b></div>`;
     });
 
     g.layer.addTo(routeMap);
