@@ -468,28 +468,36 @@
   <!-- REPORTS PAGE -->
   <div id="page-reports" class="page">
     <h1>Monthly reports</h1>
-    <p class="lead">One-page month report, or pick 3–6 month profiles to compare parameter moves and netback trends.</p>
+    <p class="lead">1-month report auto-compares vs prior month. Multi-month uses a start month + lookback of 3 / 6 / 12 months (missing months show as placeholders until you add data).</p>
     <div class="report-toolbar no-print controls">
       <div class="field">
         <label>Report type</label>
         <select id="reportType">
-          <option value="single">1-page monthly report</option>
-          <option value="trend">Compare months (2–6) with differences</option>
+          <option value="single">1-month report (+ vs last month)</option>
+          <option value="trend">Multi-month compare (3 / 6 / 12)</option>
         </select>
       </div>
       <div class="field" id="singlePickWrap">
-        <label>Month profile</label>
+        <label>Month</label>
         <select id="reportSingle"></select>
       </div>
-      <div class="field" id="multiPickWrap" style="display:none;min-width:260px">
-        <label>Select 2–6 profiles (Ctrl/Cmd-click)</label>
-        <select id="reportMulti" multiple size="6"></select>
+      <div class="field" id="trendStartWrap" style="display:none">
+        <label>Starting month (window end)</label>
+        <select id="reportStart"></select>
+      </div>
+      <div class="field" id="trendRangeWrap" style="display:none">
+        <label>Compare previous</label>
+        <select id="reportRange">
+          <option value="3">3 months</option>
+          <option value="6">6 months</option>
+          <option value="12">12 months</option>
+        </select>
       </div>
       <button type="button" class="ok" id="btnBuildReport">Build report</button>
       <button type="button" class="ghost" id="btnPrintReport">Print / Save PDF</button>
     </div>
     <div id="reportOut" class="report-page">
-      <p class="lead">Choose profiles and click <b>Build report</b>.</p>
+      <p class="lead">Choose options and click <b>Build report</b>.</p>
     </div>
   </div>
 
@@ -1154,7 +1162,7 @@ async function publishOnline(statusId) {
 function renderProfileUI() {
   const sel = document.getElementById('profileSelect');
   const single = document.getElementById('reportSingle');
-  const multi = document.getElementById('reportMulti');
+  const start = document.getElementById('reportStart');
   if (!sel) return;
   const opts = profileDb.profiles.map(p => {
     const tag = p.id === CURRENT_MONTH_ID ? ' (current)' : '';
@@ -1162,7 +1170,7 @@ function renderProfileUI() {
   }).join('');
   sel.innerHTML = opts;
   if (single) single.innerHTML = opts;
-  if (multi) multi.innerHTML = opts;
+  if (start) start.innerHTML = opts;
   try {
     const aid = localStorage.getItem(ACTIVE_KEY) || CURRENT_MONTH_ID;
     if ([...sel.options].some(o => o.value === aid)) sel.value = aid;
@@ -1307,9 +1315,71 @@ function deltaClass(v) {
   return v > 0 ? 'delta-up' : 'delta-down';
 }
 
+function shiftMonth(ym, delta) {
+  const [y0, m0] = String(ym).split('-').map(Number);
+  const d = new Date(y0, (m0 || 1) - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function findProfileByMonth(ym) {
+  return profileDb.profiles.find(p => p.id === ym || p.month === ym) || null;
+}
+function monthWindowEndingAt(endYm, nMonths) {
+  const out = [];
+  for (let i = nMonths - 1; i >= 0; i--) out.push(shiftMonth(endYm, -i));
+  return out;
+}
+function diffItemsFromComputed(a, b) {
+  return [
+    ['Brent', a.params.brent, b.params.brent, 1, '$/bbl'],
+    ['FX', a.params.fx, b.params.fx, 0, 'KZT/USD'],
+    ['Skebco (D6)', a.params.sk, b.params.sk, 3, '$/bbl'],
+    ['Discount (D7)', a.params.disc, b.params.disc, 2, '$/bbl'],
+    ['Local KZT', a.params.localKzt, b.params.localKzt, 0, 'KZT/t'],
+    ['Export transport', a.c.trExp, b.c.trExp, 2, '$/t'],
+    ['Domestic transport', a.c.trDom, b.c.trDom, 2, '$/t'],
+    ['Export NB', a.c.nbExp, b.c.nbExp, 2, '$/t'],
+    ['Domestic NB', a.c.nbDom, b.c.nbDom, 2, '$/t'],
+    ['Δ Exp−Dom', a.c.spread, b.c.spread, 2, '$/t'],
+  ];
+}
+function vsPriorHtml(cur, prior, priorYm) {
+  if (!prior) {
+    return `<div class="report-section">
+      <h2>Vs last month (${monthLabel(priorYm)})</h2>
+      <p class="lead">No profile saved for <b>${monthLabel(priorYm)}</b> yet. Add that month under <b>New / edit profile</b> and rebuild — this section will fill automatically.</p>
+    </div>`;
+  }
+  const items = diffItemsFromComputed(prior, cur);
+  return `<div class="report-section">
+    <h2>Vs last month — ${monthLabel(prior.p.month)} → ${monthLabel(cur.p.month)}</h2>
+    <div class="kpi-grid">
+      <div class="k"><span>Prior Export NB</span><b>${fmt(prior.c.nbExp,1)}</b></div>
+      <div class="k"><span>This Export NB</span><b>${fmt(cur.c.nbExp,1)}</b></div>
+      <div class="k"><span>Δ Export NB</span><b class="${deltaClass(cur.c.nbExp-prior.c.nbExp)}">${(cur.c.nbExp-prior.c.nbExp>=0?'+':'')+fmt(cur.c.nbExp-prior.c.nbExp,1)}</b></div>
+      <div class="k"><span>Δ Domestic NB</span><b class="${deltaClass(cur.c.nbDom-prior.c.nbDom)}">${(cur.c.nbDom-prior.c.nbDom>=0?'+':'')+fmt(cur.c.nbDom-prior.c.nbDom,1)}</b></div>
+    </div>
+    <table class="report-table">
+      <thead><tr><th>Item</th><th class="num">${monthLabel(prior.p.month)}</th><th class="num">${monthLabel(cur.p.month)}</th><th class="num">Difference</th></tr></thead>
+      <tbody>
+        ${items.map(([n,a,b,dp]) => {
+          const d = num(b)-num(a);
+          return `<tr><td>${n}</td><td class="num">${fmt(a,dp)}</td><td class="num">${fmt(b,dp)}</td><td class="num ${deltaClass(d)}">${(d>=0?'+':'')+fmt(d,dp)}</td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
 function buildSingleReport(id) {
   const p = profileDb.profiles.find(x => x.id === id) || profileDb.profiles[0];
   const { params, calc: c } = computeFromParams(p.params || {});
+  const cur = { p, params, c };
+  const priorYm = shiftMonth(p.month, -1);
+  const priorP = findProfileByMonth(priorYm);
+  const prior = priorP ? (() => {
+    const r = computeFromParams(priorP.params || {});
+    return { p: priorP, params: r.params, c: r.calc };
+  })() : null;
   const winner = Math.abs(c.spread)<0.5 ? 'Breakeven' : (c.spread>0 ? 'EXPORT wins' : 'DOMESTIC wins');
   setTimeout(() => {
     Plotly.newPlot('singleChart', [
@@ -1343,7 +1413,7 @@ function buildSingleReport(id) {
   }, 40);
   return `
     <h1>Netback monthly report — ${monthLabel(p.month)}</h1>
-    <div class="meta">${p.label || ''} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'}<br>${p.notes || ''}</div>
+    <div class="meta">${p.label || ''} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'} · Auto vs ${monthLabel(priorYm)}<br>${p.notes || ''}</div>
     <div class="kpi-grid">
       <div class="k"><span>Winner</span><b>${winner}</b></div>
       <div class="k"><span>Export NB</span><b>${fmt(c.nbExp,1)} $/t</b></div>
@@ -1370,6 +1440,7 @@ function buildSingleReport(id) {
       </table>
     </div>
     <div class="report-section"><h2>Calculation</h2>${calcTableHtml(c, params)}</div>
+    ${vsPriorHtml(cur, prior, priorYm)}
   `;
 }
 
@@ -1377,45 +1448,40 @@ function domesticLabelFrom(route) {
   return route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'PKOP';
 }
 
-function buildTrendReport(ids) {
-  const rows = ids.map(id => profileDb.profiles.find(p => p.id === id)).filter(Boolean);
-  rows.sort((a,b) => String(a.month).localeCompare(String(b.month)));
-  if (rows.length < 2 || rows.length > 6) {
-    return `<p class="lead">Select between 2 and 6 month profiles to compare.</p>`;
-  }
-  const computed = rows.map(p => {
+function buildTrendReport(endYm, nMonths) {
+  nMonths = Math.max(3, Math.min(12, Number(nMonths) || 3));
+  const months = monthWindowEndingAt(endYm, nMonths);
+  const slots = months.map(ym => {
+    const p = findProfileByMonth(ym);
+    if (!p) return { ym, missing: true, p: null, c: null, params: null };
     const { params, calc: c } = computeFromParams(p.params || {});
-    return { p, c, params };
+    return { ym, missing: false, p, c, params };
   });
-  const first = computed[0], last = computed[computed.length-1];
+  const present = slots.filter(s => !s.missing);
+  const missingCount = slots.length - present.length;
+  const first = present[0] || null;
+  const last = present[present.length - 1] || null;
 
-  // month-to-month diffs
   const momRows = [];
-  for (let i = 1; i < computed.length; i++) {
-    const a = computed[i-1], b = computed[i];
+  for (let i = 1; i < slots.length; i++) {
+    const a = slots[i - 1], b = slots[i];
+    if (a.missing || b.missing) {
+      momRows.push({ from: a.ym, to: b.ym, skip: true, reason: a.missing && b.missing ? 'both missing' : (a.missing ? `${monthLabel(a.ym)} missing` : `${monthLabel(b.ym)} missing`) });
+      continue;
+    }
     momRows.push({
-      from: a.p.month, to: b.p.month,
-      items: [
-        ['Brent', a.params.brent, b.params.brent, 1],
-        ['FX', a.params.fx, b.params.fx, 0],
-        ['Skebco (D6)', a.params.sk, b.params.sk, 3],
-        ['Discount (D7)', a.params.disc, b.params.disc, 2],
-        ['Local KZT', a.params.localKzt, b.params.localKzt, 0],
-        ['Export transport', a.c.trExp, b.c.trExp, 2],
-        ['Domestic transport', a.c.trDom, b.c.trDom, 2],
-        ['Export NB', a.c.nbExp, b.c.nbExp, 2],
-        ['Domestic NB', a.c.nbDom, b.c.nbDom, 2],
-        ['Δ Exp−Dom', a.c.spread, b.c.spread, 2],
-      ]
+      from: a.ym, to: b.ym, skip: false,
+      items: diffItemsFromComputed(a, b)
     });
   }
 
   setTimeout(() => {
-    const x = computed.map(r => r.p.month);
+    const x = slots.map(s => s.ym);
+    const yOrNull = (fn) => slots.map(s => s.missing ? null : fn(s));
     Plotly.newPlot('trendChart', [
-      { x, y: computed.map(r => r.c.nbExp), name: 'Export NB', mode:'lines+markers', line:{color:'#0f766e'} },
-      { x, y: computed.map(r => r.c.nbDom), name: 'Domestic NB', mode:'lines+markers', line:{color:'#b45309'} },
-      { x, y: computed.map(r => r.c.spread), name: 'Δ Exp−Dom', mode:'lines+markers', line:{color:'#1e3a5f'}, yaxis:'y2' },
+      { x, y: yOrNull(s => s.c.nbExp), name: 'Export NB', mode:'lines+markers', connectgaps:false, line:{color:'#0f766e'} },
+      { x, y: yOrNull(s => s.c.nbDom), name: 'Domestic NB', mode:'lines+markers', connectgaps:false, line:{color:'#b45309'} },
+      { x, y: yOrNull(s => s.c.spread), name: 'Δ Exp−Dom', mode:'lines+markers', connectgaps:false, line:{color:'#1e3a5f'}, yaxis:'y2' },
     ], {
       margin:{t:30,r:50,b:40,l:50}, height:360,
       yaxis:{title:'Netback $/t'}, yaxis2:{title:'Δ $/t', overlaying:'y', side:'right'},
@@ -1423,30 +1489,30 @@ function buildTrendReport(ids) {
     }, {responsive:true, displayModeBar:false});
 
     Plotly.newPlot('driverChart', [
-      { x, y: computed.map(r => r.params.brent), name: 'Brent', mode:'lines+markers' },
-      { x, y: computed.map(r => r.params.sk), name: 'Skebco D6', mode:'lines+markers' },
-      { x, y: computed.map(r => r.params.disc), name: 'Discount D7', mode:'lines+markers' },
-      { x, y: computed.map(r => r.params.fx/10), name: 'FX÷10', mode:'lines+markers', line:{dash:'dot'} },
+      { x, y: yOrNull(s => s.params.brent), name: 'Brent', mode:'lines+markers', connectgaps:false },
+      { x, y: yOrNull(s => s.params.sk), name: 'Skebco D6', mode:'lines+markers', connectgaps:false },
+      { x, y: yOrNull(s => s.params.disc), name: 'Discount D7', mode:'lines+markers', connectgaps:false },
+      { x, y: yOrNull(s => s.params.fx/10), name: 'FX÷10', mode:'lines+markers', connectgaps:false, line:{dash:'dot'} },
     ], {
       margin:{t:30,r:20,b:40,l:50}, height:320,
       yaxis:{title:'Drivers'}, legend:{orientation:'h'}, paper_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
 
-    // grouped bar of month-to-month Δ Exp−Dom
-    if (momRows.length) {
+    const momPlot = momRows.filter(r => !r.skip);
+    if (momPlot.length) {
       Plotly.newPlot('diffChart', [{
         type:'bar',
-        x: momRows.map(r => monthLabel(r.from) + '→' + monthLabel(r.to)),
-        y: momRows.map(r => {
+        x: momPlot.map(r => monthLabel(r.from) + '→' + monthLabel(r.to)),
+        y: momPlot.map(r => {
           const item = r.items.find(it => it[0]==='Δ Exp−Dom');
           return item ? (item[2]-item[1]) : 0;
         }),
-        marker:{color: momRows.map(r => {
+        marker:{color: momPlot.map(r => {
           const item = r.items.find(it => it[0]==='Δ Exp−Dom');
           const d = item ? (item[2]-item[1]) : 0;
           return d>=0 ? '#0f766e' : '#b45309';
         })},
-        text: momRows.map(r => {
+        text: momPlot.map(r => {
           const item = r.items.find(it => it[0]==='Δ Exp−Dom');
           const d = item ? (item[2]-item[1]) : 0;
           return (d>=0?'+':'')+fmt(d,1);
@@ -1457,10 +1523,13 @@ function buildTrendReport(ids) {
         yaxis:{title:'Change in Δ Exp−Dom ($/t)'},
         paper_bgcolor:'rgba(0,0,0,0)'
       }, {responsive:true, displayModeBar:false});
+    } else {
+      const el = document.getElementById('diffChart');
+      if (el) el.innerHTML = '<p class="lead">Need at least two consecutive saved months in the window for MoM bars.</p>';
     }
   }, 40);
 
-  const firstLast = [
+  const firstLast = (first && last) ? [
     ['Brent', first.params.brent, last.params.brent, '$/bbl'],
     ['FX', first.params.fx, last.params.fx, 'KZT/USD'],
     ['Skebco (D6)', first.params.sk, last.params.sk, '$/bbl'],
@@ -1471,23 +1540,35 @@ function buildTrendReport(ids) {
     ['Export NB', first.c.nbExp, last.c.nbExp, '$/t'],
     ['Domestic NB', first.c.nbDom, last.c.nbDom, '$/t'],
     ['Δ Exp−Dom', first.c.spread, last.c.spread, '$/t'],
-  ];
+  ] : [];
+
+  const windowLabel = `${monthLabel(months[0])} → ${monthLabel(months[months.length-1])}`;
+  if (!present.length) {
+    return `
+      <h1>Netback ${nMonths}-month comparison</h1>
+      <div class="meta">Window: ${windowLabel}</div>
+      <p class="lead">No profiles saved in this window yet. Pick a starting month that has data, or add previous months under <b>New / edit profile</b>.</p>
+      <div class="report-section"><h2>Window months</h2>
+        <table class="report-table"><thead><tr><th>Month</th><th>Status</th></tr></thead>
+        <tbody>${slots.map(s => `<tr><td>${monthLabel(s.ym)}</td><td>Missing — add profile</td></tr>`).join('')}</tbody></table>
+      </div>`;
+  }
 
   return `
-    <h1>Netback comparison report</h1>
-    <div class="meta">${rows.map(r => monthLabel(r.month)).join(' → ')} · ${rows.length} months</div>
+    <h1>Netback ${nMonths}-month comparison</h1>
+    <div class="meta">Window end: ${monthLabel(endYm)} · Lookback ${nMonths} months · ${windowLabel}${missingCount ? ` · ${missingCount} month(s) not yet saved` : ''}</div>
     <div class="kpi-grid">
-      <div class="k"><span>From</span><b>${monthLabel(first.p.month)}</b></div>
-      <div class="k"><span>To</span><b>${monthLabel(last.p.month)}</b></div>
+      <div class="k"><span>First with data</span><b>${monthLabel(first.p.month)}</b></div>
+      <div class="k"><span>Last with data</span><b>${monthLabel(last.p.month)}</b></div>
       <div class="k"><span>Δ Export NB</span><b class="${deltaClass(last.c.nbExp-first.c.nbExp)}">${(last.c.nbExp-first.c.nbExp>=0?'+':'')+fmt(last.c.nbExp-first.c.nbExp,1)}</b></div>
       <div class="k"><span>Δ Domestic NB</span><b class="${deltaClass(last.c.nbDom-first.c.nbDom)}">${(last.c.nbDom-first.c.nbDom>=0?'+':'')+fmt(last.c.nbDom-first.c.nbDom,1)}</b></div>
     </div>
     <div class="report-section"><h2>Netback trend</h2><div id="trendChart"></div></div>
     <div class="report-section"><h2>Driver parameters</h2><div id="driverChart"></div></div>
     <div class="report-section"><h2>Month-to-month change in Δ Exp−Dom</h2><div id="diffChart"></div></div>
-    <div class="report-section"><h2>Overall change (first → last)</h2>
+    <div class="report-section"><h2>Overall change (first → last with data)</h2>
       <table class="report-table">
-        <thead><tr><th>Item</th><th class="num">First</th><th class="num">Last</th><th class="num">Difference</th></tr></thead>
+        <thead><tr><th>Item</th><th class="num">${monthLabel(first.p.month)}</th><th class="num">${monthLabel(last.p.month)}</th><th class="num">Difference</th></tr></thead>
         <tbody>
           ${firstLast.map(([n,a,b,u]) => {
             const d = num(b)-num(a);
@@ -1496,7 +1577,11 @@ function buildTrendReport(ids) {
         </tbody>
       </table>
     </div>
-    ${momRows.map(block => `
+    ${momRows.map(block => block.skip ? `
+      <div class="report-section">
+        <h2>Differences: ${monthLabel(block.from)} → ${monthLabel(block.to)}</h2>
+        <p class="lead">Skipped — ${block.reason}. Add the missing month profile to unlock this comparison.</p>
+      </div>` : `
       <div class="report-section">
         <h2>Differences: ${monthLabel(block.from)} → ${monthLabel(block.to)}</h2>
         <table class="report-table">
@@ -1509,28 +1594,33 @@ function buildTrendReport(ids) {
           </tbody>
         </table>
       </div>`).join('')}
-    <div class="report-section"><h2>All months — parameters &amp; results</h2>
+    <div class="report-section"><h2>All months in window — parameters &amp; results</h2>
       <table class="report-table">
-        <thead><tr><th>Month</th><th>Route</th><th class="num">Brent</th><th class="num">FX</th><th class="num">Skebco</th><th class="num">Disc</th><th class="num">Local</th><th class="num">Tr Exp</th><th class="num">Tr Dom</th><th class="num">Exp NB</th><th class="num">Dom NB</th><th class="num">Δ</th></tr></thead>
+        <thead><tr><th>Month</th><th>Status</th><th>Route</th><th class="num">Brent</th><th class="num">FX</th><th class="num">Skebco</th><th class="num">Disc</th><th class="num">Local</th><th class="num">Tr Exp</th><th class="num">Tr Dom</th><th class="num">Exp NB</th><th class="num">Dom NB</th><th class="num">Δ</th></tr></thead>
         <tbody>
-          ${computed.map(({p,c,params}) => `<tr>
-            <td>${monthLabel(p.month)}</td>
-            <td>${domesticLabelFrom(params.domesticRoute)}</td>
-            <td class="num">${fmt(params.brent,1)}</td>
-            <td class="num">${fmt(params.fx,0)}</td>
-            <td class="num">${fmt(params.sk,2)}</td>
-            <td class="num">${fmt(params.disc,2)}</td>
-            <td class="num">${fmtInt(params.localKzt)}</td>
-            <td class="num">${fmt(c.trExp,1)}</td>
-            <td class="num">${fmt(c.trDom,1)}</td>
-            <td class="num">${fmt(c.nbExp,1)}</td>
-            <td class="num">${fmt(c.nbDom,1)}</td>
-            <td class="num">${(c.spread>=0?'+':'')+fmt(c.spread,1)}</td>
+          ${slots.map(s => s.missing ? `<tr>
+            <td>${monthLabel(s.ym)}</td>
+            <td>Missing</td>
+            <td colspan="11" style="color:var(--muted)">No profile yet — add under New / edit profile</td>
+          </tr>` : `<tr>
+            <td>${monthLabel(s.p.month)}</td>
+            <td>Saved</td>
+            <td>${domesticLabelFrom(s.params.domesticRoute)}</td>
+            <td class="num">${fmt(s.params.brent,1)}</td>
+            <td class="num">${fmt(s.params.fx,0)}</td>
+            <td class="num">${fmt(s.params.sk,2)}</td>
+            <td class="num">${fmt(s.params.disc,2)}</td>
+            <td class="num">${fmtInt(s.params.localKzt)}</td>
+            <td class="num">${fmt(s.c.trExp,1)}</td>
+            <td class="num">${fmt(s.c.trDom,1)}</td>
+            <td class="num">${fmt(s.c.nbExp,1)}</td>
+            <td class="num">${fmt(s.c.nbDom,1)}</td>
+            <td class="num">${(s.c.spread>=0?'+':'')+fmt(s.c.spread,1)}</td>
           </tr>`).join('')}
         </tbody>
       </table>
     </div>
-    <div class="report-section"><h2>Calculation detail (latest month: ${monthLabel(last.p.month)})</h2>
+    <div class="report-section"><h2>Calculation detail (latest with data: ${monthLabel(last.p.month)})</h2>
       ${calcTableHtml(last.c, last.params)}
     </div>
   `;
@@ -1823,7 +1913,8 @@ function wireProfilesReports() {
   document.getElementById('reportType').onchange = () => {
     const trend = document.getElementById('reportType').value === 'trend';
     document.getElementById('singlePickWrap').style.display = trend ? 'none' : 'block';
-    document.getElementById('multiPickWrap').style.display = trend ? 'block' : 'none';
+    document.getElementById('trendStartWrap').style.display = trend ? 'block' : 'none';
+    document.getElementById('trendRangeWrap').style.display = trend ? 'block' : 'none';
   };
   document.getElementById('btnBuildReport').onclick = () => {
     const type = document.getElementById('reportType').value;
@@ -1831,8 +1922,10 @@ function wireProfilesReports() {
     if (type === 'single') {
       out.innerHTML = buildSingleReport(document.getElementById('reportSingle').value);
     } else {
-      const ids = [...document.getElementById('reportMulti').selectedOptions].map(o => o.value);
-      out.innerHTML = buildTrendReport(ids);
+      const startSel = document.getElementById('reportStart');
+      const endYm = startSel.value || (profileDb.profiles[0] && profileDb.profiles[0].month) || CURRENT_MONTH_ID;
+      const nMonths = Number(document.getElementById('reportRange').value) || 3;
+      out.innerHTML = buildTrendReport(endYm, nMonths);
     }
   };
   document.getElementById('btnPrintReport').onclick = () => window.print();
