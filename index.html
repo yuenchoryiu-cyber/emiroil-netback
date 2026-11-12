@@ -200,13 +200,38 @@
   .report-table th{background:#f5f5f4; text-align:left}
   .report-table .num{text-align:right; font-variant-numeric:tabular-nums}
   .delta-up{color:#0f766e; font-weight:700}.delta-down{color:#9a3412; font-weight:700}
-  #trendChart{min-height:360px; width:100%; margin-top:10px}
+  #trendChart,#driverChart,#diffChart{width:100%; margin-top:10px}
+  #trendChart.range-3{min-height:300px} #driverChart.range-3,#diffChart.range-3{min-height:240px}
+  #trendChart.range-6{min-height:380px} #driverChart.range-6,#diffChart.range-6{min-height:300px}
+  #trendChart.range-12{min-height:480px} #driverChart.range-12,#diffChart.range-12{min-height:360px}
+  .month-mini-grid{
+    display:grid; gap:10px; margin-top:10px;
+    grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .month-mini-grid.range-3{grid-template-columns:repeat(3, 1fr)}
+  .month-mini-grid.range-6{grid-template-columns:repeat(3, 1fr)}
+  .month-mini-grid.range-12{grid-template-columns:repeat(4, 1fr)}
+  @media(max-width:900px){
+    .month-mini-grid.range-3,.month-mini-grid.range-6,.month-mini-grid.range-12{grid-template-columns:repeat(2, 1fr)}
+  }
+  .month-mini{
+    border:1px solid var(--line); border-radius:12px; padding:8px 8px 4px; background:#fffdf8;
+    min-height:150px;
+  }
+  .month-mini.missing{opacity:.72; background:#f5f5f4}
+  .month-mini .mh{font-size:.78rem; font-weight:700; color:var(--accent); margin:0 0 2px}
+  .month-mini .ms{font-size:.68rem; color:var(--muted); margin:0 0 4px}
+  .month-mini .mk{display:flex; justify-content:space-between; gap:4px; font-size:.66rem; color:var(--muted); margin-top:2px}
+  .month-mini .mk b{display:block; font-size:.78rem; color:var(--ink); font-variant-numeric:tabular-nums}
+  .month-mini .mc{height:88px; width:100%}
+  .month-mini.range-12 .mc{height:72px}
+  .month-mini.range-3 .mc{height:110px}
 
   .param-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
   @media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}}
   .preview-box{background:#eef6f4; border:1px solid #99f6e4; border-radius:12px; padding:12px; margin-top:10px}
   .preview-box .kpi-grid{margin:0}
-  #singleChart,#driverChart,#diffChart{min-height:320px; width:100%; margin-top:10px}
+  #singleChart{min-height:320px; width:100%; margin-top:10px}
   .report-section{margin-top:16px}
   .report-section h2{font-size:.95rem; margin:0 0 6px; color:var(--accent)}
   @media print{
@@ -1885,27 +1910,38 @@ function buildTrendReport(endYm, nMonths) {
     });
   }
 
+  const chartH = nMonths >= 12
+    ? { trend: 480, driver: 380, diff: 340, marker: 7, tickAngle: -40, bottom: 70 }
+    : nMonths >= 6
+      ? { trend: 380, driver: 310, diff: 280, marker: 8, tickAngle: -25, bottom: 55 }
+      : { trend: 300, driver: 250, diff: 230, marker: 10, tickAngle: 0, bottom: 40 };
+
   setTimeout(() => {
-    const x = slots.map(s => s.ym);
+    const x = slots.map(s => monthLabel(s.ym));
     const yOrNull = (fn) => slots.map(s => s.missing ? null : fn(s));
+    const mk = chartH.marker;
     Plotly.newPlot('trendChart', [
-      { x, y: yOrNull(s => s.c.nbExp), name: 'Export NB', mode:'lines+markers', connectgaps:false, line:{color:'#0f766e'} },
-      { x, y: yOrNull(s => s.c.nbDom), name: 'Domestic NB', mode:'lines+markers', connectgaps:false, line:{color:'#b45309'} },
-      { x, y: yOrNull(s => s.c.spread), name: 'Δ Exp−Dom', mode:'lines+markers', connectgaps:false, line:{color:'#1e3a5f'}, yaxis:'y2' },
+      { x, y: yOrNull(s => s.c.nbExp), name: 'Export NB', mode:'lines+markers', connectgaps:false, line:{color:'#0f766e', width:2.5}, marker:{size:mk, color:'#0f766e'} },
+      { x, y: yOrNull(s => s.c.nbDom), name: 'Domestic NB', mode:'lines+markers', connectgaps:false, line:{color:'#b45309', width:2.5}, marker:{size:mk, color:'#b45309'} },
+      { x, y: yOrNull(s => s.c.spread), name: 'Δ Exp−Dom', mode:'lines+markers', connectgaps:false, line:{color:'#1e3a5f', width:2, dash:'dot'}, marker:{size:mk-1, color:'#1e3a5f'}, yaxis:'y2' },
     ], {
-      margin:{t:30,r:50,b:40,l:50}, height:360,
-      yaxis:{title:'Netback $/t'}, yaxis2:{title:'Δ $/t', overlaying:'y', side:'right'},
-      legend:{orientation:'h'}, paper_bgcolor:'rgba(0,0,0,0)'
+      margin:{t:36,r:56,b:chartH.bottom,l:54}, height:chartH.trend,
+      xaxis:{tickangle: chartH.tickAngle, automargin:true},
+      yaxis:{title:'Netback $/t', zeroline:false, gridcolor:'#eee'},
+      yaxis2:{title:'Δ $/t', overlaying:'y', side:'right', zeroline:true, zerolinecolor:'#ccc'},
+      legend:{orientation:'h', y:1.12, x:0}, paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.5)'
     }, {responsive:true, displayModeBar:false});
 
     Plotly.newPlot('driverChart', [
-      { x, y: yOrNull(s => s.params.brent), name: 'Brent', mode:'lines+markers', connectgaps:false },
-      { x, y: yOrNull(s => s.params.sk), name: 'Skebco D6', mode:'lines+markers', connectgaps:false },
-      { x, y: yOrNull(s => s.params.disc), name: 'Discount D7', mode:'lines+markers', connectgaps:false },
-      { x, y: yOrNull(s => s.params.fx/10), name: 'FX÷10', mode:'lines+markers', connectgaps:false, line:{dash:'dot'} },
+      { x, y: yOrNull(s => s.params.brent), name: 'Brent', mode:'lines+markers', connectgaps:false, line:{color:'#0ea5e9'}, marker:{size:mk-1} },
+      { x, y: yOrNull(s => s.params.sk), name: 'Skebco D6', mode:'lines+markers', connectgaps:false, line:{color:'#7c3aed'}, marker:{size:mk-1} },
+      { x, y: yOrNull(s => s.params.disc), name: 'Discount D7', mode:'lines+markers', connectgaps:false, line:{color:'#f43f5e'}, marker:{size:mk-1} },
+      { x, y: yOrNull(s => s.params.fx/10), name: 'FX÷10', mode:'lines+markers', connectgaps:false, line:{color:'#64748b', dash:'dot'}, marker:{size:mk-2} },
     ], {
-      margin:{t:30,r:20,b:40,l:50}, height:320,
-      yaxis:{title:'Drivers'}, legend:{orientation:'h'}, paper_bgcolor:'rgba(0,0,0,0)'
+      margin:{t:36,r:24,b:chartH.bottom,l:50}, height:chartH.driver,
+      xaxis:{tickangle: chartH.tickAngle, automargin:true},
+      yaxis:{title:'Drivers', gridcolor:'#eee'},
+      legend:{orientation:'h', y:1.12, x:0}, paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.5)'
     }, {responsive:true, displayModeBar:false});
 
     const momPlot = momRows.filter(r => !r.skip);
@@ -1921,22 +1957,59 @@ function buildTrendReport(endYm, nMonths) {
           const item = r.items.find(it => it[0]==='Δ Exp−Dom');
           const d = item ? (item[2]-item[1]) : 0;
           return d>=0 ? '#0f766e' : '#b45309';
-        })},
+        }), line:{width:0}},
         text: momPlot.map(r => {
           const item = r.items.find(it => it[0]==='Δ Exp−Dom');
           const d = item ? (item[2]-item[1]) : 0;
           return (d>=0?'+':'')+fmt(d,1);
         }),
-        textposition:'auto'
+        textposition:'outside',
+        cliponaxis:false
       }], {
-        margin:{t:30,r:20,b:60,l:50}, height:280,
-        yaxis:{title:'Change in Δ Exp−Dom ($/t)'},
-        paper_bgcolor:'rgba(0,0,0,0)'
+        margin:{t:30,r:20,b: Math.max(chartH.bottom, 64), l:50}, height:chartH.diff,
+        xaxis:{tickangle: chartH.tickAngle, automargin:true},
+        yaxis:{title:'Change in Δ Exp−Dom ($/t)', zeroline:true, gridcolor:'#eee'},
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(255,255,255,0.5)'
       }, {responsive:true, displayModeBar:false});
     } else {
       const el = document.getElementById('diffChart');
       if (el) el.innerHTML = '<p class="lead">Need at least two consecutive saved months in the window for MoM bars.</p>';
     }
+
+    // Small per-month charts
+    slots.forEach((s, i) => {
+      const el = document.getElementById('miniMonth_' + i);
+      if (!el) return;
+      if (s.missing) {
+        Plotly.newPlot(el, [{
+          type:'bar', x:['Exp','Dom'], y:[0,0],
+          marker:{color:['#d6d3d1','#d6d3d1']},
+          text:['—','—'], textposition:'outside', cliponaxis:false
+        }], {
+          margin:{t:8,r:6,b:22,l:28}, height: nMonths>=12 ? 72 : (nMonths>=6 ? 88 : 110),
+          yaxis:{visible:false, range:[0,1]}, xaxis:{tickfont:{size:10}},
+          paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', showlegend:false
+        }, {responsive:true, displayModeBar:false});
+        return;
+      }
+      const h = nMonths>=12 ? 72 : (nMonths>=6 ? 88 : 110);
+      const ymax = Math.max(s.c.nbExp, s.c.nbDom, 1) * 1.18;
+      Plotly.newPlot(el, [{
+        type:'bar',
+        x:['Export','Dom'],
+        y:[s.c.nbExp, s.c.nbDom],
+        marker:{color:['#0f766e','#b45309']},
+        text:[fmt(s.c.nbExp,0), fmt(s.c.nbDom,0)],
+        textposition:'outside',
+        cliponaxis:false,
+        textfont:{size:10}
+      }], {
+        margin:{t:10,r:6,b:22,l:28}, height:h,
+        yaxis:{range:[0, ymax], tickfont:{size:9}, gridcolor:'#f0f0f0', zeroline:false},
+        xaxis:{tickfont:{size:10}},
+        paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', showlegend:false
+      }, {responsive:true, displayModeBar:false});
+    });
   }, 40);
 
   const firstLast = (first && last) ? [
@@ -1964,18 +2037,46 @@ function buildTrendReport(endYm, nMonths) {
       </div>`;
   }
 
+  const rangeCls = 'range-' + nMonths;
+  const miniCards = slots.map((s, i) => {
+    if (s.missing) {
+      return `<div class="month-mini missing ${rangeCls}">
+        <div class="mh">${monthLabel(s.ym)}</div>
+        <div class="ms">No profile yet</div>
+        <div class="mc" id="miniMonth_${i}"></div>
+        <div class="mk"><span>Export<br><b>—</b></span><span>Domestic<br><b>—</b></span><span>Δ<br><b>—</b></span></div>
+      </div>`;
+    }
+    const win = Math.abs(s.c.spread)<0.5 ? 'Tie' : (s.c.spread>0 ? 'Export' : 'Domestic');
+    return `<div class="month-mini ${rangeCls}">
+      <div class="mh">${monthLabel(s.p.month)}</div>
+      <div class="ms">${win} wins · ${domesticLabelFrom(s.params.domesticRoute)}</div>
+      <div class="mc" id="miniMonth_${i}"></div>
+      <div class="mk">
+        <span>Export<br><b>${fmt(s.c.nbExp,1)}</b></span>
+        <span>Domestic<br><b>${fmt(s.c.nbDom,1)}</b></span>
+        <span>Δ<br><b class="${deltaClass(s.c.spread)}">${(s.c.spread>=0?'+':'')+fmt(s.c.spread,1)}</b></span>
+      </div>
+    </div>`;
+  }).join('');
+
   return `
     <h1>Netback ${nMonths}-month comparison</h1>
-    <div class="meta">Window end: ${monthLabel(endYm)} · Lookback ${nMonths} months · ${windowLabel}${missingCount ? ` · ${missingCount} month(s) not yet saved` : ''}</div>
+    <div class="meta">Window end: ${monthLabel(endYm)} · Lookback ${nMonths} months · ${windowLabel}${missingCount ? ` · ${missingCount} month(s) not yet saved` : ''} · Chart scale: ${nMonths}m</div>
     <div class="kpi-grid">
       <div class="k"><span>First with data</span><b>${monthLabel(first.p.month)}</b></div>
       <div class="k"><span>Last with data</span><b>${monthLabel(last.p.month)}</b></div>
       <div class="k"><span>Δ Export NB</span><b class="${deltaClass(last.c.nbExp-first.c.nbExp)}">${(last.c.nbExp-first.c.nbExp>=0?'+':'')+fmt(last.c.nbExp-first.c.nbExp,1)}</b></div>
       <div class="k"><span>Δ Domestic NB</span><b class="${deltaClass(last.c.nbDom-first.c.nbDom)}">${(last.c.nbDom-first.c.nbDom>=0?'+':'')+fmt(last.c.nbDom-first.c.nbDom,1)}</b></div>
     </div>
-    <div class="report-section"><h2>Netback trend</h2><div id="trendChart"></div></div>
-    <div class="report-section"><h2>Driver parameters</h2><div id="driverChart"></div></div>
-    <div class="report-section"><h2>Month-to-month change in Δ Exp−Dom</h2><div id="diffChart"></div></div>
+    <div class="report-section">
+      <h2>Month snapshots</h2>
+      <p class="lead" style="margin:0 0 6px">Small Export vs Domestic netback for each month in the window.</p>
+      <div class="month-mini-grid ${rangeCls}">${miniCards}</div>
+    </div>
+    <div class="report-section"><h2>Netback trend</h2><div id="trendChart" class="${rangeCls}"></div></div>
+    <div class="report-section"><h2>Driver parameters</h2><div id="driverChart" class="${rangeCls}"></div></div>
+    <div class="report-section"><h2>Month-to-month change in Δ Exp−Dom</h2><div id="diffChart" class="${rangeCls}"></div></div>
     <div class="report-section"><h2>Overall change (first → last with data)</h2>
       <table class="report-table">
         <thead><tr><th>Item</th><th class="num">${monthLabel(first.p.month)}</th><th class="num">${monthLabel(last.p.month)}</th><th class="num">Difference</th></tr></thead>
