@@ -244,6 +244,14 @@
     display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
     margin-top:6px; padding-top:8px; border-top:1px dashed var(--line);
   }
+  .prod-price-ref{
+    margin-top:8px; padding:10px 12px; border:1px solid var(--line);
+    border-radius:10px; background:#faf7f0; font-size:.82rem; line-height:1.45; color:var(--ink);
+  }
+  .prod-price-ref .prf-title{font-weight:700; color:var(--accent); margin:0 0 4px; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase}
+  .prod-price-ref .prf-delta.up{color:#0f766e; font-weight:700}
+  .prod-price-ref .prf-delta.down{color:#b45309; font-weight:700}
+  .prod-price-ref .prf-meta{color:var(--muted); font-size:.78rem}
 
   .btn-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px}
   button.danger{background:#9a3412; color:#fff; border:0; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:.82rem}
@@ -734,6 +742,7 @@
         </div>
       </div>
       <p class="lead" id="prodWeightNote" style="margin-top:8px;font-size:.82rem"></p>
+      <div id="prodPriceRef" class="prod-price-ref" style="display:none"></div>
     </div>
 
     <div class="grid">
@@ -1840,6 +1849,76 @@ function fillProdMonthSelect(){
   }).join('');
   if (!ms.length) sel.innerHTML = '<option value="">No historic months for this refinery</option>';
 }
+function histMonthsForRef(refId){
+  return (refBlock(refId).historyMonths || []).slice().sort((a,b) => String(a.id).localeCompare(String(b.id)));
+}
+function latestHistMonthForRef(refId){
+  const ms = histMonthsForRef(refId);
+  return ms.length ? ms[ms.length - 1] : null;
+}
+function monthPrettyLabel(m){
+  if (!m) return '—';
+  if (m.label && /^[A-Za-z]{3} \d{4}$/.test(String(m.label))) return m.label;
+  return (typeof monthLabel === 'function') ? monthLabel(m.id) : (m.label || m.id);
+}
+/** Yield-weighted average VAT-incl KZT/t across sellable products with price. */
+function avgSellablePriceKzt(month){
+  if (!month || !Array.isArray(month.products)) return null;
+  let sum = 0, w = 0;
+  for (const p of month.products) {
+    const y = Math.max(0, num(p.yield));
+    const pk = num(p.priceKzt);
+    if (!p.sellable || y <= 0 || pk <= 0) continue;
+    sum += y * pk;
+    w += y;
+  }
+  return w > 0 ? sum / w : null;
+}
+function fmtDeltaKzt(d){
+  if (d == null || !Number.isFinite(d)) return '—';
+  const sign = d > 0 ? '+' : '';
+  return sign + fmtInt(d) + ' KZT/t';
+}
+function renderForecastPriceRef(){
+  const el = document.getElementById('prodPriceRef');
+  if (!el) return;
+  if (prodState.mode !== 'forecast') {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  const cur = prodState.refinery === 'pnhz' ? 'pnhz' : 'pkop';
+  const other = cur === 'pnhz' ? 'pkop' : 'pnhz';
+  const curName = cur === 'pnhz' ? 'PNHZ' : 'PKOP';
+  const othName = other === 'pnhz' ? 'PNHZ' : 'PKOP';
+  const hist = histMonthsForRef(cur);
+  const mCur = hist.length ? hist[hist.length - 1] : null;
+  const mPrev = hist.length >= 2 ? hist[hist.length - 2] : null;
+  const mOth = latestHistMonthForRef(other);
+  const avgCur = avgSellablePriceKzt(mCur);
+  const avgPrev = avgSellablePriceKzt(mPrev);
+  const avgOth = avgSellablePriceKzt(mOth);
+  const dOth = (avgCur != null && avgOth != null) ? avgCur - avgOth : null;
+  const dMom = (avgCur != null && avgPrev != null) ? avgCur - avgPrev : null;
+  const pctOth = (dOth != null && avgOth) ? (dOth / avgOth * 100) : null;
+  const pctMom = (dMom != null && avgPrev) ? (dMom / avgPrev * 100) : null;
+  const cls = (d) => (d == null ? '' : (d >= 0 ? 'up' : 'down'));
+  const block = activeRef();
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="prf-title">Forecast price reference · ${curName}</div>
+    <div>Prices &amp; yields reference <b>${monthPrettyLabel(mCur)}</b>
+      ${mCur && mCur.fx != null ? `· sheet FX ${fmt(mCur.fx,1)}` : ''}
+      · yield-weighted avg <b>${avgCur != null ? fmtInt(avgCur) + ' KZT/t' : '—'}</b> (VAT-incl)</div>
+    <div style="margin-top:4px">vs ${othName} latest <b>${monthPrettyLabel(mOth)}</b>
+      (avg ${avgOth != null ? fmtInt(avgOth) : '—'}):
+      <span class="prf-delta ${cls(dOth)}">${fmtDeltaKzt(dOth)}${pctOth != null ? ` (${pctOth >= 0 ? '+' : ''}${fmt(pctOth,1)}%)` : ''}</span>
+    </div>
+    <div style="margin-top:2px">vs prior ${curName} month <b>${monthPrettyLabel(mPrev)}</b>:
+      <span class="prf-delta ${cls(dMom)}">${fmtDeltaKzt(dMom)}${pctMom != null ? ` (${pctMom >= 0 ? '+' : ''}${fmt(pctMom,1)}%)` : ''}</span>
+    </div>
+    <div class="prf-meta" style="margin-top:4px">${block.yieldWeightNote ? ('Yield weights: ' + block.yieldWeightNote + ' · ') : ''}Forecast unit prices start from latest ${curName} month.</div>`;
+}
 function syncProdToggles(){
   document.querySelectorAll('#prodRefToggle button[data-prod-ref]').forEach(b => {
     b.classList.toggle('active', b.dataset.prodRef === prodState.refinery);
@@ -1855,11 +1934,13 @@ function syncProdToggles(){
   if (title) title.textContent = (prodState.mode === 'historic' ? 'Historic slate (merged)' : 'Forecast slate') + ' — sell all';
   const wn = document.getElementById('prodWeightNote');
   const block = activeRef();
+  const latest = latestHistMonthForRef(prodState.refinery);
   if (wn) {
     wn.textContent = prodState.mode === 'forecast'
-      ? `${block.label || prodState.refinery} · weighted yields`
+      ? `${block.label || prodState.refinery} · weighted yields · price as of ${monthPrettyLabel(latest)}`
       : 'Merged PKOP + PNHZ history from Jan 2026';
   }
+  renderForecastPriceRef();
 }
 
 function prodTrendWindow(){
@@ -2164,7 +2245,9 @@ function renderProductsPage(){
       ? ('FORECAST · ' + String(prodState.refinery).toUpperCase())
       : 'HISTORIC · MERGED';
     document.getElementById('prodVerdictSub').textContent =
-      (prodState.mode === 'historic' ? (histMonth(prodState.monthId)?.label || '') : 'Weighted yields · sell-all')
+      (prodState.mode === 'historic'
+        ? (histMonth(prodState.monthId)?.label || '')
+        : ('Prices as of ' + monthPrettyLabel(latestHistMonthForRef(prodState.refinery)) + ' · sell-all'))
       + ` · share ${(r.share*100).toFixed(0)}% · FX ${fmt(r.fx,2)}`;
     document.getElementById('prodExpNb').textContent = fmtProdUnit(r.expNb, 2);
     document.getElementById('prodDomNb').textContent = fmtProdUnit(r.domNb, 2);
