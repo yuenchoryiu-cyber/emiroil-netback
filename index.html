@@ -267,6 +267,53 @@
   .profile-list th{background:#1e3a5f; color:#fff; text-align:left; padding:7px 6px}
   .profile-list td{padding:6px; border-bottom:1px solid #ece7dc; vertical-align:top}
   .profile-list tr:nth-child(even) td{background:#faf7f0}
+  .pe-eot-box{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .pe-eot-box .pe-eot-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin:0 0 10px}
+  .pe-eot-box table.calc input{width:100%;max-width:7.5rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
+  .chip.eot{background:#ede9fe;color:#5b21b6;font-size:.65rem;padding:1px 6px;border-radius:999px;margin-left:4px;font-weight:700}
+  .chip.cur{background:#ccfbf1;color:#0f766e;font-size:.65rem;padding:1px 6px;border-radius:999px;margin-left:4px;font-weight:700}
+  #auditGate{
+    position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(900px 400px at 0% 0%, #3f1d1d, transparent 55%),
+      radial-gradient(700px 320px at 100% 0%, #1c1917, transparent 50%), #0c0a09;
+  }
+  #auditGate.open{display:flex}
+  #auditGate .gate-card{border-color:#7f1d1d;background:#1c1917;color:#fafaf9}
+  #auditGate .gate-card h1{color:#fecaca}
+  #auditGate .gate-card p{color:#a8a29e}
+  #auditGate .gate-card input[type=password]{background:#292524;border-color:#44403c;color:#fafaf9}
+  #auditGate .gate-card button{background:#b91c1c}
+  #page-audit{display:none}
+  #page-audit.active{display:block}
+  #page-audit .rl-hero{
+    display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-radius:14px;margin:0 0 12px;color:#fff;
+  }
+  #page-audit .rl-hero.ok{background:#0f766e}
+  #page-audit .rl-hero.bad{background:#b91c1c}
+  #page-audit .rl-hero.warn{background:#b45309}
+  #page-audit .rl-hero .rl-count{font-size:1.6rem;font-weight:800}
+  .rl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+  .rl-card{
+    border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card);
+    border-left:5px solid #a8a29e;
+  }
+  .rl-card.ok{border-left-color:#0f766e}
+  .rl-card.warn{border-left-color:#b45309;background:#fffbeb}
+  .rl-card.bad{border-left-color:#b91c1c;background:#fef2f2}
+  .rl-card .rl-title{font-weight:700;font-size:.9rem;margin:0 0 4px;display:flex;gap:8px;align-items:center}
+  .rl-lamp{
+    width:12px;height:12px;border-radius:50%;display:inline-block;flex:0 0 auto;
+    box-shadow:0 0 0 2px rgba(0,0,0,.06);
+  }
+  .rl-lamp.ok{background:#10b981}
+  .rl-lamp.warn{background:#f59e0b}
+  .rl-lamp.bad{background:#ef4444;box-shadow:0 0 10px rgba(239,68,68,.55)}
+  .rl-card .rl-body{font-size:.8rem;color:var(--muted);line-height:1.45;margin:0}
+  .rl-card .rl-val{font-family:Consolas,"Courier New",monospace;font-size:.78rem;color:var(--ink);margin-top:6px}
+  .audit-only #app > .subnav,
+  .audit-only #app > .app-brand{display:none}
+
   .chip{display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px; background:#e7e5e4}
   .chip.cur{background:#0f766e; color:#fff}
   .two-col{display:grid; grid-template-columns:1.1fr .9fr; gap:10px}
@@ -817,7 +864,7 @@
   <!-- PROFILES PAGE -->
   <div id="page-profiles" class="page">
     <h1>Month profiles</h1>
-    <p class="lead">Load, create, and edit months here. Current baseline is the <b>latest</b> profile (<b>Nov 2026</b>). Save scenarios online so colleagues can load or create other months later. Tax tables are shared under <b>Taxes / fiscal</b>.</p>
+    <p class="lead">Load, create, and edit months here — crude parameters <b>and</b> optional <b>EOT / refinery</b> monthly slate. Current/future months auto-refresh <b>FX</b> from the daily market rate. Tax tables are shared under <b>Taxes / fiscal</b>.</p>
     <div class="two-col">
       <div class="section">
         <h2>1) Current month &amp; load</h2>
@@ -848,7 +895,7 @@
       <h2>Saved profiles</h2>
       <p class="lead" style="margin-bottom:8px">Use <b>Edit</b> to change a month, then Save on the editor page. <b>Save←Analysis</b> overwrites that month with current Analysis values.</p>
       <table class="profile-list">
-        <thead><tr><th>Month</th><th>Label</th><th>Author</th><th>Export NB</th><th>Domestic NB</th><th>Δ Exp−Dom</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Month</th><th>Label</th><th>Author</th><th>Export NB</th><th>Domestic NB</th><th>Δ Exp−Dom</th><th>EOT</th><th>Actions</th></tr></thead>
         <tbody id="profileTable"></tbody>
       </table>
       <div class="btn-row no-print" style="margin-top:10px">
@@ -891,7 +938,13 @@
       <h2>Parameters</h2>
       <div class="param-grid">
         <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
-        <div class="field"><label>FX (KZT per 1 USD)</label><input id="peFx" type="number" step="0.01" value="448.64"/></div>
+        <div class="field"><label>FX (KZT per 1 USD)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="peFx" type="number" step="0.01" value="448.64" style="flex:1"/>
+            <button type="button" class="ghost" id="btnPeFetchFx" title="Pull live daily FX">Fetch FX</button>
+          </div>
+          <div class="sub" id="peFxHint">Current/future months auto-refresh FX on open.</div>
+        </div>
         <div class="field"><label>Skebco D6 ($/bbl, can be negative)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
         <div class="field"><label>Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="6.18"/></div>
         <div class="field"><label>Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="130000"/></div>
@@ -931,6 +984,40 @@
         <div>
           <h2 style="font-size:.85rem">DOMESTIC · <span id="peTrDomTitle">Shymkent (PKOP)</span></h2>
           <div id="peTrDom" style="overflow:auto; max-height:420px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="section pe-eot-box" id="peEotSection">
+      <h2>EOT / refinery monthly data</h2>
+      <p class="lead">Optional sell-all slate for this month (yields + VAT-incl prices). Saved with the profile so future months can be created here and used by <b>EOT Netback</b> / reports. Leave Off to keep embedded history only.</p>
+      <div class="pe-eot-tools">
+        <div class="field" style="margin:0;min-width:9rem">
+          <label>Include EOT for this month</label>
+          <select id="peEotEnable">
+            <option value="off">Off</option>
+            <option value="on">On — edit &amp; save</option>
+          </select>
+        </div>
+        <button type="button" class="ghost" id="btnPeEotFromHist">Fill from last historic</button>
+        <button type="button" class="ghost" id="btnPeEotFromPage">Fill from EOT Netback page</button>
+        <button type="button" class="ghost" id="btnPeEotClear">Clear slate</button>
+        <span class="status" id="peEotStatus" style="margin:0"></span>
+      </div>
+      <div id="peEotEditor" style="display:none">
+        <div class="param-grid" style="margin-bottom:8px">
+          <div class="field"><label>EOT FX (defaults to profile FX)</label><input id="peEotFx" type="number" step="0.01"/></div>
+          <div class="field"><label>Yield / price source note</label><input id="peEotSrc" type="text" placeholder="e.g. PKOP actuals / forecast"/></div>
+        </div>
+        <div style="overflow:auto;max-height:360px">
+          <table class="calc"><thead><tr>
+            <th>Product</th><th>Kind</th><th>Yield</th><th>Price KZT/t (VAT-incl)</th><th>Sellable</th>
+          </tr></thead><tbody id="peEotBody"></tbody></table>
+        </div>
+        <div class="kpi-grid" style="margin-top:10px">
+          <div class="k"><span>Yield sold</span><b id="peEotYSold">—</b></div>
+          <div class="k"><span>EOT NB preview</span><b id="peEotNb">—</b></div>
+          <div class="k"><span>Domestic + EOT</span><b id="peEotShareDom">—</b></div>
+          <div class="k"><span>Δ Export − (Dom+EOT)</span><b id="peEotDelta">—</b></div>
         </div>
       </div>
     </div>
@@ -997,6 +1084,33 @@
     </div>
   </div>
 
+  <!-- AUDIT / RED-LIGHT (backdoor #audit) -->
+  <div id="page-audit" class="page">
+    <h1>Red-light logic audit</h1>
+    <p class="lead">Backdoor check: green = consistent; amber = review; red = contradicts model logic. Suggested auditor parameters — expand freely.</p>
+    <div class="rl-hero ok" id="rlHero">
+      <div>
+        <div class="rl-count" id="rlHeroCount">—</div>
+        <div id="rlHeroSub">Run audit</div>
+      </div>
+      <div class="btn-row" style="margin:0">
+        <button type="button" class="ok" id="btnRunAudit">Re-run audit</button>
+        <button type="button" class="ghost" id="btnAuditExit">Exit audit</button>
+      </div>
+    </div>
+    <div class="rl-grid" id="rlGrid"></div>
+  </div>
+
+</div>
+
+<div id="auditGate">
+  <div class="gate-card">
+    <h1>Red-light audit</h1>
+    <p>Backdoor access. Enter the audit password.</p>
+    <div class="gate-err" id="auditGateErr"></div>
+    <input id="auditGatePw" type="password" placeholder="Password" autocomplete="current-password"/>
+    <button type="button" id="auditGateBtn">Open audit</button>
+  </div>
 </div>
 
 <script>
@@ -1618,8 +1732,18 @@ function getActiveProfile() {
     ? (profileDb.profiles.find(p => p.id === id) || profileDb.profiles.find(p => p.id === CURRENT_MONTH_ID) || profileDb.profiles[0])
     : null);
 }
+function calendarMonthId(){
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
+}
+/** Live-FX “current” = this calendar month (rolls forward automatically). */
 function isCurrentProfile(p) {
-  return !!(p && (p.id === CURRENT_MONTH_ID || p.month === CURRENT_MONTH_ID || p.isCurrent));
+  if (!p) return false;
+  const mid = p.month || p.id;
+  return mid === calendarMonthId();
+}
+function isFutureOrCurrentMonth(ym){
+  return String(ym || '') >= calendarMonthId();
 }
 /** Strip redundant "(current)" / month echoes from stored labels. */
 function cleanProfileLabel(p) {
@@ -1768,13 +1892,49 @@ function mergedHistory(){
   const m = (eotProj && eotProj.mergedHistory) || [];
   return m.filter(x => String(x.id) >= '2026-01');
 }
+/** EOT slate saved on a month profile (overrides embedded history for that month). */
+function profileEotMonth(id){
+  if (!id || typeof findProfileByMonth !== 'function') return null;
+  const p = findProfileByMonth(id);
+  if (!p || !p.eot || !Array.isArray(p.eot.products) || !p.eot.products.length) return null;
+  const fx = num(p.eot.fx, num(p.params && p.params.fx, NaN));
+  return {
+    id: String(id),
+    label: (typeof monthLabel === 'function') ? monthLabel(id) : String(id),
+    fx: Number.isFinite(fx) ? fx : undefined,
+    products: cloneProds(p.eot.products),
+    yieldSource: p.eot.yieldSource || 'profile',
+    priceSource: p.eot.priceSource || 'profile',
+    priceSources: p.eot.priceSources || null,
+    fromProfile: true,
+    rates: p.eot.rates || null,
+    volumeT: p.eot.volumeT
+  };
+}
 function histMonths(){
-  // Historic / trends: merged PKOP+PNHZ from Jan 2026
-  return mergedHistory();
+  const byId = new Map();
+  for (const m of mergedHistory()) byId.set(m.id, m);
+  if (typeof profileDb !== 'undefined' && Array.isArray(profileDb.profiles)) {
+    for (const p of profileDb.profiles) {
+      const mid = p.month || p.id;
+      const em = profileEotMonth(mid);
+      if (em) byId.set(em.id, em);
+    }
+  }
+  return [...byId.values()].sort((a,b) => String(a.id).localeCompare(String(b.id)));
 }
 function histMonth(id){
-  const ms = histMonths();
-  return ms.find(m => m.id === id) || ms[ms.length - 1] || null;
+  if (!id) {
+    const ms = histMonths();
+    return ms.length ? ms[ms.length - 1] : null;
+  }
+  const em = profileEotMonth(id);
+  if (em) return em;
+  const ms = mergedHistory();
+  const hit = ms.find(m => m.id === id);
+  if (hit) return hit;
+  const all = histMonths();
+  return all.length ? all[all.length - 1] : null;
 }
 function forecastMonths(){
   // Forecast weights: selected refinery only
@@ -2602,10 +2762,22 @@ async function loadEotProductsCloud(){
 }
 
 function showPage(name) {
-  const pages = ['netback','transport','taxes','products','profiles','reports'];
+  const pages = ['netback','transport','taxes','products','profiles','reports','audit'];
   if (name === 'route-map') name = 'transport';
   if (name === 'profile-edit') name = 'profiles';
+  if (name === 'redlight' || name === 'red-light') name = 'audit';
   if (!pages.includes(name)) name = 'netback';
+  if (name === 'audit') {
+    try {
+      if (sessionStorage.getItem(AUDIT_AUTH_KEY) !== '1') {
+        showAuditGate();
+        return;
+      }
+    } catch {
+      showAuditGate();
+      return;
+    }
+  }
   pages.forEach(id => {
     const el = document.getElementById('page-' + id);
     if (el) el.classList.toggle('active', id === name);
@@ -2618,8 +2790,9 @@ function showPage(name) {
   if (name==='transport') { refreshTransportUI(); try { renderRouteMap(); } catch(e) {} }
   if (name==='taxes') renderTaxPage();
   if (name==='products') { wireProductsPage(); renderProductsPage(); }
-  if (name==='profiles') { renderProfileUI(); try { refreshProfileEditorPreview(); } catch(e) {} }
+  if (name==='profiles') { renderProfileUI(); try { refreshProfileEditorPreview(); refreshPeEotPreview(); } catch(e) {} }
   if (name==='reports') renderProfileUI();
+  if (name==='audit') { wireAuditPage(); runRedLightAudit(); }
 }
 
 /* ===== Route map (Leaflet) ===== */
@@ -3441,8 +3614,10 @@ function applyLiveFxToCurrentMonth(fx, ru, asOf, source) {
     source: source || liveFxMeta.source || 'daily rate',
     status: 'ok'
   };
-  const p = (profileDb.profiles || []).find(x => x.id === CURRENT_MONTH_ID || x.month === CURRENT_MONTH_ID);
-  if (p) {
+  const cal = calendarMonthId();
+  const p = (profileDb.profiles || []).find(x => x.id === cal || x.month === cal)
+    || (profileDb.profiles || []).find(x => x.id === CURRENT_MONTH_ID || x.month === CURRENT_MONTH_ID);
+  if (p && (p.month || p.id) === cal) {
     p.params = { ...(p.params || {}), fx: state.fx, ru: state.ru };
     p.fxAsOf = liveFxMeta.asOf;
     p.fxSource = liveFxMeta.source;
@@ -3467,10 +3642,18 @@ function applyLiveFxToCurrentMonth(fx, ru, asOf, source) {
 }
 
 async function refreshCurrentMonthLiveFx() {
-  const active = getActiveProfile();
+  const cal = calendarMonthId();
+  let active = getActiveProfile();
+  if (!active || !isCurrentProfile(active)) {
+    active = (profileDb.profiles || []).find(x => (x.month || x.id) === cal) || null;
+  }
   if (!active || !isCurrentProfile(active)) {
     updateFxRateNoteForActive();
     return false;
+  }
+  // Ensure Analysis is on the calendar month before writing FX
+  if ((getActiveProfileId() || '') !== (active.id || active.month)) {
+    try { applyParams(active.params || {}); localStorage.setItem(ACTIVE_KEY, active.id || active.month); } catch {}
   }
   liveFxMeta.status = 'loading';
   updateFxRateNoteForActive();
@@ -3788,6 +3971,8 @@ function renderProfileUI() {
     const s = p.snapshot || {};
     const extra = cleanProfileLabel(p);
     const note = String(p.notes || '').trim();
+    const hasEot = !!(p.eot && Array.isArray(p.eot.products) && p.eot.products.length);
+    const embedded = !hasEot && typeof profileEotMonth === 'function' && !!mergedHistory().find(m => m.id === (p.month||p.id));
     return `<tr>
       <td>${monthLabel(p.month)}${isCurrentProfile(p)?' <span class="chip cur">current</span>':''}</td>
       <td>${extra || '—'}${note ? `<div class="sub">${note.slice(0,90)}</div>` : ''}</td>
@@ -3795,6 +3980,7 @@ function renderProfileUI() {
       <td class="num">${s.nbExp!=null?fmt(s.nbExp,1):'—'}</td>
       <td class="num">${s.nbDom!=null?fmt(s.nbDom,1):'—'}</td>
       <td class="num">${s.spread!=null?((s.spread>=0?'+':'')+fmt(s.spread,1)):'—'}</td>
+      <td>${hasEot?'<span class="chip eot">saved</span>':(embedded?'<span class="chip eot">hist</span>':'—')}</td>
       <td class="no-print" style="white-space:nowrap">
         <button type="button" class="ghost" data-load="${p.id}">Load</button>
         <button type="button" class="ok" data-edit="${p.id}">Edit</button>
@@ -3805,7 +3991,7 @@ function renderProfileUI() {
   }).join('');
 }
 
-function upsertProfile({ month, label, author, notes, online, params, statusId }) {
+function upsertProfile({ month, label, author, notes, online, params, statusId, eot }) {
   const id = String(month || '').trim();
   const sid = statusId || 'saveStatus';
   if (!id) {
@@ -3828,6 +4014,9 @@ function upsertProfile({ month, label, author, notes, online, params, statusId }
       .replace(/\s{2,}/g, ' ')
       .trim();
     if (!neatLabel || neatLabel.toLowerCase() === when.toLowerCase()) neatLabel = when;
+    const eotPayload = (eot !== undefined)
+      ? eot
+      : (existing && existing.eot ? existing.eot : undefined);
     const row = {
       id,
       label: neatLabel,
@@ -3835,10 +4024,11 @@ function upsertProfile({ month, label, author, notes, online, params, statusId }
       author: String(author ?? '').trim(),
       notes: String(notes ?? '').trim(),
       savedAt: new Date().toISOString(),
-      isCurrent: id === CURRENT_MONTH_ID,
+      isCurrent: id === calendarMonthId(),
       params: norm,
       snapshot: snap
     };
+    if (eotPayload && eotPayload !== null) row.eot = eotPayload;
     if (existing) {
       existing.label = row.label;
       existing.month = row.month;
@@ -3849,6 +4039,10 @@ function upsertProfile({ month, label, author, notes, online, params, statusId }
       existing.params = row.params;
       existing.snapshot = row.snapshot;
       existing.id = row.id;
+      if (eot !== undefined) {
+        if (eot === null) delete existing.eot;
+        else existing.eot = eot;
+      }
     } else {
       profileDb.profiles.push(row);
     }
@@ -3911,7 +4105,7 @@ function resetToSelectedMonth() {
 }
 
 function deleteProfile(id) {
-  if (id === CURRENT_MONTH_ID) return;
+  if (id === CURRENT_MONTH_ID || id === calendarMonthId()) return;
   profileDb.profiles = profileDb.profiles.filter(p => p.id !== id);
   saveProfilesLocal();
   renderProfileUI();
@@ -4821,6 +5015,432 @@ function syncProfileEditorMode() {
   });
 }
 
+/* ===== Profile editor: EOT / refinery monthly slate ===== */
+let peEotProducts = [];
+
+function defaultEotProductTemplate(){
+  const block = (typeof refBlock === 'function') ? refBlock('pkop') : null;
+  const list = (block && block.forecastProducts && block.forecastProducts.length)
+    ? block.forecastProducts
+    : (histMonths().slice(-1)[0] || {}).products || [];
+  return cloneProds(list).map(p => ({
+    name: p.name,
+    kind: p.kind || 'other',
+    yield: num(p.yield, 0),
+    priceKzt: num(p.priceKzt, 0),
+    sellable: p.sellable !== false && num(p.yield, 0) > 0 && num(p.priceKzt, 0) > 0,
+    priceSource: p.priceSource || 'profile'
+  }));
+}
+
+function setPeEotEnabled(on){
+  const sel = document.getElementById('peEotEnable');
+  const ed = document.getElementById('peEotEditor');
+  if (sel) sel.value = on ? 'on' : 'off';
+  if (ed) ed.style.display = on ? '' : 'none';
+}
+
+function renderPeEotTable(){
+  const body = document.getElementById('peEotBody');
+  if (!body) return;
+  body.innerHTML = (peEotProducts || []).map((p, i) => `<tr>
+    <td>${p.name || ('Product ' + (i+1))}</td>
+    <td>${p.kind || ''}</td>
+    <td><input data-pe-eot-i="${i}" data-pe-eot-f="yield" type="number" step="0.0001" min="0" max="1" value="${num(p.yield,0)}"/></td>
+    <td><input data-pe-eot-i="${i}" data-pe-eot-f="priceKzt" type="number" step="100" min="0" value="${num(p.priceKzt,0)}"/></td>
+    <td><input data-pe-eot-i="${i}" data-pe-eot-f="sellable" type="checkbox" ${p.sellable ? 'checked' : ''}/></td>
+  </tr>`).join('');
+  refreshPeEotPreview();
+}
+
+function readPeEotFromDom(){
+  document.querySelectorAll('[data-pe-eot-i]').forEach(el => {
+    const i = Number(el.dataset.peEotI);
+    const f = el.dataset.peEotF;
+    if (!peEotProducts[i]) return;
+    if (f === 'sellable') peEotProducts[i].sellable = !!el.checked;
+    else peEotProducts[i][f] = num(el.value, 0);
+  });
+}
+
+function collectPeEotPayload(){
+  const en = document.getElementById('peEotEnable');
+  if (!en || en.value !== 'on') return null;
+  readPeEotFromDom();
+  const products = (peEotProducts || []).map(p => ({
+    name: p.name,
+    kind: p.kind || 'other',
+    yield: num(p.yield, 0),
+    priceKzt: num(p.priceKzt, 0),
+    sellable: !!p.sellable,
+    priceSource: p.priceSource || 'profile'
+  }));
+  if (!products.length) return null;
+  const fxEl = document.getElementById('peEotFx');
+  const srcEl = document.getElementById('peEotSrc');
+  const peFx = num(document.getElementById('peFx') && document.getElementById('peFx').value, NaN);
+  return {
+    fx: num(fxEl && fxEl.value, Number.isFinite(peFx) ? peFx : undefined),
+    yieldSource: (srcEl && srcEl.value) || 'profile',
+    priceSource: 'profile',
+    products
+  };
+}
+
+function loadPeEotIntoEditor(eot){
+  if (eot && Array.isArray(eot.products) && eot.products.length) {
+    peEotProducts = cloneProds(eot.products);
+    setPeEotEnabled(true);
+    const fxEl = document.getElementById('peEotFx');
+    const srcEl = document.getElementById('peEotSrc');
+    if (fxEl) fxEl.value = num(eot.fx, document.getElementById('peFx')?.value || '');
+    if (srcEl) srcEl.value = eot.yieldSource || eot.priceSource || '';
+  } else {
+    peEotProducts = [];
+    setPeEotEnabled(false);
+    const fxEl = document.getElementById('peEotFx');
+    if (fxEl) fxEl.value = document.getElementById('peFx')?.value || '';
+  }
+  renderPeEotTable();
+}
+
+function fillPeEotFromHistoric(){
+  const ms = histMonths();
+  const last = ms.length ? ms[ms.length - 1] : null;
+  if (!last || !last.products) {
+    setStatus('peEotStatus', 'No historic EOT month to copy.', 'err');
+    return;
+  }
+  peEotProducts = cloneProds(last.products);
+  setPeEotEnabled(true);
+  const fxEl = document.getElementById('peEotFx');
+  const srcEl = document.getElementById('peEotSrc');
+  if (fxEl) fxEl.value = num(last.fx, document.getElementById('peFx')?.value || '');
+  if (srcEl) srcEl.value = `Copied from ${last.id}`;
+  renderPeEotTable();
+  setStatus('peEotStatus', `Filled from ${last.label || last.id}.`, 'ok');
+}
+
+function fillPeEotFromProductsPage(){
+  try {
+    ensureProdModel(false);
+    if (!prodState.products || !prodState.products.length) {
+      setStatus('peEotStatus', 'EOT Netback page has no slate loaded.', 'err');
+      return;
+    }
+    peEotProducts = cloneProds(prodState.products).map(p => ({
+      name: p.name, kind: p.kind, yield: num(p.yield), priceKzt: num(p.priceKzt),
+      sellable: !!p.sellable, priceSource: p.priceSource || 'profile'
+    }));
+    setPeEotEnabled(true);
+    const fxEl = document.getElementById('peEotFx');
+    if (fxEl) fxEl.value = (typeof productsFx === 'function') ? productsFx() : document.getElementById('peFx')?.value;
+    renderPeEotTable();
+    setStatus('peEotStatus', 'Filled from EOT Netback page.', 'ok');
+  } catch (e) {
+    setStatus('peEotStatus', 'Could not read EOT page: ' + (e.message || e), 'err');
+  }
+}
+
+function refreshPeEotPreview(){
+  const yEl = document.getElementById('peEotYSold');
+  const nbEl = document.getElementById('peEotNb');
+  const sdEl = document.getElementById('peEotShareDom');
+  const dEl = document.getElementById('peEotDelta');
+  if (!yEl) return;
+  try {
+    readPeEotFromDom();
+    const params = readEditorParams();
+    const { calc } = computeFromParams(params);
+    const fx = Math.max(1e-9, num(document.getElementById('peEotFx')?.value, params.fx));
+    const vat = Math.max(1e-9, params.vat);
+    const feedKzt = params.localKzt / vat;
+    const dflt = (typeof refBlock === 'function' ? refBlock('pkop').defaults : null) || {};
+    let rev = 0, ySold = 0, yGas = 0, yDt = 0;
+    for (const p of (peEotProducts || [])) {
+      const y = num(p.yield);
+      if (!p.sellable || y <= 0) continue;
+      ySold += y;
+      rev += y * (num(p.priceKzt) / vat);
+      if ((p.kind || '') === 'gasoline' || /^(ai92|ai95|ai98)$/i.test(p.name || '')) yGas += y;
+      if ((p.kind || '') === 'diesel' || /^diesel/i.test(p.name || '')) yDt += y;
+    }
+    const fixed = num(dflt.processingKzt, 26029) + num(dflt.additive1Kzt, 600) + num(dflt.additive2Kzt, 240)
+      + num(dflt.additivesKzt, 0) + num(dflt.adminKzt, 300);
+    const exc = yGas * num(dflt.exciseGasRateKzt, 38134) + yDt * num(dflt.exciseDieselRateKzt, 35726);
+    const nbKzt = rev - feedKzt - fixed - exc;
+    const nb = nbKzt / fx;
+    const share = 0.6;
+    const sharePlusDom = share * nb + calc.nbDom;
+    const delta = calc.nbExp - sharePlusDom;
+    yEl.textContent = (ySold * 100).toFixed(1) + '%';
+    if (nbEl) nbEl.textContent = fmt(nb, 1) + ' $/t';
+    if (sdEl) sdEl.textContent = fmt(sharePlusDom, 1) + ' $/t';
+    if (dEl) dEl.textContent = (delta >= 0 ? '+' : '') + fmt(delta, 1) + ' $/t';
+  } catch (e) {
+    yEl.textContent = '—';
+  }
+}
+
+async function peFetchLiveFx(){
+  const hint = document.getElementById('peFxHint');
+  if (hint) hint.textContent = 'Fetching daily FX…';
+  const got = await fetchDailyFxRates();
+  if (!got) {
+    if (hint) hint.textContent = 'FX fetch failed — enter manually.';
+    setPeSaveStatus('Could not fetch live FX.', 'err');
+    return false;
+  }
+  const fxEl = document.getElementById('peFx');
+  const ruEl = document.getElementById('peRu');
+  const eotFx = document.getElementById('peEotFx');
+  if (fxEl) fxEl.value = (Math.round(got.fx * 100) / 100).toFixed(2);
+  if (ruEl && Number.isFinite(got.ru)) ruEl.value = (Math.round(got.ru * 10000) / 10000).toFixed(4);
+  if (eotFx && (!eotFx.value || document.getElementById('peEotEnable')?.value === 'on')) {
+    eotFx.value = fxEl.value;
+  }
+  if (hint) hint.textContent = `Live FX ${fmt(got.fx, 2)} as of ${formatRateDate(got.asOf)} (${got.source}).`;
+  rebuildPeTransportBasesKeepingAdj();
+  refreshProfileEditorPreview();
+  refreshPeEotPreview();
+  return true;
+}
+
+/* ===== Red-light audit (backdoor #audit) ===== */
+const AUDIT_PASS_HASH = '612776d93d1f0dce9a5a7012babda2289d00748d6a4191a55d136fae4dbb3a05';
+const AUDIT_AUTH_KEY = 'eo_netback_audit_v1';
+
+function isAuditHash(){
+  const h = (location.hash || '').replace(/^#/, '').toLowerCase();
+  return h === 'audit' || h === 'redlight' || h === 'red-light';
+}
+
+function showAuditGate(){
+  const g = document.getElementById('auditGate');
+  if (g) g.classList.add('open');
+  const pw = document.getElementById('auditGatePw');
+  if (pw) setTimeout(() => pw.focus(), 50);
+}
+
+function hideAuditGate(){
+  const g = document.getElementById('auditGate');
+  if (g) g.classList.remove('open');
+}
+
+async function openAuditShell(){
+  hideAuditGate();
+  const appReady = document.getElementById('app')?.classList.contains('ready');
+  if (!appReady) {
+    document.getElementById('gate')?.classList.add('hidden');
+    document.getElementById('app')?.classList.add('ready');
+    document.body.classList.add('audit-only');
+    try {
+      hydrate();
+      hydrateTax();
+      loadProfilesLocal();
+      ensureOctBaseline();
+      sortProfiles();
+      await loadEotProductsCloud();
+      await refreshFromCloud().catch(() => {});
+    } catch (e) { console.warn(e); }
+  }
+  showPage('audit');
+  runRedLightAudit();
+}
+
+async function tryUnlockAudit(pw){
+  const hash = await sha256(String(pw || '').trim());
+  const err = document.getElementById('auditGateErr');
+  if (hash !== AUDIT_PASS_HASH) {
+    if (err) err.textContent = 'Wrong password';
+    return false;
+  }
+  try { sessionStorage.setItem(AUDIT_AUTH_KEY, '1'); } catch {}
+  await openAuditShell();
+  return true;
+}
+
+function rlItem(level, title, body, val){
+  return { level, title, body, val };
+}
+
+function runRedLightAudit(){
+  const items = [];
+  const push = (level, title, body, val) => items.push(rlItem(level, title, body, val));
+  try {
+    const profiles = (profileDb && profileDb.profiles) || [];
+    const cal = calendarMonthId();
+    const c = calcNetback();
+    const kebcoCheck = Math.abs((c.B - c.S) - c.kebco) < 1e-6;
+    push(kebcoCheck ? 'ok' : 'bad', 'Kebco = Brent − Skebco',
+      'Export rental/MET/duty must use Kebco, never Brent alone when Skebco is in the model.',
+      `B ${fmt(c.B,2)} − S ${fmt(c.S,3)} = ${fmt(c.B - c.S,3)} · model kebco ${fmt(c.kebco,3)}`);
+
+    push(Math.abs(c.domRent || 0) < 1e-9 ? 'ok' : 'bad', 'Domestic rental = 0',
+      'RK Tax Code: rental is export-only.', `domRent=${c.domRent}`);
+    push(Math.abs(c.domDuty || 0) < 1e-9 ? 'ok' : 'bad', 'Domestic export duty = 0',
+      'Export duty does not apply on domestic sales.', `domDuty=${c.domDuty}`);
+
+    const expectedDomMetShare = Math.abs(c.domMetShare - 0.5) < 1e-9;
+    push(expectedDomMetShare ? 'ok' : 'warn', 'Domestic MET reduction factor',
+      'Art. 778 uses 0.5 for RK refinery sales until equalizing coefficient replaces it from 2027.',
+      `domMetShare=${fmt(c.domMetShare, 3)}`);
+
+    let snapBad = 0, snapChecked = 0;
+    for (const p of profiles) {
+      if (!p.snapshot || !p.params) continue;
+      snapChecked++;
+      const live = computeFromParams(p.params).calc;
+      if (Math.abs(live.nbExp - num(p.snapshot.nbExp)) > 1.0 || Math.abs(live.nbDom - num(p.snapshot.nbDom)) > 1.0) {
+        snapBad++;
+      }
+    }
+    push(snapBad === 0 ? 'ok' : (snapBad <= 2 ? 'warn' : 'bad'), 'Profile snapshot vs live recalc',
+      'Saved Export/Dom snapshots should match live computeFromParams (±1 $/t). Large drift = stale snapshot or formula change.',
+      `${snapBad} of ${snapChecked} months drifted`);
+
+    const fx = c.FX;
+    push(fx > 300 && fx < 800 ? 'ok' : 'bad', 'FX in plausible band',
+      'USD/KZT outside 300–800 is almost certainly wrong for this model era.',
+      `FX=${fmt(fx,2)}`);
+    const ru = c.RU;
+    push(ru > 2 && ru < 15 ? 'ok' : 'warn', 'RUB→KZT in plausible band',
+      'KZT per 1 RUB typically ~4–8 recently.', `RU=${fmt(ru,4)}`);
+
+    const curP = profiles.find(p => (p.month || p.id) === cal);
+    if (!curP) {
+      push('warn', 'Calendar month profile missing',
+        'No profile for this calendar month — create one so daily FX can auto-update.',
+        `calendar=${cal}`);
+    } else if (!curP.fxAsOf) {
+      push('warn', 'Current month FX not yet refreshed',
+        'Open Analysis on the current month (or Fetch FX) so daily rate stamps fxAsOf.',
+        monthLabel(cal));
+    } else {
+      push('ok', 'Current month has live FX stamp',
+        'Daily FX metadata present on calendar month profile.',
+        `${fmt(curP.params?.fx,2)} as of ${curP.fxAsOf}`);
+    }
+
+    const months = profiles.map(p => p.month || p.id).filter(Boolean).sort();
+    let gaps = 0;
+    for (let i = 1; i < months.length; i++) {
+      const [y0, m0] = months[i-1].split('-').map(Number);
+      const [y1, m1] = months[i].split('-').map(Number);
+      const d = (y1 - y0) * 12 + (m1 - m0);
+      if (d > 1) gaps += d - 1;
+    }
+    push(gaps === 0 ? 'ok' : 'warn', 'Month profile continuity',
+      'Missing months weaken multi-month reports and MoM diffs.',
+      gaps ? `${gaps} missing month(s) in sequence` : 'No gaps');
+
+    const share = (typeof reportRefineShare === 'function') ? reportRefineShare() : 0.6;
+    let eotBad = 0, eotN = 0;
+    for (const p of profiles) {
+      const mid = p.month || p.id;
+      const oil = (typeof computeOilCompareForMonth === 'function') ? computeOilCompareForMonth(mid, share) : null;
+      if (!oil || !oil.ok) continue;
+      eotN++;
+      const expect = oil.shareNb + oil.domNb;
+      if (Math.abs(expect - oil.sharePlusDom) > 0.05) eotBad++;
+      if (Math.abs((oil.expNb - oil.sharePlusDom) - oil.deltaShareDomVsExp) > 0.05) eotBad++;
+      if (Math.abs((oil.expNb - oil.nb) - oil.deltaVsExp) > 0.05) eotBad++;
+      const m = histMonth(mid);
+      if (m && m.products) {
+        let ySum = 0;
+        for (const pr of m.products) {
+          const y = num(pr.yield);
+          if (y < 0) eotBad++;
+          ySum += y;
+        }
+        if (ySum > 1.05) eotBad++;
+      }
+    }
+    push(eotN === 0 ? 'warn' : (eotBad === 0 ? 'ok' : 'bad'), 'EOT identity & yield checks',
+      'Domestic+EOT must equal Dom + share×EOT; deltas must be Export − path; yields ≥ 0 and sum ≲ 1.',
+      eotN ? `${eotBad} issue(s) across ${eotN} EOT months` : 'No EOT history months available');
+
+    let fxMismatch = 0, fxPairs = 0;
+    for (const p of profiles) {
+      if (!p.eot || p.eot.fx == null || !p.params) continue;
+      fxPairs++;
+      if (Math.abs(num(p.eot.fx) - num(p.params.fx)) > 1.0) fxMismatch++;
+    }
+    push(fxPairs === 0 ? 'ok' : (fxMismatch === 0 ? 'ok' : 'warn'), 'Profile FX vs saved EOT FX',
+      'When both exist they should match (±1). Mismatch confuses Products NB ÷ FX.',
+      fxPairs ? `${fxMismatch} mismatch(es) of ${fxPairs}` : 'No saved EOT FX pairs');
+
+    push(Math.abs(c.VAT - 1.16) < 1e-6 ? 'ok' : 'warn', 'VAT factor',
+      'Baseline RK VAT factor is 1.16 unless law changes.', `VAT=${fmt(c.VAT,2)}`);
+
+    const spread = c.spread;
+    push(Math.abs(spread) < 0.5 || (spread > 0 && c.nbExp > c.nbDom) || (spread < 0 && c.nbExp < c.nbDom) ? 'ok' : 'bad',
+      'Δ Export − Domestic sign',
+      'Positive spread must mean Export NB > Domestic NB.',
+      `spread=${fmt(spread,2)} · Exp ${fmt(c.nbExp,1)} · Dom ${fmt(c.nbDom,1)}`);
+
+    push(c.B > 20 && c.B < 200 ? 'ok' : 'warn', 'Brent sanity',
+      'Brent outside $20–200/bbl is unusual for this workbook.', `Brent=${fmt(c.B,1)}`);
+    push(Math.abs(c.S) < 80 ? 'ok' : 'warn', 'Skebco magnitude',
+      'Skebco differentials beyond ±80 $/bbl deserve a manual check.', `Skebco=${fmt(c.S,3)}`);
+    push(c.LOC > 50000 && c.LOC < 500000 ? 'ok' : 'warn', 'Local VAT-incl KZT/t band',
+      'Domestic list price should look like a real KZT/t VAT-incl posting.',
+      `localKzt=${fmtInt(c.LOC)}`);
+    push(Math.abs(c.kbRent - 7.5) < 1e-9 && Math.abs(c.kbMet - 7.5) < 1e-9 ? 'ok' : 'warn',
+      'Rental / MET kb factors',
+      'Baseline kbRent/kbMet = 7.5 bbl/t unless fiscal page intentionally changed.',
+      `kbRent=${fmt(c.kbRent,2)} · kbMet=${fmt(c.kbMet,2)}`);
+
+    const savedEot = profiles.filter(p => p.eot && p.eot.products && p.eot.products.length).length;
+    push('ok', 'Saved EOT month count',
+      'Profiles can carry future refinery months; EOT Netback merges them over embedded history.',
+      `${savedEot} profile(s) with EOT slate`);
+  } catch (e) {
+    push('bad', 'Audit runner crashed', String(e && e.message ? e.message : e), '');
+  }
+
+  const bad = items.filter(x => x.level === 'bad').length;
+  const warn = items.filter(x => x.level === 'warn').length;
+  const ok = items.filter(x => x.level === 'ok').length;
+  const hero = document.getElementById('rlHero');
+  const count = document.getElementById('rlHeroCount');
+  const sub = document.getElementById('rlHeroSub');
+  if (hero) hero.className = 'rl-hero ' + (bad ? 'bad' : (warn ? 'warn' : 'ok'));
+  if (count) count.textContent = bad ? `${bad} RED` : (warn ? `${warn} AMBER` : 'ALL CLEAR');
+  if (sub) sub.textContent = `${ok} green · ${warn} amber · ${bad} red · ${items.length} checks`;
+  const grid = document.getElementById('rlGrid');
+  if (grid) {
+    grid.innerHTML = items.map(it => `<div class="rl-card ${it.level}">
+      <div class="rl-title"><span class="rl-lamp ${it.level}"></span>${it.title}</div>
+      <p class="rl-body">${it.body}</p>
+      ${it.val != null && it.val !== '' ? `<div class="rl-val">${it.val}</div>` : ''}
+    </div>`).join('');
+  }
+}
+
+function wireAuditPage(){
+  const btn = document.getElementById('btnRunAudit');
+  if (btn) btn.onclick = () => runRedLightAudit();
+  const exit = document.getElementById('btnAuditExit');
+  if (exit) exit.onclick = () => {
+    document.body.classList.remove('audit-only');
+    try {
+      if (sessionStorage.getItem(AUTH_KEY) === '1') { showPage('netback'); return; }
+    } catch {}
+    document.getElementById('app')?.classList.remove('ready');
+    document.getElementById('gate')?.classList.remove('hidden');
+    location.hash = '';
+  };
+  const ag = document.getElementById('auditGateBtn');
+  if (ag) ag.onclick = () => tryUnlockAudit(document.getElementById('auditGatePw').value);
+  const ap = document.getElementById('auditGatePw');
+  if (ap && !ap._wired) {
+    ap._wired = true;
+    ap.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlockAudit(ap.value); });
+  }
+}
+
+
 function openProfileEditor(p) {
   if (p) {
     peEditingId = p.id || p.month;
@@ -4830,15 +5450,23 @@ function openProfileEditor(p) {
       author: p.author || '',
       notes: p.notes || ''
     });
+    loadPeEotIntoEditor(p.eot || null);
   } else {
     peEditingId = null;
-    const now = new Date();
-    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const ym = calendarMonthId();
     fillEditor(OCT2026_PROFILE.params, { month: ym, label: '', author: '', notes: '' });
+    loadPeEotIntoEditor(null);
   }
   syncProfileEditorMode();
   setPeSaveStatus('', '');
   showPage('profiles');
+  const month = (p && (p.month || p.id)) || calendarMonthId();
+  if (isFutureOrCurrentMonth(month)) {
+    peFetchLiveFx().catch(() => {});
+  } else {
+    const hint = document.getElementById('peFxHint');
+    if (hint) hint.textContent = 'Prior month — keep monthly-average FX (Fetch FX only if you intentionally override).';
+  }
 }
 
 function openNewProfileEditor() {
@@ -4905,12 +5533,15 @@ async function saveFromEditor(online) {
     setPeSaveStatus('Could not read form values: ' + (err.message || err), 'err');
     return;
   }
+  const eotEn = document.getElementById('peEotEnable');
+  const eot = (eotEn && eotEn.value === 'on') ? collectPeEotPayload() : null;
   const ok = await upsertProfile({
     month: peEditingId || month,
     label: document.getElementById('peLabel').value || monthLabel(peEditingId || month),
     author: document.getElementById('peAuthor').value,
     notes: document.getElementById('peNotes').value,
     params,
+    eot,
     online: !!online,
     statusId: 'peSaveStatus'
   });
@@ -4974,6 +5605,54 @@ function wireProfilesReports() {
       setStatus('profileStatus', 'Import failed.', 'err');
     }
   });
+  const btnPeFx = document.getElementById('btnPeFetchFx');
+  if (btnPeFx) btnPeFx.onclick = () => peFetchLiveFx();
+  const peEotEn = document.getElementById('peEotEnable');
+  if (peEotEn) peEotEn.onchange = () => {
+    const on = peEotEn.value === 'on';
+    setPeEotEnabled(on);
+    if (on && (!peEotProducts || !peEotProducts.length)) {
+      peEotProducts = defaultEotProductTemplate();
+      const fxEl = document.getElementById('peEotFx');
+      if (fxEl && !fxEl.value) fxEl.value = document.getElementById('peFx')?.value || '';
+      renderPeEotTable();
+    }
+  };
+  const bHist = document.getElementById('btnPeEotFromHist');
+  if (bHist) bHist.onclick = () => fillPeEotFromHistoric();
+  const bPage = document.getElementById('btnPeEotFromPage');
+  if (bPage) bPage.onclick = () => fillPeEotFromProductsPage();
+  const bClr = document.getElementById('btnPeEotClear');
+  if (bClr) bClr.onclick = () => {
+    peEotProducts = [];
+    setPeEotEnabled(false);
+    renderPeEotTable();
+    setStatus('peEotStatus', 'EOT slate cleared (will remove on Save).', '');
+  };
+  const peEotBody = document.getElementById('peEotBody');
+  if (peEotBody && !peEotBody._wired) {
+    peEotBody._wired = true;
+    peEotBody.addEventListener('input', () => refreshPeEotPreview());
+    peEotBody.addEventListener('change', () => refreshPeEotPreview());
+  }
+  ['peEotFx','peFx','peLocal','peVat'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => refreshPeEotPreview());
+  });
+  const peMonthEl = document.getElementById('peMonth');
+  if (peMonthEl && !peMonthEl._fxWired) {
+    peMonthEl._fxWired = true;
+    peMonthEl.addEventListener('change', () => {
+      const ym = peMonthEl.value;
+      if (isFutureOrCurrentMonth(ym)) peFetchLiveFx().catch(() => {});
+      else {
+        const hint = document.getElementById('peFxHint');
+        if (hint) hint.textContent = 'Prior month — keep monthly-average FX.';
+      }
+    });
+  }
+  wireAuditPage();
+
   document.getElementById('btnSaveToken').onclick = () => {
     const t = document.getElementById('publishToken').value.trim();
     try { if (t) localStorage.setItem(TOKEN_KEY, t); } catch {}
@@ -5095,7 +5774,7 @@ async function startApp() {
   const hash=(location.hash||'#netback').replace('#','');
   wireRouteMap();
   await loadEotProductsCloud();
-  showPage((() => { let h=hash; if(h==='route-map') h='transport'; if(h==='profile-edit') h='profiles'; return ['netback','transport','taxes','products','profiles','reports'].includes(h)?h:'netback'; })());
+  showPage((() => { let h=hash; if(h==='route-map') h='transport'; if(h==='profile-edit') h='profiles'; if(h==='redlight'||h==='red-light') h='audit'; return ['netback','transport','taxes','products','profiles','reports','audit'].includes(h)?h:'netback'; })());
   await initProfilesReports();
 }
 
@@ -5116,6 +5795,19 @@ document.getElementById('gatePw').addEventListener('keydown', (e) => {
 });
 
 (async function boot() {
+  wireAuditPage();
+  if (isAuditHash()) {
+    try {
+      if (sessionStorage.getItem(AUDIT_AUTH_KEY) === '1') {
+        if (sessionStorage.getItem(AUTH_KEY) === '1') { await startApp(); showPage('audit'); return; }
+        await openAuditShell();
+        return;
+      }
+    } catch {}
+    document.getElementById('gate')?.classList.add('hidden');
+    showAuditGate();
+    return;
+  }
   try {
     if (sessionStorage.getItem(AUTH_KEY) === '1') { startApp(); return; }
   } catch {}
