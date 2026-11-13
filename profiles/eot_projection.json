@@ -14,7 +14,7 @@
           "yield": 0.204408,
           "priceKzt": 251772.9,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI95",
@@ -22,7 +22,7 @@
           "yield": 0.114253,
           "priceKzt": 325500.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI98",
@@ -30,7 +30,7 @@
           "yield": 0.003746,
           "priceKzt": 325000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Diesel fuel",
@@ -38,7 +38,7 @@
           "yield": 0.337706,
           "priceKzt": 334063.76,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Kerosene (Aviation fuel)",
@@ -46,7 +46,7 @@
           "yield": 0.041206,
           "priceKzt": 395714.29,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Fuel oil",
@@ -54,7 +54,7 @@
           "yield": 0.069797,
           "priceKzt": 148000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Vacuum gas oil",
@@ -62,7 +62,7 @@
           "yield": 0.0,
           "priceKzt": 278460.0,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Sulphur",
@@ -70,7 +70,7 @@
           "yield": 0.010811,
           "priceKzt": 204807.69,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Liquefied gas",
@@ -78,7 +78,7 @@
           "yield": 0.050187,
           "priceKzt": 69277.52,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Technical fuel",
@@ -86,7 +86,7 @@
           "yield": 0.059314,
           "priceKzt": 6128.07,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Losses",
@@ -98,18 +98,18 @@
         }
       ],
       "yieldSource": "pnhz",
-      "priceSource": "both",
+      "priceSource": "pnhz",
       "priceSources": {
-        "AI92": "both",
-        "AI95": "both",
-        "AI98": "both",
-        "Diesel fuel": "both",
-        "Kerosene (Aviation fuel)": "both",
-        "Fuel oil": "both",
-        "Vacuum gas oil": "both",
-        "Sulphur": "both",
-        "Liquefied gas": "both",
-        "Technical fuel": "both"
+        "AI92": "pnhz",
+        "AI95": "pnhz",
+        "AI98": "pnhz",
+        "Diesel fuel": "pnhz",
+        "Kerosene (Aviation fuel)": "pnhz",
+        "Fuel oil": "pnhz",
+        "Vacuum gas oil": "pnhz",
+        "Sulphur": "pnhz",
+        "Liquefied gas": "pnhz",
+        "Technical fuel": "pnhz"
       },
       "snapshot": {
         "revKzt": 235013.3,
@@ -135,7 +135,7 @@
           "yield": 0.200894,
           "priceKzt": 252200.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI95",
@@ -143,7 +143,7 @@
           "yield": 0.112224,
           "priceKzt": 326800.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI98",
@@ -151,7 +151,7 @@
           "yield": 0.008016,
           "priceKzt": 325000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Diesel fuel",
@@ -159,7 +159,7 @@
           "yield": 0.341667,
           "priceKzt": 335000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Kerosene (Aviation fuel)",
@@ -167,7 +167,7 @@
           "yield": 0.044088,
           "priceKzt": 390000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Fuel oil",
@@ -175,7 +175,7 @@
           "yield": 0.066651,
           "priceKzt": 157500.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Vacuum gas oil",
@@ -183,7 +183,7 @@
           "yield": 0.0,
           "priceKzt": 267540.0,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Sulphur",
@@ -191,7 +191,7 @@
           "yield": 0.010842,
           "priceKzt": 204807.69,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Liquefied gas",
@@ -199,7 +199,7 @@
           "yield": 0.051685,
           "priceKzt": 69277.52,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Technical fuel",
@@ -207,7 +207,7 @@
           "yield": 0.059012,
           "priceKzt": 6128.07,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Losses",
@@ -219,18 +219,18 @@
         }
       ],
       "yieldSource": "pnhz",
-      "priceSource": "both",
+      "priceSource": "pnhz",
       "priceSources": {
-        "AI92": "both",
-        "AI95": "both",
-        "AI98": "both",
-        "Diesel fuel": "both",
-        "Kerosene (Aviation fuel)": "both",
-        "Fuel oil": "both",
-        "Vacuum gas oil": "both",
-        "Sulphur": "both",
-        "Liquefied gas": "both",
-        "Technical fuel": "both"
+        "AI92": "pnhz",
+        "AI95": "pnhz",
+        "AI98": "pnhz",
+        "Diesel fuel": "pnhz",
+        "Kerosene (Aviation fuel)": "pnhz",
+        "Fuel oil": "pnhz",
+        "Vacuum gas oil": "pnhz",
+        "Sulphur": "pnhz",
+        "Liquefied gas": "pnhz",
+        "Technical fuel": "pnhz"
       },
       "snapshot": {
         "revKzt": 237896.9,
@@ -256,7 +256,7 @@
           "yield": 0.178991,
           "priceKzt": 251280.14,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI95",
@@ -264,7 +264,7 @@
           "yield": 0.109319,
           "priceKzt": 325000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI98",
@@ -272,7 +272,7 @@
           "yield": 0.007168,
           "priceKzt": 325000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Diesel fuel",
@@ -280,7 +280,7 @@
           "yield": 0.372937,
           "priceKzt": 332491.67,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Kerosene (Aviation fuel)",
@@ -288,7 +288,7 @@
           "yield": 0.041219,
           "priceKzt": 371000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Fuel oil",
@@ -296,7 +296,7 @@
           "yield": 0.050989,
           "priceKzt": 160000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Vacuum gas oil",
@@ -304,7 +304,7 @@
           "yield": 0.0,
           "priceKzt": 267540.0,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Sulphur",
@@ -312,7 +312,7 @@
           "yield": 0.01026,
           "priceKzt": 221500.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Liquefied gas",
@@ -320,7 +320,7 @@
           "yield": 0.049174,
           "priceKzt": 69277.52,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Technical fuel",
@@ -328,7 +328,7 @@
           "yield": 0.05593,
           "priceKzt": 6128.07,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Losses",
@@ -340,18 +340,18 @@
         }
       ],
       "yieldSource": "pnhz",
-      "priceSource": "both",
+      "priceSource": "pnhz",
       "priceSources": {
-        "AI92": "both",
-        "AI95": "both",
-        "AI98": "both",
-        "Diesel fuel": "both",
-        "Kerosene (Aviation fuel)": "both",
-        "Fuel oil": "both",
-        "Vacuum gas oil": "both",
-        "Sulphur": "both",
-        "Liquefied gas": "both",
-        "Technical fuel": "both"
+        "AI92": "pnhz",
+        "AI95": "pnhz",
+        "AI98": "pnhz",
+        "Diesel fuel": "pnhz",
+        "Kerosene (Aviation fuel)": "pnhz",
+        "Fuel oil": "pnhz",
+        "Vacuum gas oil": "pnhz",
+        "Sulphur": "pnhz",
+        "Liquefied gas": "pnhz",
+        "Technical fuel": "pnhz"
       },
       "snapshot": {
         "revKzt": 235963.34,
@@ -377,7 +377,7 @@
           "yield": 0.169748,
           "priceKzt": 248338.71,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI95",
@@ -385,7 +385,7 @@
           "yield": 0.111111,
           "priceKzt": 302000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI98",
@@ -393,7 +393,7 @@
           "yield": 0.007407,
           "priceKzt": 325000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Diesel fuel",
@@ -401,7 +401,7 @@
           "yield": 0.382052,
           "priceKzt": 330369.08,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Kerosene (Aviation fuel)",
@@ -409,7 +409,7 @@
           "yield": 0.040741,
           "priceKzt": 510000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Fuel oil",
@@ -417,7 +417,7 @@
           "yield": 0.030874,
           "priceKzt": 160000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Vacuum gas oil",
@@ -425,7 +425,7 @@
           "yield": 0.0,
           "priceKzt": 251160.0,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Sulphur",
@@ -433,7 +433,7 @@
           "yield": 0.010156,
           "priceKzt": 221500.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Liquefied gas",
@@ -441,7 +441,7 @@
           "yield": 0.045515,
           "priceKzt": 69277.52,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Technical fuel",
@@ -449,7 +449,7 @@
           "yield": 0.054848,
           "priceKzt": 6128.07,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Losses",
@@ -461,18 +461,18 @@
         }
       ],
       "yieldSource": "pnhz",
-      "priceSource": "both",
+      "priceSource": "pnhz",
       "priceSources": {
-        "AI92": "both",
-        "AI95": "both",
-        "AI98": "both",
-        "Diesel fuel": "both",
-        "Kerosene (Aviation fuel)": "both",
-        "Fuel oil": "both",
-        "Vacuum gas oil": "both",
-        "Sulphur": "both",
-        "Liquefied gas": "both",
-        "Technical fuel": "both"
+        "AI92": "pnhz",
+        "AI95": "pnhz",
+        "AI98": "pnhz",
+        "Diesel fuel": "pnhz",
+        "Kerosene (Aviation fuel)": "pnhz",
+        "Fuel oil": "pnhz",
+        "Vacuum gas oil": "pnhz",
+        "Sulphur": "pnhz",
+        "Liquefied gas": "pnhz",
+        "Technical fuel": "pnhz"
       },
       "snapshot": {
         "revKzt": 235456.43,
@@ -498,7 +498,7 @@
           "yield": 0.187006,
           "priceKzt": 252335.7,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI95",
@@ -506,7 +506,7 @@
           "yield": 0.092421,
           "priceKzt": 296142.86,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "AI98",
@@ -514,7 +514,7 @@
           "yield": 0.002957,
           "priceKzt": 325000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Diesel fuel",
@@ -522,7 +522,7 @@
           "yield": 0.378566,
           "priceKzt": 324250.38,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Kerosene (Aviation fuel)",
@@ -530,7 +530,7 @@
           "yield": 0.046211,
           "priceKzt": 605000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Fuel oil",
@@ -538,7 +538,7 @@
           "yield": 0.019806,
           "priceKzt": 160000.0,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Vacuum gas oil",
@@ -546,7 +546,7 @@
           "yield": 0.0,
           "priceKzt": 251160.0,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Sulphur",
@@ -554,7 +554,7 @@
           "yield": 0.0102,
           "priceKzt": 271707.32,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Liquefied gas",
@@ -562,7 +562,7 @@
           "yield": 0.048978,
           "priceKzt": 69277.52,
           "sellable": true,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Technical fuel",
@@ -570,7 +570,7 @@
           "yield": 0.053976,
           "priceKzt": 6128.07,
           "sellable": false,
-          "priceSource": "both"
+          "priceSource": "pnhz"
         },
         {
           "name": "Losses",
@@ -582,18 +582,18 @@
         }
       ],
       "yieldSource": "pnhz",
-      "priceSource": "both",
+      "priceSource": "pnhz",
       "priceSources": {
-        "AI92": "both",
-        "AI95": "both",
-        "AI98": "both",
-        "Diesel fuel": "both",
-        "Kerosene (Aviation fuel)": "both",
-        "Fuel oil": "both",
-        "Vacuum gas oil": "both",
-        "Sulphur": "both",
-        "Liquefied gas": "both",
-        "Technical fuel": "both"
+        "AI92": "pnhz",
+        "AI95": "pnhz",
+        "AI98": "pnhz",
+        "Diesel fuel": "pnhz",
+        "Kerosene (Aviation fuel)": "pnhz",
+        "Fuel oil": "pnhz",
+        "Vacuum gas oil": "pnhz",
+        "Sulphur": "pnhz",
+        "Liquefied gas": "pnhz",
+        "Technical fuel": "pnhz"
       },
       "snapshot": {
         "revKzt": 235560.41,
@@ -1295,23 +1295,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 518.64,
-            "AI95": 607.0,
-            "Diesel fuel": 685.19,
-            "Kerosene (Aviation fuel)": 1137.86,
-            "Fuel oil": 267.49,
-            "Sulphur": 2.06,
-            "Liquefied gas": 142.55
-          },
           "snapshot": {
-            "revUsd": 566.3038,
-            "feedUsd": 221.7256,
-            "opexUsd": 113.2436,
-            "nbUsd": 231.3347,
-            "feedKztAssumed": 125000.0,
-            "fxUsed": 486.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 566.5136,
+            "feedUsd": 230.68,
+            "opexUsd": 113.2855,
+            "nbUsd": 222.5481,
+            "monthPlUsd": 801173.17,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -1399,23 +1390,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 583.16,
-            "AI95": 711.83,
-            "Diesel fuel": 710.98,
-            "Kerosene (Aviation fuel)": 2037.89,
-            "Fuel oil": 273.68,
-            "Sulphur": 126.32,
-            "Liquefied gas": 145.85
-          },
           "snapshot": {
-            "revUsd": 670.6985,
-            "feedUsd": 235.9347,
-            "opexUsd": 113.2556,
-            "nbUsd": 321.5083,
+            "revUsd": 655.761,
+            "feedUsd": 230.68,
+            "opexUsd": 110.7332,
+            "nbUsd": 314.3477,
+            "monthPlUsd": 1100217.1,
             "feedKztAssumed": 130000.0,
-            "fxUsed": 475.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -1503,23 +1485,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 608.6,
-            "AI95": 741.94,
-            "Diesel fuel": 770.75,
-            "Kerosene (Aviation fuel)": 2081.72,
-            "Fuel oil": 279.57,
-            "Sulphur": 150.54,
-            "Liquefied gas": 148.98
-          },
           "snapshot": {
-            "revUsd": 671.6008,
-            "feedUsd": 241.0085,
-            "opexUsd": 116.7272,
-            "nbUsd": 313.8651,
+            "revUsd": 642.8191,
+            "feedUsd": 230.68,
+            "opexUsd": 111.7248,
+            "nbUsd": 300.4143,
+            "monthPlUsd": 1201657.16,
             "feedKztAssumed": 130000.0,
-            "fxUsed": 465.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -1607,23 +1580,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 639.14,
-            "AI95": 780.56,
-            "Diesel fuel": 830.65,
-            "Kerosene (Aviation fuel)": 1252.85,
-            "Fuel oil": 296.13,
-            "Sulphur": 159.45,
-            "Liquefied gas": 157.81
-          },
           "snapshot": {
-            "revUsd": 672.1923,
-            "feedUsd": 255.2824,
-            "opexUsd": 126.3564,
-            "nbUsd": 290.5535,
+            "revUsd": 607.411,
+            "feedUsd": 230.68,
+            "opexUsd": 114.1791,
+            "nbUsd": 262.5519,
+            "monthPlUsd": 1365269.95,
             "feedKztAssumed": 130000.0,
-            "fxUsed": 439.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -1711,23 +1675,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 624.65,
-            "AI95": 726.87,
-            "Diesel fuel": 800.07,
-            "Kerosene (Aviation fuel)": 1167.4,
-            "Fuel oil": 277.17,
-            "Sulphur": 154.19,
-            "Liquefied gas": 152.59
-          },
           "snapshot": {
-            "revUsd": 635.0686,
-            "feedUsd": 241.1515,
-            "opexUsd": 120.5973,
-            "nbUsd": 273.3198,
-            "feedKztAssumed": 127000.0,
-            "fxUsed": 454.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 640.7136,
+            "feedUsd": 249.0421,
+            "opexUsd": 121.6693,
+            "nbUsd": 270.0022,
+            "monthPlUsd": 1215009.99,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         }
       ],
@@ -1940,24 +1895,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 502.52,
-            "AI95": 649.67,
-            "AI98": 648.68,
-            "Diesel fuel": 666.77,
-            "Kerosene (Aviation fuel)": 789.82,
-            "Fuel oil": 295.4,
-            "Sulphur": 408.78,
-            "Liquefied gas": 138.27
-          },
           "snapshot": {
-            "revUsd": 469.0697,
-            "feedUsd": 215.2471,
-            "opexUsd": 102.8473,
-            "nbUsd": 150.9753,
-            "feedKztAssumed": 125098.0,
-            "fxUsed": 501.02,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 460.8104,
+            "feedUsd": 219.7431,
+            "opexUsd": 101.0364,
+            "nbUsd": 140.0309,
+            "monthPlUsd": 646832.02,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -2045,24 +1990,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 506.43,
-            "AI95": 656.22,
-            "AI98": 652.61,
-            "Diesel fuel": 672.69,
-            "Kerosene (Aviation fuel)": 783.13,
-            "Fuel oil": 316.27,
-            "Sulphur": 411.26,
-            "Liquefied gas": 139.11
-          },
           "snapshot": {
-            "revUsd": 477.7046,
-            "feedUsd": 216.2426,
-            "opexUsd": 103.6577,
-            "nbUsd": 157.8044,
-            "feedKztAssumed": 124919.0,
-            "fxUsed": 498.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 485.5039,
+            "feedUsd": 228.7122,
+            "opexUsd": 105.35,
+            "nbUsd": 151.4417,
+            "monthPlUsd": 743125.13,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -2150,24 +2085,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 521.33,
-            "AI95": 674.27,
-            "AI98": 674.27,
-            "Diesel fuel": 689.82,
-            "Kerosene (Aviation fuel)": 769.71,
-            "Fuel oil": 331.95,
-            "Sulphur": 459.54,
-            "Liquefied gas": 143.73
-          },
           "snapshot": {
-            "revUsd": 489.5505,
-            "feedUsd": 223.4154,
-            "opexUsd": 107.3865,
-            "nbUsd": 158.7486,
-            "feedKztAssumed": 124916.0,
-            "fxUsed": 482.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 481.5578,
+            "feedUsd": 228.7122,
+            "opexUsd": 105.6333,
+            "nbUsd": 147.2124,
+            "monthPlUsd": 544685.8,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -2255,24 +2180,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 537.53,
-            "AI95": 653.68,
-            "AI98": 703.46,
-            "Diesel fuel": 715.08,
-            "Kerosene (Aviation fuel)": 1103.9,
-            "Fuel oil": 346.32,
-            "Sulphur": 479.44,
-            "Liquefied gas": 149.95
-          },
           "snapshot": {
-            "revUsd": 509.646,
-            "feedUsd": 232.5049,
-            "opexUsd": 112.1449,
-            "nbUsd": 164.9963,
-            "feedKztAssumed": 124604.0,
-            "fxUsed": 462.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 511.8618,
+            "feedUsd": 243.6282,
+            "opexUsd": 112.6324,
+            "nbUsd": 155.6012,
+            "monthPlUsd": 536069.48,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -2360,24 +2275,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 519.21,
-            "AI95": 609.35,
-            "AI98": 668.72,
-            "Diesel fuel": 667.18,
-            "Kerosene (Aviation fuel)": 1244.86,
-            "Fuel oil": 329.22,
-            "Sulphur": 559.07,
-            "Liquefied gas": 142.55
-          },
           "snapshot": {
-            "revUsd": 484.6922,
-            "feedUsd": 221.7256,
-            "opexUsd": 105.8891,
-            "nbUsd": 157.0776,
-            "feedKztAssumed": 125000.0,
-            "fxUsed": 486.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 512.0878,
+            "feedUsd": 243.6282,
+            "opexUsd": 111.8741,
+            "nbUsd": 156.5856,
+            "monthPlUsd": 766741.49,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         },
         {
@@ -2465,24 +2370,14 @@
               "sellable": false
             }
           ],
-          "pricesUsd": {
-            "AI92": 529.98,
-            "AI95": 609.35,
-            "AI98": 668.72,
-            "Diesel fuel": 678.58,
-            "Kerosene (Aviation fuel)": 1244.86,
-            "Fuel oil": 329.22,
-            "Sulphur": 559.07,
-            "Liquefied gas": 142.55
-          },
           "snapshot": {
-            "revUsd": 492.7037,
-            "feedUsd": 221.7256,
-            "opexUsd": 106.052,
-            "nbUsd": 164.9261,
-            "feedKztAssumed": 125000.0,
-            "fxUsed": 486.0,
-            "note": "sell-all; FX/feed from Month profile when available"
+            "revUsd": 520.5522,
+            "feedUsd": 243.6282,
+            "opexUsd": 112.0463,
+            "nbUsd": 164.8777,
+            "monthPlUsd": 42410.84,
+            "feedKztAssumed": 130000.0,
+            "note": "sell-all; feedstock assumed 130000 KZT/t VAT-incl; formula opex"
           }
         }
       ],
