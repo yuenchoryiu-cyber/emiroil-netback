@@ -1773,13 +1773,60 @@ function effectivePriceKzt(p, fx, escPct){
   if (p.sellable) base *= esc;
   return Math.max(0, base);
 }
+/** Export/Domestic benchmark for Oil Products compare: historic month → that profile; forecast → live Analysis. */
+function analysisBenchForProducts(){
+  const live = calcNetback();
+  if (prodState.mode === 'historic' && prodState.monthId) {
+    const mid = prodState.monthId;
+    const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(mid) : null;
+    const label = (typeof monthLabel === 'function') ? monthLabel(mid) : mid;
+    if (pf && pf.params && typeof computeFromParams === 'function') {
+      try {
+        const { calc } = computeFromParams(pf.params);
+        return {
+          nbExp: calc.nbExp,
+          nbDom: calc.nbDom,
+          KB: calc.KB,
+          FX: calc.FX,
+          VAT: calc.VAT,
+          LOC: calc.LOC,
+          fromProfile: true,
+          sourceMonth: mid,
+          sourceLabel: label
+        };
+      } catch (e) {}
+    }
+    if (pf && pf.snapshot && pf.snapshot.nbExp != null && pf.snapshot.nbDom != null) {
+      return {
+        nbExp: num(pf.snapshot.nbExp),
+        nbDom: num(pf.snapshot.nbDom),
+        KB: num(pf.params && pf.params.kb, live.KB),
+        FX: num(pf.params && pf.params.fx, live.FX),
+        VAT: num(pf.params && pf.params.vat, live.VAT),
+        LOC: num(pf.params && pf.params.localKzt, live.LOC),
+        fromProfile: true,
+        sourceMonth: mid,
+        sourceLabel: label
+      };
+    }
+    return {
+      nbExp: live.nbExp, nbDom: live.nbDom, KB: live.KB, FX: live.FX, VAT: live.VAT, LOC: live.LOC,
+      fromProfile: false, sourceMonth: mid, sourceLabel: label + ' (no profile — live Analysis)'
+    };
+  }
+  return {
+    nbExp: live.nbExp, nbDom: live.nbDom, KB: live.KB, FX: live.FX, VAT: live.VAT, LOC: live.LOC,
+    fromProfile: false, sourceMonth: null, sourceLabel: 'Live Analysis'
+  };
+}
 function calcProducts(){
   ensureProdModel(false);
   syncProdFromAnalysis();
   const c = calcNetback();
+  const bench = analysisBenchForProducts();
   const fx = productsFx();
-  const vat = safeRate(prodState.vat != null ? prodState.vat : c.VAT, c.VAT);
-  const feedKztVat = num(prodState.feedKzt, c.LOC); // VAT-incl posted local
+  const vat = safeRate(prodState.vat != null ? prodState.vat : (bench.VAT != null ? bench.VAT : c.VAT), c.VAT);
+  const feedKztVat = num(prodState.feedKzt, bench.LOC != null ? bench.LOC : c.LOC); // VAT-incl posted local
   const feedKzt = feedKztVat / Math.max(vat, 1e-9);  // ex-VAT KZT/t crude
   const esc = num(prodState.priceEscPct, 0);
   const rates = prodState.rates || {};
@@ -1814,8 +1861,8 @@ function calcProducts(){
   const opexUsd = opexKzt / fx;
   const revUsd = revKzt / fx;
   const nb = nbKzt / fx;
-  const expNb = c.nbExp;
-  const domNb = c.nbDom;
+  const expNb = bench.nbExp;
+  const domNb = bench.nbDom;
   const expNbKzt = expNb * fx;
   const domNbKzt = domNb * fx;
   const share = Math.max(0, Math.min(1, num(prodState.refineShare, 0.6)));
@@ -1834,7 +1881,10 @@ function calcProducts(){
     expNb, expNbKzt, domNb, domNbKzt, share, shareNb, shareNbKzt,
     sharePlusDom, sharePlusDomKzt,
     deltaVsExp, deltaVsExpKzt, deltaShareDomVsExp, deltaShareDomVsExpKzt,
-    rates, kb: c.KB };
+    benchFromProfile: !!bench.fromProfile,
+    benchLabel: bench.sourceLabel || 'Analysis',
+    benchMonth: bench.sourceMonth,
+    rates, kb: bench.KB != null ? bench.KB : c.KB };
 }
 function fillProdMonthSelect(){
   const sel = document.getElementById('prodMonthSelect');
@@ -2155,18 +2205,37 @@ function renderProdTrends(){
     const cNow = calcNetback();
     const share = Math.max(0, Math.min(1, num(prodState.refineShare, 0.6)));
     const xLab = labels.map(shortMonthLabel);
-    const expY = labels.map(() => toNb(cNow.nbExp));
-    const domY = labels.map(() => toNb(cNow.nbDom));
-    const shareDomY = nbSeries.map(v => (v == null ? null : v * share + toNb(cNow.nbDom)));
+    const expY = [];
+    const domY = [];
+    for (let i = 0; i < labels.length; i++) {
+      const id = labels[i];
+      const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(id) : null;
+      let exp = null, dom = null;
+      if (pf && pf.params && typeof computeFromParams === 'function') {
+        try {
+          const { calc } = computeFromParams(pf.params);
+          exp = calc.nbExp; dom = calc.nbDom;
+        } catch (e) {}
+      }
+      if (exp == null && pf && pf.snapshot) {
+        exp = pf.snapshot.nbExp != null ? num(pf.snapshot.nbExp) : null;
+        dom = pf.snapshot.nbDom != null ? num(pf.snapshot.nbDom) : null;
+      }
+      if (exp == null) exp = cNow.nbExp;
+      if (dom == null) dom = cNow.nbDom;
+      expY.push(toNb(exp));
+      domY.push(toNb(dom));
+    }
+    const shareDomY = nbSeries.map((v, i) => (v == null || domY[i] == null ? null : v * share + domY[i]));
     Plotly.newPlot('prodNbChart', [
       { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Refinery NB (100%)',
         x:xLab, y:nbSeries, line:{color:'#0f766e', width:3}, marker:{size:7} },
       { type:'scatter', mode:'lines+markers', connectgaps:false, name:(share*100).toFixed(0)+'% refine + Dom',
         x:xLab, y:shareDomY, line:{color:'#7c3aed', width:2, dash:'dot'}, marker:{size:6} },
-      { type:'scatter', mode:'lines', name:'Export (Analysis)',
-        x:xLab, y:expY, line:{color:'#b45309', width:2, dash:'dash'} },
-      { type:'scatter', mode:'lines', name:'Domestic (Analysis)',
-        x:xLab, y:domY, line:{color:'#1e3a5f', width:2, dash:'dash'} }
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Export (month profile)',
+        x:xLab, y:expY, line:{color:'#b45309', width:2, dash:'dash'}, marker:{size:5} },
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Domestic (month profile)',
+        x:xLab, y:domY, line:{color:'#1e3a5f', width:2, dash:'dash'}, marker:{size:5} }
     ], {
       margin:{t:16,r:20,b:50,l:55}, yaxis:{title:uNb},
       legend:{orientation:'h', y:1.12},
@@ -2246,8 +2315,8 @@ function renderProductsPage(){
       : 'HISTORIC · MERGED';
     document.getElementById('prodVerdictSub').textContent =
       (prodState.mode === 'historic'
-        ? (histMonth(prodState.monthId)?.label || '')
-        : ('Prices as of ' + monthPrettyLabel(latestHistMonthForRef(prodState.refinery)) + ' · sell-all'))
+        ? ((histMonth(prodState.monthId)?.label || '') + ' · vs Export/Dom ' + (r.benchLabel || ''))
+        : ('Prices as of ' + monthPrettyLabel(latestHistMonthForRef(prodState.refinery)) + ' · sell-all · live Analysis'))
       + ` · share ${(r.share*100).toFixed(0)}% · FX ${fmt(r.fx,2)}`;
     document.getElementById('prodExpNb').textContent = fmtProdUnit(r.expNb, 2);
     document.getElementById('prodDomNb').textContent = fmtProdUnit(r.domNb, 2);
@@ -2295,8 +2364,11 @@ function renderProductsPage(){
     const modeLbl = prodState.mode === 'historic'
       ? ('Historic · ' + (histMonth(prodState.monthId)?.label || prodState.monthId || ''))
       : ('Forecast · ' + String(prodState.refinery).toUpperCase());
+    const benchNote = r.benchFromProfile
+      ? (`Month profile · ${r.benchLabel}`)
+      : (r.benchMonth ? `No profile for ${r.benchLabel}` : 'Live Analysis');
     reportHost.innerHTML = `
-      <p class="meta" style="margin:0 0 10px">${modeLbl} · FX ${fmt(r.fx,2)} · share ${pct}% · feed ${fmtInt(r.feedKztVat)} KZT/t VAT-incl</p>
+      <p class="meta" style="margin:0 0 10px">${modeLbl} · FX ${fmt(r.fx,2)} · share ${pct}% · feed ${fmtInt(r.feedKztVat)} KZT/t VAT-incl · compare vs <b>${r.benchLabel || 'Analysis'}</b></p>
       <p style="margin:0 0 12px;font-size:.92rem;line-height:1.45"><b>Verdict:</b> ${winner}
         ${beatFull ? ` (full refinery also ahead of Export by ${fmtProdUnit(r.deltaVsExp, 2)})`
           : ` (full refinery still ${fmtProdUnit(-r.deltaVsExp, 2)} behind Export)`}.</p>
@@ -2306,16 +2378,16 @@ function renderProductsPage(){
         </tr></thead>
         <tbody>
           <tr>
-            <td>Export crude (Analysis)</td>
+            <td>Export crude</td>
             <td class="num">${fmt(prodPerUnit(r.expNb),2)}</td>
             <td class="num">—</td>
-            <td>Benchmark</td>
+            <td>${benchNote}</td>
           </tr>
           <tr>
-            <td>Domestic crude (Analysis)</td>
+            <td>Domestic crude</td>
             <td class="num">${fmt(prodPerUnit(r.domNb),2)}</td>
             <td class="num">${(r.domNb-r.expNb>=0?'+':'')+fmt(prodPerUnit(r.domNb-r.expNb),2)}</td>
-            <td>Sell crude to RK refinery</td>
+            <td>${benchNote}</td>
           </tr>
           <tr>
             <td>Refinery NB (100%)</td>
