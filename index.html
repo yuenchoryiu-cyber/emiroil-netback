@@ -622,7 +622,7 @@
   <!-- PRODUCTS / REFINING PAGE -->
   <div id="page-products" class="page">
     <h1>Products netback — sell all this month</h1>
-    <p class="lead">Sell-all (no inventory, no tonnage). Toggle $/t or $/bbl (÷ Analysis bbl/t). Historic months use each month’s FX unless Analysis FX is locked. Two historic series (<b>PKOP</b> / <b>PNHZ</b>). Forecast yields = recency-weighted average within the selected refinery. Feedstock = Analysis domestic price.</p>
+    <p class="lead">Sell-all (no inventory, no tonnage). Product prices shown in <b>KZT / t</b> (posted unit price). Netback KPIs toggle $/t or $/bbl. Historic months use each month’s FX unless Analysis FX is locked. Two series (<b>PKOP</b> / <b>PNHZ</b>). Forecast yields = recency-weighted average. Feedstock = Analysis domestic price.</p>
 
     <div class="route-toggle" id="prodRefToggle" role="group" aria-label="Refinery" style="margin-bottom:8px">
       <button type="button" data-prod-ref="pkop" class="active">PKOP (Shymkent)</button>
@@ -712,11 +712,11 @@
 
     <div class="section" id="prodTrendsSection">
       <h2>Historic trends</h2>
-      <p class="lead" style="margin-bottom:8px" id="prodTrendNote">Prices use each month’s own FX. Unit follows $/t · $/bbl toggle.</p>
-      <h3 style="font-size:.9rem;margin:10px 0 4px">Gasoline prices (AI92 / AI95)</h3>
+      <p class="lead" style="margin-bottom:8px" id="prodTrendNote">Product prices in KZT/t from Jan 2026 (≤12 months). Missing months blank.</p>
+      <h3 style="font-size:.9rem;margin:10px 0 4px">Gasoline prices (AI92 / AI95) — KZT/t</h3>
       <div id="prodGasChart" style="height:300px"></div>
       <p class="lead" id="prodGasAnalysis" style="margin-top:8px;font-size:.85rem"></p>
-      <h3 style="font-size:.9rem;margin:14px 0 4px">All product prices</h3>
+      <h3 style="font-size:.9rem;margin:14px 0 4px">All product prices — KZT/t</h3>
       <div id="prodPriceChart" style="height:280px"></div>
       <h3 style="font-size:.9rem;margin:14px 0 4px">Products netback</h3>
       <div id="prodNbChart" style="height:280px"></div>
@@ -1589,10 +1589,11 @@ function calcProducts(){
   const nb = revUsd - feedUsd - opexUsd;
   let gasRev=0, gasY=0;
   for (const row of rows) { if (row.isGas && row.sold) { gasRev += row.contribKzt; gasY += row.yield; } }
-  const gasBasketUsd = gasY > 0 ? (gasRev / gasY) / fx : 0;
+  const gasBasketKzt = gasY > 0 ? (gasRev / gasY) : 0;
+  const gasBasketUsd = gasBasketKzt / fx;
   return { fx, vat, feedKzt, feedUsd, esc, yGas, yDt, fixedKzt, fixedUsd: fixedKzt/fx,
     excGasKzt, excDtKzt, excKzt, excUsd: excKzt/fx, dutyUsd, opexUsd, revKzt, revUsd, yieldSold,
-    nb, rows, gasBasketUsd, gasY, domNb: c.nbDom, deltaVsDom: nb - c.nbDom, rates, kb: c.KB };
+    nb, rows, gasBasketKzt, gasBasketUsd, gasY, domNb: c.nbDom, deltaVsDom: nb - c.nbDom, rates, kb: c.KB };
 }
 function fillProdMonthSelect(){
   const sel = document.getElementById('prodMonthSelect');
@@ -1622,38 +1623,100 @@ function syncProdToggles(){
   }
 }
 
+function prodTrendWindow(){
+  // From 2026-01, at most 12 months through latest historic month (gaps stay null).
+  const ms = histMonths().slice().sort((a,b) => String(a.id).localeCompare(String(b.id)));
+  const byId = {};
+  for (const m of ms) byId[m.id] = m;
+  const start = '2026-01';
+  let endId = null;
+  for (const m of ms) {
+    if (String(m.id) >= start) endId = m.id;
+  }
+  if (!endId) {
+    return { labels:[], months:[], byId };
+  }
+  const [ey, em] = endId.split('-').map(Number);
+  const out = [];
+  for (let k = 11; k >= 0; k--) {
+    let y = ey, mo = em - k;
+    while (mo <= 0) { mo += 12; y -= 1; }
+    const id = y + '-' + String(mo).padStart(2,'0');
+    if (id < start) continue;
+    out.push(id);
+  }
+  return {
+    labels: out,
+    months: out.map(id => byId[id] || null),
+    byId
+  };
+}
+function prodPricesKztSeries(labels, months){
+  const names = new Set();
+  for (const m of months) {
+    if (!m || !m.products) continue;
+    for (const p of m.products) {
+      if (p && p.name && num(p.priceKzt) > 0) names.add(p.name);
+    }
+  }
+  const prices = {};
+  for (const name of names) {
+    prices[name] = labels.map((_, i) => {
+      const m = months[i];
+      if (!m || !m.products) return null;
+      const p = m.products.find(x => x && x.name === name);
+      if (!p) return null;
+      const v = num(p.priceKzt);
+      return v > 0 ? v : null;
+    });
+  }
+  return prices;
+}
 function renderProdTrends(){
   const block = activeRef();
   const tr = block.trends || {};
-  const labels = tr.labels || [];
-  const u = prodUnitLabel();
+  const win = prodTrendWindow();
+  const labels = win.labels;
+  const months = win.months;
+  const uNb = prodUnitLabel();
   const kb = Math.max(1e-9, num(calcNetback().KB, 7.2223));
-  const toU = (v) => (v == null ? null : (prodUnitIsBbl() ? v / kb : v));
+  const toNb = (v) => (v == null ? null : (prodUnitIsBbl() ? v / kb : v));
   const note = document.getElementById('prodTrendNote');
   if (note) {
-    note.innerHTML = `Each month uses <b>that month’s FX</b> for KZT→$. Display <b>${u}</b>` +
-      (prodUnitIsBbl() ? ` (÷ export bbl/t ${fmt(kb,4)}).` : '.');
+    note.innerHTML = `Product &amp; gasoline prices in <b>KZT / t product</b> (posted unit price). Window: <b>from Jan 2026</b>, last ≤12 months. Missing months stay blank. Netback chart uses <b>${uNb}</b>.`;
   }
-  if (!window.Plotly || !labels.length) return;
-  const prices = tr.pricesUsd || {};
+  if (!window.Plotly) return;
+  if (!labels.length) {
+    const empty = (id) => {
+      const el = document.getElementById(id);
+      if (el) Plotly.purge(el);
+    };
+    empty('prodGasChart'); empty('prodPriceChart'); empty('prodNbChart');
+    const ga = document.getElementById('prodGasAnalysis');
+    if (ga) ga.textContent = 'No historic months from Jan 2026 for this refinery.';
+    return;
+  }
+  const prices = prodPricesKztSeries(labels, months);
   const gasNames = ['AI92','AI95'];
   const gasTraces = [];
   const colorsG = ['#0f766e','#b45309'];
   gasNames.forEach((name, i) => {
-    const arr = (prices[name] || []).map(toU);
+    const arr = prices[name] || labels.map(() => null);
     if (!arr.some(v => v != null)) return;
-    gasTraces.push({ type:'scatter', mode:'lines+markers', name, x:labels, y:arr,
+    gasTraces.push({ type:'scatter', mode:'lines+markers', connectgaps:false, name, x:labels, y:arr,
       line:{color:colorsG[i], width:3}, marker:{size:7} });
   });
   const basket = labels.map((_, i) => {
-    const vals = gasNames.map(n => toU((prices[n] || [])[i])).filter(v => v != null);
+    const vals = gasNames.map(n => (prices[n] || [])[i]).filter(v => v != null);
     return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
   });
-  gasTraces.push({ type:'scatter', mode:'lines+markers', name:'Gasoline avg', x:labels, y:basket,
-    line:{color:'#1e3a5f', width:2, dash:'dot'}, marker:{size:5} });
+  if (basket.some(v => v != null)) {
+    gasTraces.push({ type:'scatter', mode:'lines+markers', connectgaps:false, name:'Gasoline avg', x:labels, y:basket,
+      line:{color:'#1e3a5f', width:2, dash:'dot'}, marker:{size:5} });
+  }
   if (document.getElementById('prodGasChart')) {
     Plotly.newPlot('prodGasChart', gasTraces, {
-      margin:{t:16,r:20,b:50,l:55}, yaxis:{title:u}, legend:{orientation:'h', y:-0.22},
+      margin:{t:16,r:20,b:50,l:70}, yaxis:{title:'KZT / t'}, legend:{orientation:'h', y:-0.22},
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
   }
@@ -1663,31 +1726,41 @@ function renderProdTrends(){
     if (series.length >= 2) {
       const first = series[0], last = series[series.length-1];
       const chg = last - first, pct = first ? chg/first*100 : 0;
-      ga.innerHTML = `<b>Gasoline trend:</b> ${fmt(first,2)} → ${fmt(last,2)} ${u} (` +
-        `${chg>=0?'+':''}${fmt(chg,2)}, ${pct>=0?'+':''}${fmt(pct,1)}%). ` +
-        `Range ${fmt(Math.min(...series),2)} – ${fmt(Math.max(...series),2)} ${u}.`;
-    } else ga.textContent = '';
+      ga.innerHTML = `<b>Gasoline trend (KZT/t):</b> ${fmtInt(first)} → ${fmtInt(last)} (` +
+        `${chg>=0?'+':''}${fmtInt(chg)}, ${pct>=0?'+':''}${fmt(pct,1)}%). ` +
+        `Range ${fmtInt(Math.min(...series))} – ${fmtInt(Math.max(...series))}. Gaps = no data.`;
+    } else if (series.length === 1) {
+      ga.innerHTML = `<b>Gasoline:</b> one month with data — ${fmtInt(series[0])} KZT/t.`;
+    } else ga.textContent = 'No gasoline price data in this window.';
   }
   const colors = ['#0f766e','#b45309','#1e3a5f','#7c3aed','#e11d48','#0891b2'];
   const priceTraces = []; let ci=0;
   for (const [name, arr] of Object.entries(prices)) {
     if (!arr || !arr.some(v => v != null && v > 0)) continue;
-    priceTraces.push({ type:'scatter', mode:'lines+markers', name, x:labels, y:arr.map(toU),
+    priceTraces.push({ type:'scatter', mode:'lines+markers', connectgaps:false, name, x:labels, y:arr,
       line:{color:colors[ci++ % colors.length], width:2}, marker:{size:5} });
   }
   if (document.getElementById('prodPriceChart')) {
     Plotly.newPlot('prodPriceChart', priceTraces, {
-      margin:{t:16,r:20,b:50,l:55}, yaxis:{title:u}, legend:{orientation:'h', y:-0.25},
+      margin:{t:16,r:20,b:50,l:70}, yaxis:{title:'KZT / t'}, legend:{orientation:'h', y:-0.25},
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
   }
+  // Netback: align USD series to same Jan-2026 window via history month ids
+  const trLabels = tr.labels || [];
+  const nbMap = {};
+  (tr.netbackUsd || []).forEach((v, i) => { if (trLabels[i]) nbMap[trLabels[i]] = v; });
+  const nbSeries = labels.map(id => {
+    const v = nbMap[id];
+    return (v == null || !(v > -1e12)) ? null : toNb(v);
+  });
   if (document.getElementById('prodNbChart')) {
     Plotly.newPlot('prodNbChart', [{
-      type:'scatter', mode:'lines+markers', name:'Products NB',
-      x:labels, y:(tr.netbackUsd||[]).map(toU),
+      type:'scatter', mode:'lines+markers', connectgaps:false, name:'Products NB',
+      x:labels, y:nbSeries,
       line:{color:'#0f766e', width:3}, marker:{size:7}
     }], {
-      margin:{t:16,r:20,b:50,l:55}, yaxis:{title:u},
+      margin:{t:16,r:20,b:50,l:55}, yaxis:{title:uNb},
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
   }
@@ -1741,17 +1814,14 @@ function renderProductsPage(){
           <option value="usd" ${mode==='usd'?'selected':''}>$/t</option></select></td>
         <td><input data-prod-i="${i}" data-prod-f="${mode==='usd'?'priceUsd':'priceKzt'}" type="number" step="${mode==='usd'?1:100}" min="0" value="${priceVal}" style="width:6.5rem"/></td>
         <td class="num" data-prod-eff="${i}">${fmt(row.priceKzt||0,0)}</td>
-        <td class="num" data-prod-contrib="${i}">${row.sold?fmt(row.contribUsd,2):'—'}</td>
-        <td class="num" data-prod-month="${i}">${row.sold?fmt(row.monthUsd,0):'—'}</td></tr>`;
-    }).join('') + `<tr class="total"><td>Sellable (sold now)</td><td class="num">${(r.yieldSold*100).toFixed(2)}%</td><td colspan="2"></td><td></td><td class="num">${fmt(r.revUsd,2)}</td><td class="num">${fmt(r.revUsd*r.vol,0)}</td></tr>`;
+        <td class="num" data-prod-contrib="${i}">${row.sold?fmt(prodPerUnit(row.contribUsd),2):'—'}</td></tr>`;
+    }).join('') + `<tr class="total"><td>Sellable (sold now)</td><td class="num">${(r.yieldSold*100).toFixed(2)}%</td><td colspan="2"></td><td></td><td class="num">${fmt(prodPerUnit(r.revUsd),2)}</td></tr>`;
   } else if (body && editing) {
     r.rows.forEach((row, i) => {
       const e = body.querySelector(`[data-prod-eff="${i}"]`);
       const c = body.querySelector(`[data-prod-contrib="${i}"]`);
-      const m = body.querySelector(`[data-prod-month="${i}"]`);
       if (e) e.textContent = fmt(row.priceKzt, 0);
-      if (c) c.textContent = row.sold ? fmt(row.contribUsd, 2) : '—';
-      if (m) m.textContent = row.sold ? fmt(row.monthUsd, 0) : '—';
+      if (c) c.textContent = row.sold ? fmt(prodPerUnit(row.contribUsd), 2) : '—';
     });
   }
 
@@ -1761,12 +1831,12 @@ function renderProductsPage(){
     document.getElementById('prodVerdictTxt').textContent = (prodState.mode === 'forecast' ? 'FORECAST' : 'HISTORIC') + ' · ' + String(prodState.refinery).toUpperCase();
     document.getElementById('prodVerdictSub').textContent =
       (prodState.mode === 'historic' ? (histMonth(prodState.monthId)?.label || '') : 'Weighted yields · sell-all')
-      + ` · FX ${fmt(r.fx,2)} · ${fmtInt(r.vol)} t`;
+      + ` · FX ${fmt(r.fx,2)}`;
     document.getElementById('prodRev').textContent = fmtProdUnit(r.revUsd, 2);
     document.getElementById('prodCost').textContent = fmtProdUnit(r.feedUsd+r.opexUsd, 2);
     document.getElementById('prodNb').textContent = fmtProdUnit(r.nb, 2);
     const gasEl = document.getElementById('prodGasBasket');
-    if (gasEl) gasEl.textContent = fmtProdUnit(r.gasBasketUsd||0, 2);
+    if (gasEl) gasEl.textContent = fmtInt(r.gasBasketKzt||0) + ' KZT/t';
   }
   const k=(id,t)=>{const el=document.getElementById(id); if(el) el.textContent=t;};
   k('prodKpiRev', fmtProdUnit(r.revUsd, 2));
@@ -1786,7 +1856,6 @@ function renderProductsPage(){
       <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)} ÷ FX</td><td class="num">${fmt(r.excGasKzt/r.fx,2)} $/t</td></tr>
       <tr><td>Excise diesel</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)} ÷ FX</td><td class="num">${fmt(r.excDtKzt/r.fx,2)} $/t</td></tr>
       <tr class="total"><td>Products NB</td><td>rev − feed − opex</td><td class="num">${fmt(r.nb,2)} $/t</td></tr>
-      <tr><td>Month P&amp;L</td><td>× ${fmtInt(r.vol)} t</td><td class="num">${fmt(r.monthPl,0)} $</td></tr>
       <tr class="secDom"><td colspan="3">vs selling crude domestically</td></tr>
       <tr><td>Domestic crude NB</td><td>Analysis</td><td class="num">${fmt(r.domNb,2)} $/t</td></tr>
       <tr class="total"><td>Δ Products − Domestic</td><td></td><td class="num">${(r.deltaVsDom>=0?'+':'')+fmt(r.deltaVsDom,2)} $/t</td></tr>
