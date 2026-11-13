@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-12T14:02:43.000Z",
+  "updatedAt": "2026-11-13T04:25:00.000Z",
   "sources": {
-    "usdKzt": "Excel J2 working rate; J3 month-end if J2==440; else KazFin monthly avg",
+    "usdKzt": "Excel J2 working for completed months; Nov = local KZ bank MTD mid (themoney.kz)",
     "rubKzt": "X-Rates monthly averages 2026 (cross-checked KazFin)",
     "xRates": "https://www.x-rates.com/average/?amount=1&from=RUB&to=KZT&year=2026",
     "kazFinRub": "https://kazfin.info/archive/2026/rur/",
@@ -200,12 +200,11 @@
     }
   ],
   "nov": {
-    "fx": 450.18,
-    "ru": 5.560603,
-    "nbExp": 188.82800820318806,
-    "nbDom": 212.72979800799988,
-    "oldFlatNbExp": 181.81365650445457,
-    "oldFlatNbDom": 217.74269140282132
+    "fx": 448.64,
+    "ru": 5.5606,
+    "fxSource": "themoney.kz Nov MTD local bank mid (buy 448.66 / sell 448.61)",
+    "nbExp": 188.62228392483775,
+    "nbDom": 213.47352937152593
   },
   "octPreviousMonth": {
     "month": "2026-10",

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-12T14:02:43.000Z",
+  "updatedAt": "2026-11-13T04:25:00.000Z",
   "currentMonthId": "2026-11",
   "profiles": [
     {
@@ -358,12 +358,12 @@
       "label": "Nov 2026",
       "month": "2026-11",
       "author": "excel import",
-      "notes": "Current baseline. Nov avg FX 450.18 KZT/USD (KazFin), RUB\to KZT 5.5606 (X-Rates).",
-      "savedAt": "2026-11-12T14:02:43.000Z",
+      "notes": "Current baseline. Nov MTD local bank USD/KZT mid 448.64 (themoney.kz bank buy/sell avg), RUB\to KZT 5.5606 (X-Rates).",
+      "savedAt": "2026-11-13T04:25:00.000Z",
       "isCurrent": true,
       "params": {
         "brent": 105.0,
-        "fx": 450.18,
+        "fx": 448.64,
         "sk": 20.104,
         "disc": 6.18,
         "localKzt": 130000,
@@ -377,11 +377,11 @@
         "bulkDom": 0
       },
       "snapshot": {
-        "nbExp": 188.82800820318806,
-        "nbDom": 212.72979800799988,
-        "spread": -23.901789804811813,
-        "trExp": 59.932558596811944,
-        "trDom": 32.27527055844329,
+        "nbExp": 188.62228392483775,
+        "nbDom": 213.47352937152593,
+        "spread": -24.851245446688182,
+        "trExp": 60.13828287516227,
+        "trDom": 32.38605853245364,
         "duty": 115,
         "rental": 165.375,
         "metExp": 39.375,
