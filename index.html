@@ -701,8 +701,11 @@
         <div class="field"><label>Feedstock domestic (KZT/t VAT-incl)</label><input id="prodFeedKzt" type="number" step="500"/></div>
         <div class="field"><label>VAT factor</label><input id="prodVat" type="number" step="0.01" min="1" max="1.3"/></div>
         <div class="field"><label>Feedstock ex-VAT</label><input id="prodFeedUsd" type="text" readonly style="background:#f5f2ea"/></div>
-        <div class="field" style="display:flex;align-items:end"><button type="button" class="ghost" id="btnProdSyncAnalysis">Pull from Analysis</button></div>
+        <div class="field" style="display:flex;align-items:end;padding-bottom:4px">
+          <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;cursor:pointer"><input id="prodUseAnalysisFeed" type="checkbox" checked/> Use Analysis domestic price</label>
+        </div>
       </div>
+      <p class="lead" style="margin-top:4px;font-size:.8rem">Feedstock VAT-incl tracks Analysis <b>Local domestic</b> (same KZT/t as Export vs Domestic). Uncheck to override.</p>
       <p class="lead" id="prodWeightNote" style="margin-top:8px;font-size:.82rem"></p>
     </div>
 
@@ -1525,6 +1528,7 @@ let prodState = {
   mode: 'forecast',
   monthId: null,
   useAnalysisFx: true,
+  useAnalysisFeed: true,
   unit: 't',
   fx: null,
   feedKzt: null,
@@ -1602,11 +1606,34 @@ function ensureProdModel(force){
     }
   }
 }
+function profileLocalForMonth(monthId){
+  const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(monthId) : null;
+  if (pf && pf.params && pf.params.localKzt != null) return num(pf.params.localKzt);
+  return null;
+}
+function profileVatForMonth(monthId){
+  const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(monthId) : null;
+  if (pf && pf.params && pf.params.vat != null) return num(pf.params.vat);
+  return null;
+}
 function syncProdFromAnalysis(){
   const c = calcNetback();
-  if (prodState.feedKzt == null) prodState.feedKzt = c.LOC;
-  if (prodState.vat == null) prodState.vat = c.VAT;
   if (prodState.useAnalysisFx) prodState.fx = c.FX;
+  if (prodState.useAnalysisFeed) {
+    // Same VAT-incl domestic list price as Analysis Export vs Domestic
+    if (prodState.mode === 'historic' && prodState.monthId) {
+      const loc = profileLocalForMonth(prodState.monthId);
+      const vat = profileVatForMonth(prodState.monthId);
+      prodState.feedKzt = loc != null ? loc : c.LOC;
+      prodState.vat = vat != null ? vat : c.VAT;
+    } else {
+      prodState.feedKzt = c.LOC;
+      prodState.vat = c.VAT;
+    }
+  } else {
+    if (prodState.feedKzt == null) prodState.feedKzt = c.LOC;
+    if (prodState.vat == null) prodState.vat = c.VAT;
+  }
 }
 function isGasoline(p){ return (p.kind||'') === 'gasoline' || /^(ai92|ai95|ai98)$/i.test(p.name||''); }
 function isDiesel(p){ return (p.kind||'') === 'diesel' || /^diesel/i.test(p.name||''); }
@@ -1977,6 +2004,12 @@ function renderProductsPage(){
   if (useFx && document.activeElement !== useFx) useFx.checked = !!prodState.useAnalysisFx;
   const fxEl = document.getElementById('prodFx');
   if (fxEl) fxEl.disabled = !!prodState.useAnalysisFx;
+  const useFeed = document.getElementById('prodUseAnalysisFeed');
+  if (useFeed && document.activeElement !== useFeed) useFeed.checked = !!prodState.useAnalysisFeed;
+  const feedEl = document.getElementById('prodFeedKzt');
+  const vatEl = document.getElementById('prodVat');
+  if (feedEl) feedEl.disabled = !!prodState.useAnalysisFeed;
+  if (vatEl) vatEl.disabled = !!prodState.useAnalysisFeed;
   setVal('prodProc', r.rates.processingKzt);
   setVal('prodAdd1', r.rates.additive1Kzt);
   setVal('prodAdd2', r.rates.additive2Kzt);
@@ -2152,8 +2185,16 @@ function wireProductsPage(){
     renderProductsPage();
   });
   document.getElementById('prodFx').addEventListener('input', e => { prodState.fx = num(e.target.value); renderProductsPage(); });
-  document.getElementById('prodFeedKzt').addEventListener('input', e => { prodState.feedKzt = num(e.target.value); renderProductsPage(); });
-  document.getElementById('prodVat').addEventListener('input', e => { prodState.vat = num(e.target.value); renderProductsPage(); });
+  document.getElementById('prodFeedKzt').addEventListener('input', e => {
+    prodState.useAnalysisFeed = false;
+    prodState.feedKzt = num(e.target.value);
+    renderProductsPage();
+  });
+  document.getElementById('prodVat').addEventListener('input', e => {
+    prodState.useAnalysisFeed = false;
+    prodState.vat = num(e.target.value);
+    renderProductsPage();
+  });
   document.getElementById('prodEsc').addEventListener('input', e => { prodState.priceEscPct = num(e.target.value); renderProductsPage(); });
   document.getElementById('prodRefineShare').addEventListener('input', e => {
     prodState.refineShare = Math.max(0, Math.min(100, num(e.target.value, 60))) / 100;
@@ -2164,10 +2205,8 @@ function wireProductsPage(){
     if (prodState.useAnalysisFx) prodState.fx = calcNetback().FX;
     renderProductsPage();
   });
-  document.getElementById('btnProdSyncAnalysis').addEventListener('click', () => {
-    const c = calcNetback();
-    prodState.feedKzt = c.LOC; prodState.vat = c.VAT;
-    if (prodState.useAnalysisFx) prodState.fx = c.FX;
+  document.getElementById('prodUseAnalysisFeed').addEventListener('change', e => {
+    prodState.useAnalysisFeed = !!e.target.checked;
     renderProductsPage();
   });
   ['prodProc','prodAdd1','prodAdd2','prodAdd0','prodAdmin','prodExcGasRate','prodExcDtRate','prodMazDuty'].forEach(id => {
