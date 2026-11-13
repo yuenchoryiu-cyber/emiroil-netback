@@ -79,11 +79,17 @@
     letter-spacing:.01em;
   }
   .month-head .muted{font-weight:500; color:var(--muted); font-size:.9rem}
-  .fx-note{
-    font-size:.68rem; color:var(--muted); margin-top:4px; line-height:1.35; max-width:220px;
+  .fx-footnote{
+    margin:6px 0 0; padding:0; font-size:.68rem; color:var(--muted); line-height:1.35;
+    font-style:italic;
   }
-  .fx-note.live{color:#0f766e}
-  .fx-note b{font-weight:700; color:inherit}
+  .fx-footnote.live{color:#0f766e; font-style:normal}
+  .fx-footnote b{font-weight:700; color:inherit}
+  .controls .row > div > label,
+  .tr-controls > div > label{
+    min-height:2.4em; display:flex; align-items:flex-end; flex-wrap:wrap; gap:4px;
+  }
+  .fx-star{font-size:.75em; vertical-align:super; color:var(--muted); font-weight:700}
   .reset-pick{display:flex; gap:6px; align-items:end; flex-wrap:wrap}
   .reset-pick select{
     min-width:160px; max-width:220px; padding:8px 10px; border:1px solid var(--line);
@@ -335,15 +341,15 @@
           <div class="nb-val" id="verdictSpread">—</div>
         </div>
         <div>
-          <span class="nb-label">FX (KZT / 1 USD)</span>
+          <span class="nb-label">FX (KZT / 1 USD)<span class="fx-star" aria-hidden="true">*</span></span>
           <div class="nb-val" id="verdictFx">—</div>
-          <div class="fx-note" id="verdictFxNote"></div>
         </div>
         <div>
           <span class="nb-label">RUB→KZT (KZT / 1 RUB)</span>
           <div class="nb-val" id="verdictRu">—</div>
         </div>
       </div>
+      <p class="fx-footnote" id="verdictFxNote"></p>
     </div>
 
     <div class="controls">
@@ -357,9 +363,8 @@
           <input id="brent" type="range" min="20" max="200" step="0.5" value="105"/>
         </div>
         <div>
-          <label>FX <span class="val" id="fxLbl">448.64</span> KZT per 1 USD</label>
+          <label>FX<span class="fx-star" aria-hidden="true">*</span> <span class="val" id="fxLbl">448.64</span> KZT per 1 USD</label>
           <input id="fx" type="range" min="360" max="560" step="0.01" value="448.64"/>
-          <div class="fx-note" id="fxRateNote">Prior months: monthly average · Current month: daily rate on open</div>
         </div>
         <div>
           <label>Skebco (D6) <span class="val" id="skLbl">20.1</span> $/bbl</label>
@@ -385,6 +390,7 @@
           <button type="button" id="btnReset">Reset</button>
         </div>
       </div>
+      <p class="fx-footnote" id="fxRateNote">* FX: prior months use monthly average; current month uses daily rate on open.</p>
       <button type="button" class="adv-toggle" id="btnAdv">Show structural parameters (VAT, bbl/t, MET%)</button>
       <div class="adv-box" id="advBox">
         <div class="adv-title">Structural — usually unchanged short term</div>
@@ -439,9 +445,8 @@
     </div>
     <div class="controls tr-controls">
       <div>
-        <label>FX (KZT/USD) <span class="val" id="trFxLbl">448.64</span></label>
+        <label>FX<span class="fx-star" aria-hidden="true">*</span> (KZT/USD) <span class="val" id="trFxLbl">448.64</span></label>
         <input id="trFx" type="range" min="360" max="560" step="0.01" value="448.64"/>
-        <div class="fx-note" id="trFxRateNote">Prior months: monthly average · Current month: daily rate on open</div>
       </div>
       <div>
         <label>RUB→KZT (KZT/RUB) <span class="val" id="trRuLbl">5.56</span></label>
@@ -455,6 +460,7 @@
         <label>Bulk % DOMESTIC <span class="val" id="bulkDomLbl">0%</span></label>
         <input id="bulkDom" type="range" min="-50" max="100" step="0.5" value="0"/>
       </div>
+      <p class="fx-footnote" id="trFxRateNote" style="grid-column:1/-1">* FX: prior months use monthly average; current month uses daily rate on open.</p>
     </div>
     <div class="section export" id="secExp"></div>
     <div class="section domestic" id="secDom"></div>
@@ -1955,11 +1961,13 @@ const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11
 let liveFxMeta = { fx: null, ru: null, asOf: null, source: '', status: 'idle' };
 
 function setFxRateNote(html, live) {
+  const text = html ? (String(html).trim().startsWith('*') ? html : `* ${html}`) : '';
   ['fxRateNote', 'trFxRateNote', 'verdictFxNote'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.innerHTML = html || '';
+    el.innerHTML = text;
     el.classList.toggle('live', !!live);
+    el.hidden = !text;
   });
 }
 
@@ -1980,26 +1988,26 @@ function updateFxRateNoteForActive() {
   }
   if (isCurrentProfile(p)) {
     if (liveFxMeta.status === 'loading') {
-      setFxRateNote('Fetching today’s FX…', true);
+      setFxRateNote('FX: fetching today’s daily rate…', true);
       return;
     }
     if (liveFxMeta.asOf && liveFxMeta.fx != null) {
       setFxRateNote(
-        `Daily rate as of <b>${formatRateDate(liveFxMeta.asOf)}</b>` +
-          (liveFxMeta.source ? ` · ${liveFxMeta.source}` : '') +
-          ` · refreshed when you open this page`,
+        `FX daily rate as of <b>${formatRateDate(liveFxMeta.asOf)}</b>` +
+          (liveFxMeta.source ? ` (${liveFxMeta.source})` : '') +
+          ` — refreshed on page open`,
         true
       );
       return;
     }
     if (liveFxMeta.status === 'error') {
-      setFxRateNote('Could not refresh daily FX — using last saved current-month rate', false);
+      setFxRateNote('FX: could not refresh daily rate — using last saved current-month value', false);
       return;
     }
-    setFxRateNote('Current month uses daily FX (updates when you open this page)', true);
+    setFxRateNote('FX: current month uses daily rate (updates on page open)', true);
     return;
   }
-  setFxRateNote(`Monthly average FX for <b>${monthLabel(p.month)}</b> (fixed for that month)`, false);
+  setFxRateNote(`FX: monthly average for <b>${monthLabel(p.month)}</b> (fixed for that month)`, false);
 }
 
 async function fetchDailyFxRates() {
