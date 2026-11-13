@@ -691,10 +691,6 @@
         <div class="field" style="display:flex;align-items:end"><button type="button" class="ghost" id="btnProdLoadHistoricToForecast">Copy month → forecast prices</button></div>
       </div>
       <div class="row2">
-        <div class="field"><label>FX (KZT / USD)</label><input id="prodFx" type="number" step="0.01" min="1"/></div>
-        <div class="field" style="display:flex;align-items:end;padding-bottom:4px">
-          <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;cursor:pointer"><input id="prodUseAnalysisFx" type="checkbox" checked/> Use Analysis FX</label>
-        </div>
         <div class="field"><label>Price escalation %</label><input id="prodEsc" type="number" step="0.1" value="0"/></div>
       </div>
       <div class="row2" style="margin-top:8px">
@@ -1527,10 +1523,8 @@ let prodState = {
   refinery: (EOT_PROJ_EMBED && EOT_PROJ_EMBED.defaultRefinery) || 'pkop',
   mode: 'forecast',
   monthId: null,
-  useAnalysisFx: true,
   useAnalysisFeed: true,
   unit: 't',
-  fx: null,
   feedKzt: null,
   vat: null,
   priceEscPct: 0,
@@ -1597,10 +1591,6 @@ function ensureProdModel(force){
     if (prodState.mode === 'historic') {
       const m = histMonth(prodState.monthId);
       prodState.products = cloneProds(m ? m.products : []).map(p => ({...p, priceMode:'kzt'}));
-      if (m && !prodState.useAnalysisFx) {
-        const pfx = profileFxForMonth(m.id);
-        prodState.fx = pfx != null ? pfx : m.fx;
-      }
     } else {
       prodState.products = cloneProds(block.forecastProducts || []).map(p => ({...p, priceMode:'kzt'}));
     }
@@ -1616,9 +1606,19 @@ function profileVatForMonth(monthId){
   if (pf && pf.params && pf.params.vat != null) return num(pf.params.vat);
   return null;
 }
+/** Historic → that month’s profile FX; forecast → Analysis FX. No UI override. */
+function productsFx(){
+  const c = calcNetback();
+  if (prodState.mode === 'historic') {
+    const hm = histMonth(prodState.monthId);
+    const mid = (hm && hm.id) || prodState.monthId;
+    const pfx = mid ? profileFxForMonth(mid) : null;
+    return Math.max(1e-9, num(pfx != null ? pfx : (hm && hm.fx), c.FX));
+  }
+  return Math.max(1e-9, c.FX);
+}
 function syncProdFromAnalysis(){
   const c = calcNetback();
-  if (prodState.useAnalysisFx) prodState.fx = c.FX;
   if (prodState.useAnalysisFeed) {
     // Same VAT-incl domestic list price as Analysis Export vs Domestic
     if (prodState.mode === 'historic' && prodState.monthId) {
@@ -1648,17 +1648,7 @@ function calcProducts(){
   ensureProdModel(false);
   syncProdFromAnalysis();
   const c = calcNetback();
-  let fxSrc = c.FX;
-  if (!prodState.useAnalysisFx) {
-    const hm = prodState.mode === 'historic' ? histMonth(prodState.monthId) : null;
-    const mid = (hm && hm.id) || prodState.monthId;
-    const profileFx = mid ? profileFxForMonth(mid) : null;
-    fxSrc = num(
-      prodState.fx != null ? prodState.fx : (profileFx != null ? profileFx : (hm && hm.fx)),
-      c.FX
-    );
-  }
-  const fx = Math.max(1e-9, fxSrc);
+  const fx = productsFx();
   const vat = safeRate(prodState.vat != null ? prodState.vat : c.VAT, c.VAT);
   const feedKztVat = num(prodState.feedKzt, c.LOC); // VAT-incl posted local
   const feedKzt = feedKztVat / Math.max(vat, 1e-9);  // ex-VAT KZT/t crude
@@ -1678,7 +1668,7 @@ function calcProducts(){
     const contribKzt = sold ? y * priceKzt : 0; // ex-VAT KZT per t crude
     if (sold) { revKzt += contribKzt; yieldSold += y; }
     rows.push({ name:p.name, yield:y, priceKztVat, priceKzt, sellable:!!p.sellable, sold,
-      contribKzt, contribUsd: contribKzt / fx, isGas: isGasoline(p) });
+      contribKzt, contribUsd: contribKzt / fx });
   }
   const fixedKzt = num(rates.processingKzt)+num(rates.additive1Kzt)+num(rates.additive2Kzt)+num(rates.additivesKzt)+num(rates.adminKzt);
   const excGasKzt = yGas * num(rates.exciseGasRateKzt);
@@ -1706,13 +1696,10 @@ function calcProducts(){
   const deltaVsExpKzt = nbKzt - expNbKzt;
   const deltaShareDomVsExp = sharePlusDom - expNb;
   const deltaShareDomVsExpKzt = sharePlusDomKzt - expNbKzt;
-  let gasRev=0, gasY=0;
-  for (const row of rows) { if (row.isGas && row.sold) { gasRev += row.contribKzt; gasY += row.yield; } }
-  const gasBasketKzt = gasY > 0 ? (gasRev / gasY) : 0;
   return { fx, vat, feedKztVat, feedKzt, feedUsd, esc, yGas, yDt,
     fixedKzt, fixedUsd: fixedKzt/fx, excGasKzt, excDtKzt, excKzt, excUsd: excKzt/fx,
     dutyUsd, dutyKzt, opexKzt, opexUsd, revKzt, revUsd, yieldSold,
-    nbKzt, nb, rows, gasBasketKzt, gasY,
+    nbKzt, nb, rows,
     expNb, expNbKzt, domNb, domNbKzt, share, shareNb, shareNbKzt,
     sharePlusDom, sharePlusDomKzt,
     deltaVsExp, deltaVsExpKzt, deltaShareDomVsExp, deltaShareDomVsExpKzt,
@@ -1994,16 +1981,11 @@ function renderProductsPage(){
   if (contribHead) contribHead.textContent = 'KZT/t contrib';
   const r = calcProducts();
   const setVal = (id, v) => { const el = document.getElementById(id); if (!el || document.activeElement === el) return; el.value = v; };
-  setVal('prodFx', num(prodState.fx, r.fx).toFixed(2));
   setVal('prodFeedKzt', prodState.feedKzt);
   setVal('prodVat', num(prodState.vat, r.vat).toFixed(2));
   setVal('prodEsc', num(prodState.priceEscPct, 0));
   const feedOut = document.getElementById('prodFeedUsd');
   if (feedOut) feedOut.value = fmtInt(r.feedKzt) + ' KZT · ' + fmt(r.feedUsd, 2) + ' $/t';
-  const useFx = document.getElementById('prodUseAnalysisFx');
-  if (useFx && document.activeElement !== useFx) useFx.checked = !!prodState.useAnalysisFx;
-  const fxEl = document.getElementById('prodFx');
-  if (fxEl) fxEl.disabled = !!prodState.useAnalysisFx;
   const useFeed = document.getElementById('prodUseAnalysisFeed');
   if (useFeed && document.activeElement !== useFeed) useFeed.checked = !!prodState.useAnalysisFeed;
   const feedEl = document.getElementById('prodFeedKzt');
@@ -2162,11 +2144,6 @@ function wireProductsPage(){
     if (prodState.mode === 'historic') {
       prodState.products = null;
       ensureProdModel(true);
-      const m = histMonth(prodState.monthId);
-      if (m && !prodState.useAnalysisFx) {
-        const pfx = profileFxForMonth(m.id);
-        prodState.fx = pfx != null ? pfx : m.fx;
-      }
     }
     renderProductsPage();
   });
@@ -2174,17 +2151,12 @@ function wireProductsPage(){
     const m = histMonth(document.getElementById('prodMonthSelect').value || prodState.monthId);
     if (!m) return;
     prodState.mode = 'forecast';
-    const fx = Math.max(1e-9, num(prodState.useAnalysisFx ? calcNetback().FX : prodState.fx, 450));
+    const fx = productsFx();
     prodState.products = cloneProds(m.products).map(p => ({
       ...p, priceMode: 'kzt', priceUsd: num(p.priceKzt) / fx
     }));
-    if (!prodState.useAnalysisFx) {
-      const pfx = profileFxForMonth(m.id);
-      prodState.fx = pfx != null ? pfx : m.fx;
-    }
     renderProductsPage();
   });
-  document.getElementById('prodFx').addEventListener('input', e => { prodState.fx = num(e.target.value); renderProductsPage(); });
   document.getElementById('prodFeedKzt').addEventListener('input', e => {
     prodState.useAnalysisFeed = false;
     prodState.feedKzt = num(e.target.value);
@@ -2198,11 +2170,6 @@ function wireProductsPage(){
   document.getElementById('prodEsc').addEventListener('input', e => { prodState.priceEscPct = num(e.target.value); renderProductsPage(); });
   document.getElementById('prodRefineShare').addEventListener('input', e => {
     prodState.refineShare = Math.max(0, Math.min(100, num(e.target.value, 60))) / 100;
-    renderProductsPage();
-  });
-  document.getElementById('prodUseAnalysisFx').addEventListener('change', e => {
-    prodState.useAnalysisFx = !!e.target.checked;
-    if (prodState.useAnalysisFx) prodState.fx = calcNetback().FX;
     renderProductsPage();
   });
   document.getElementById('prodUseAnalysisFeed').addEventListener('change', e => {
@@ -2224,7 +2191,7 @@ function onProdTableEdit(e){
   if (!prodState.products || !prodState.products[i]) return;
   if (f === 'priceMode') {
     prodState.products[i].priceMode = el.value === 'usd' ? 'usd' : 'kzt';
-    const fx = Math.max(1e-9, num(prodState.useAnalysisFx ? calcNetback().FX : prodState.fx, 450));
+    const fx = productsFx();
     if (prodState.products[i].priceMode === 'usd' && !num(prodState.products[i].priceUsd)) {
       prodState.products[i].priceUsd = num(prodState.products[i].priceKzt) / fx;
     }
