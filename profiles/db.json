@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-13T04:25:00.000Z",
+  "updatedAt": "2026-11-12T14:02:43.000Z",
   "currentMonthId": "2026-11",
   "profiles": [
     {
@@ -8,7 +8,7 @@
       "label": "Jan 2026",
       "month": "2026-01",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 1-2026 — Brent 70.0, Skebco 9.7, Discount 4.415, USD/KZT 501.02 (excel J3 month-end (J2 was 440 placeholder); sheet J2=440, J3=501.02), RUB/KZT 6.496572 (X-Rates monthly avg), local VAT-incl 125098 KZT/t · Monthly average FX 501.02 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 1-2026 — Brent 70.0, Skebco 9.7, Discount 4.415, USD/KZT 501.02 (excel J3 month-end (J2 was 440 placeholder); sheet J2=440, J3=501.02), RUB/KZT 6.496572 (X-Rates monthly avg), local VAT-incl 125098 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -43,7 +43,7 @@
       "label": "Feb 2026",
       "month": "2026-02",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 2-2026 — Brent 77.0, Skebco 9.225, Discount 5.906, USD/KZT 498.0 (excel J2 working; sheet J2=498, J3=497.56), RUB/KZT 6.466457 (X-Rates monthly avg), local VAT-incl 124919 KZT/t · Monthly average FX 498.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 2-2026 — Brent 77.0, Skebco 9.225, Discount 5.906, USD/KZT 498.0 (excel J2 working; sheet J2=498, J3=497.56), RUB/KZT 6.466457 (X-Rates monthly avg), local VAT-incl 124919 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -78,7 +78,7 @@
       "label": "Mar 2026",
       "month": "2026-03",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 3-2026 — Brent 115.0, Skebco 8.25, Discount 6.475, USD/KZT 482.0 (excel J2 working; sheet J2=482, J3=481.54), RUB/KZT 6.067106 (X-Rates monthly avg), local VAT-incl 124916 KZT/t · Monthly average FX 482.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 3-2026 — Brent 115.0, Skebco 8.25, Discount 6.475, USD/KZT 482.0 (excel J2 working; sheet J2=482, J3=481.54), RUB/KZT 6.067106 (X-Rates monthly avg), local VAT-incl 124916 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -113,7 +113,7 @@
       "label": "Apr 2026",
       "month": "2026-04",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 4-2026 — Brent 118.0, Skebco 9.7, Discount 8.363, USD/KZT 462.0 (excel J2 working; sheet J2=462, J3=461.55), RUB/KZT 6.095411 (X-Rates monthly avg), local VAT-incl 124604 KZT/t · Monthly average FX 462.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 4-2026 — Brent 118.0, Skebco 9.7, Discount 8.363, USD/KZT 462.0 (excel J2 working; sheet J2=462, J3=461.55), RUB/KZT 6.095411 (X-Rates monthly avg), local VAT-incl 124604 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -148,7 +148,7 @@
       "label": "May 2026",
       "month": "2026-05",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 5-2026 — Brent 107.0, Skebco 9.05, Discount 6.62, USD/KZT 486.0 (excel J2 working; sheet J2=486, J3=485.95), RUB/KZT 6.432054 (X-Rates monthly avg), local VAT-incl 125000 KZT/t · Monthly average FX 486.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 5-2026 — Brent 107.0, Skebco 9.05, Discount 6.62, USD/KZT 486.0 (excel J2 working; sheet J2=486, J3=485.95), RUB/KZT 6.432054 (X-Rates monthly avg), local VAT-incl 125000 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -183,7 +183,7 @@
       "label": "Jun 2026",
       "month": "2026-06",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 6-2026 — Brent 76.0, Skebco 9.362, Discount 5.608, USD/KZT 486.0 (excel J2 working; sheet J2=486, J3=485.82), RUB/KZT 6.60189 (X-Rates monthly avg), local VAT-incl 125000 KZT/t · Monthly average FX 486.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 6-2026 — Brent 76.0, Skebco 9.362, Discount 5.608, USD/KZT 486.0 (excel J2 working; sheet J2=486, J3=485.82), RUB/KZT 6.60189 (X-Rates monthly avg), local VAT-incl 125000 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -218,7 +218,7 @@
       "label": "Jul 2026",
       "month": "2026-07",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 7-2026 — Brent 88.0, Skebco 9.417, Discount 6.012, USD/KZT 475.0 (excel J2 working; sheet J2=475, J3=474.63), RUB/KZT 6.079645 (X-Rates monthly avg), local VAT-incl 130000 KZT/t · Monthly average FX 475.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 7-2026 — Brent 88.0, Skebco 9.417, Discount 6.012, USD/KZT 475.0 (excel J2 working; sheet J2=475, J3=474.63), RUB/KZT 6.079645 (X-Rates monthly avg), local VAT-incl 130000 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -253,7 +253,7 @@
       "label": "Aug 2026",
       "month": "2026-08",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 8-2026 — Brent 128.0, Skebco 7.4, Discount 8.485, USD/KZT 465.0 (excel J2 working; sheet J2=465, J3=464.77), RUB/KZT 5.596939 (X-Rates monthly avg), local VAT-incl 130000 KZT/t · Monthly average FX 465.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 8-2026 — Brent 128.0, Skebco 7.4, Discount 8.485, USD/KZT 465.0 (excel J2 working; sheet J2=465, J3=464.77), RUB/KZT 5.596939 (X-Rates monthly avg), local VAT-incl 130000 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -288,7 +288,7 @@
       "label": "Sep 2026",
       "month": "2026-09",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 9-2026 — Brent 121.0, Skebco 7.7, Discount 8.151, USD/KZT 439.0 (excel J2 working; sheet J2=439, J3=439.37), RUB/KZT 5.297035 (X-Rates monthly avg), local VAT-incl 130000 KZT/t · Monthly average FX 439.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 9-2026 — Brent 121.0, Skebco 7.7, Discount 8.151, USD/KZT 439.0 (excel J2 working; sheet J2=439, J3=439.37), RUB/KZT 5.297035 (X-Rates monthly avg), local VAT-incl 130000 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -323,7 +323,7 @@
       "label": "Oct 2026",
       "month": "2026-10",
       "author": "excel import",
-      "notes": "From netback analysis (2).xlsx sheet 10-2026 — Brent 108.0, Skebco 7.7, Discount 8.151, USD/KZT 454.0 (excel J2 working; sheet J2=454, J3=453.87), RUB/KZT 5.437656 (X-Rates monthly avg), local VAT-incl 127000 KZT/t · Monthly average FX 454.0 KZT/USD.",
+      "notes": "From netback analysis (2).xlsx sheet 10-2026 — Brent 108.0, Skebco 7.7, Discount 8.151, USD/KZT 454.0 (excel J2 working; sheet J2=454, J3=453.87), RUB/KZT 5.437656 (X-Rates monthly avg), local VAT-incl 127000 KZT/t",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": false,
       "params": {
@@ -355,15 +355,15 @@
     },
     {
       "id": "2026-11",
-      "label": "Nov 2026",
+      "label": "Nov 2026 (current)",
       "month": "2026-11",
       "author": "excel import",
-      "notes": "Current month — FX daily. Export taxes on Kebco; domestic MET = ex-VAT local x MET% x 0.5 (art. 778); no rental/duty on domestic.",
-      "savedAt": "2026-11-13T09:15:00.000Z",
+      "notes": "Latest month — prior workbook prices with Nov avg FX USD/KZT 450.18 (KazFin) and RUB/KZT 5.560603 (X-Rates). Previous month Oct verified with monthly FX/RUB.",
+      "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": true,
       "params": {
         "brent": 105.0,
-        "fx": 448.64,
+        "fx": 450.18,
         "sk": 20.104,
         "disc": 6.18,
         "localKzt": 130000,
@@ -377,14 +377,14 @@
         "bulkDom": 0
       },
       "snapshot": {
-        "nbExp": 288.2938839248377,
-        "nbDom": 211.16610217392645,
-        "spread": 77.12778175091125,
-        "trExp": 60.13828287516227,
-        "trDom": 32.38605853245364,
-        "duty": 80,
-        "rental": 108.2424,
-        "metExp": 31.836,
+        "nbExp": 188.82800820318806,
+        "nbDom": 212.72979800799988,
+        "spread": -23.901789804811813,
+        "trExp": 59.932558596811944,
+        "trDom": 32.27527055844329,
+        "duty": 115,
+        "rental": 165.375,
+        "metExp": 39.375,
         "domesticRoute": "pkop"
       }
     }
