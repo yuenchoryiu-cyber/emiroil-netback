@@ -462,9 +462,9 @@
       <span><i style="background:#7c3aed"></i> Domestic → Pavlodar (PNHZ)</span>
     </div>
     <div class="btn-row" style="margin-bottom:8px">
-      <button type="button" class="ok" id="btnMapShowAll">Show all routes</button>
-      <button type="button" class="ghost" id="btnMapShowExp">Export only</button>
-      <button type="button" class="ghost" id="btnMapShowDom">Domestic (active route)</button>
+      <button type="button" class="ok" id="btnMapShowAll" data-map-mode="all">Show all routes</button>
+      <button type="button" class="ghost" id="btnMapShowExp" data-map-mode="export">Export only</button>
+      <button type="button" class="ghost" id="btnMapShowDom" data-map-mode="dom">Domestic (both routes)</button>
       <button type="button" class="ghost" id="btnMapFit">Fit map</button>
     </div>
     <div class="route-side">
@@ -1498,13 +1498,13 @@ function renderRouteMap(mode) {
     pavlodar: { color:'#7c3aed', lines: TR_LINES.filter(l => l.channel==='domestic' && l.route==='pavlodar'), layer: routeLayers.pavlodar }
   };
 
-  // visible groups for this mode
+  // visible groups for this mode — domestic shows BOTH Shymkent + Pavlodar
   const visible = Object.entries(groups).filter(([key]) => {
-    if (mode === 'export' && key !== 'export') return false;
-    if (mode === 'dom' && key === 'export') return false;
-    if (mode === 'dom' && key !== activeDomesticRoute()) return false;
-    return true;
+    if (mode === 'export') return key === 'export';
+    if (mode === 'dom') return key === 'pkop' || key === 'pavlodar';
+    return true; // all
   });
+  syncMapModeButtons(mode);
 
   // count overlapping corridors so we can offset
   const edgeBuckets = {};
@@ -1522,8 +1522,11 @@ function renderRouteMap(mode) {
   });
 
   const list = document.getElementById('routeLegList');
+  const modeNote = mode === 'export'
+    ? 'Showing export only (highlighted).'
+    : (mode === 'dom' ? 'Showing both domestic routes — Shymkent + Pavlodar (highlighted).' : 'Showing all routes.');
   let listHtml = `<h2 style="margin-top:0">Legs · original currency</h2>
-    <p class="lead" style="margin:0 0 8px">Hover a leg to highlight it (map stays put). Prices in tariff currency (KZT or RUB/t). Route ${domesticLabel()}</p>`;
+    <p class="lead" style="margin:0 0 8px">${modeNote} Hover a leg for detail. Prices in KZT or RUB/t.</p>`;
 
   for (const [key, g] of visible) {
     // station markers under legs so line hover wins
@@ -1600,7 +1603,10 @@ function renderRouteMap(mode) {
   setTimeout(() => {
     routeMap.invalidateSize();
     if (!routeMap._eoFramed) fitRouteMapView({ animate: false, markFramed: true });
-  }, 80);
+    // After filter: highlight the visible corridor(s) so the mode is obvious
+    if (mode === 'export') highlightRouteGroups(['export']);
+    else if (mode === 'dom') highlightRouteGroups(['pkop', 'pavlodar']);
+  }, 100);
 }
 
 /** Build bounds from leg latlngs — LayerGroup has no getBounds(), so FeatureGroup(routeLayers) was a no-op. */
@@ -1636,6 +1642,83 @@ function fitRouteMapView({ animate = true, markFramed = true } = {}) {
   }
 }
 
+function syncMapModeButtons(mode) {
+  document.querySelectorAll('[data-map-mode]').forEach(btn => {
+    const on = btn.dataset.mapMode === mode;
+    btn.classList.toggle('ok', on);
+    btn.classList.toggle('ghost', !on);
+  });
+}
+
+/** Glow every leg belonging to the given route groups (export / pkop / pavlodar). Camera stays put. */
+function highlightRouteGroups(groupKeys) {
+  if (!routeMap || !groupKeys || !groupKeys.length) return;
+  if (routeHighlightClearTimer) {
+    clearTimeout(routeHighlightClearTimer);
+    routeHighlightClearTimer = null;
+  }
+  clearRouteHighlight();
+
+  const want = new Set(groupKeys);
+  const activeIds = [];
+  Object.entries(routeLegLayers).forEach(([id, info]) => {
+    if (!info || !info.line) return;
+    const g = info.line.channel === 'export' ? 'export' : info.line.route;
+    if (want.has(g)) activeIds.push(id);
+  });
+  if (!activeIds.length) return;
+
+  const activeSet = new Set(activeIds);
+  Object.entries(routeLegLayers).forEach(([lid, other]) => {
+    if (!other || !other.layer) return;
+    if (activeSet.has(lid)) {
+      if (other.isPoint) other.layer.setStyle({ fillOpacity: 1, opacity: 1, radius: 11, weight: 3 });
+      else other.layer.setStyle({ opacity: 1, weight: 7 });
+    } else if (other.isPoint) {
+      other.layer.setStyle({ fillOpacity: 0.15, opacity: 0.2, radius: 5 });
+    } else {
+      other.layer.setStyle({ opacity: 0.12, weight: 2 });
+    }
+  });
+
+  routeHighlight = L.layerGroup().addTo(routeMap);
+  const glowColor = '#f59e0b';
+  activeIds.forEach(id => {
+    const info = routeLegLayers[id];
+    if (!info || !info.latlngs) return;
+    if (info.isPoint) {
+      L.circleMarker(info.latlngs[0], {
+        radius: 16, color: glowColor, weight: 3, fillColor: glowColor, fillOpacity: 0.35, interactive: false
+      }).addTo(routeHighlight);
+    } else if (info.latlngs.length >= 2) {
+      L.polyline(info.latlngs, {
+        color: glowColor, weight: 12, opacity: 0.35, lineCap: 'round', interactive: false
+      }).addTo(routeHighlight);
+      L.polyline(info.latlngs, {
+        color: info.color, weight: 6, opacity: 1, lineCap: 'round', interactive: false
+      }).addTo(routeHighlight);
+    }
+  });
+
+  // Permanent banner tip for the mode
+  const tip = groupKeys.includes('export') && groupKeys.length === 1
+    ? 'Export → Novorossiysk (highlighted)'
+    : (groupKeys.includes('pkop') ? 'Domestic · Shymkent + Pavlodar (highlighted)' : 'Routes highlighted');
+  const bounds = routeMapBounds();
+  if (bounds && bounds.isValid()) {
+    const c = bounds.getCenter();
+    L.marker(c, { opacity: 0, interactive: false })
+      .bindTooltip(tip, { permanent: true, direction: 'center', className: 'route-hl-tip' })
+      .addTo(routeHighlight)
+      .openTooltip();
+  }
+
+  // Keep list rows for these legs visually active
+  document.querySelectorAll('#routeLegList [data-map-leg]').forEach(el => {
+    el.classList.toggle('is-active', activeSet.has(el.dataset.mapLeg));
+  });
+}
+
 function wireRouteMap() {
   const all = document.getElementById('btnMapShowAll');
   const exp = document.getElementById('btnMapShowExp');
@@ -1652,6 +1735,7 @@ function wireRouteMap() {
     clearRouteHighlight();
     fitRouteMapView({ animate: true, markFramed: true });
   };
+  syncMapModeButtons(routeLastMode || 'all');
 }
 
 function ladderRowsHtml(kind) {
