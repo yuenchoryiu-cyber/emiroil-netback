@@ -311,7 +311,7 @@
 <div id="app" class="wrap">
   <header class="app-brand">
     <h1 class="brand">Emir Oil Netback</h1>
-    <p class="brand-sub">Main analysis plus tools for transport, taxes, month profiles, and reports — no Excel required</p>
+    <p class="brand-sub">Analysis, transport, taxes, products refining, month profiles, and reports</p>
   </header>
   <nav class="subnav" aria-label="Netback tools">
     <span class="subnav-label">Tools</span>
@@ -319,6 +319,7 @@
     <button type="button" data-page="transport">Transport</button>
     <button type="button" data-page="route-map">Route map</button>
     <button type="button" data-page="taxes">Taxes / fiscal</button>
+    <button type="button" data-page="products">Products / refining</button>
     <button type="button" data-page="profiles">Month profiles</button>
     <button type="button" data-page="profile-edit">New / edit profile</button>
     <button type="button" data-page="reports">Reports</button>
@@ -614,6 +615,123 @@
             <button type="button" class="ghost" id="btnAddDutyRow">Add duty row</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- PRODUCTS / REFINING PAGE -->
+  <div id="page-products" class="page">
+    <h1>Products netback — refine &amp; sell all</h1>
+    <p class="lead">Extends domestic crude: feedstock = Analysis domestic price (ex-VAT), plus PKOP refining costs from <b>eot oil products.xlsx</b>. Assumes the month’s yield slate is sold at the sheet unit prices.</p>
+
+    <div class="sticky-top">
+      <div id="prodVerdict" class="verdict export" style="grid-template-columns:1.4fr repeat(4,1fr)">
+        <div>
+          <div class="big" id="prodVerdictTxt">Products</div>
+          <div class="sub" id="prodVerdictSub">vs selling crude domestically</div>
+        </div>
+        <div>
+          <span class="nb-label">Product revenue</span>
+          <div class="nb-val" id="prodRev">—</div>
+        </div>
+        <div>
+          <span class="nb-label">Feedstock + refining</span>
+          <div class="nb-val" id="prodCost">—</div>
+        </div>
+        <div>
+          <span class="nb-label">Products NB</span>
+          <div class="nb-val" id="prodNb">—</div>
+        </div>
+        <div>
+          <span class="nb-label">Month P&amp;L</span>
+          <div class="nb-val" id="prodMonth">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="row2">
+        <div class="field">
+          <label>Yield month (PKOP from Excel)</label>
+          <select id="prodMonthSelect"></select>
+        </div>
+        <div class="field">
+          <label>Refining volume (t)</label>
+          <input id="prodVol" type="number" step="100" min="0"/>
+        </div>
+        <div class="field">
+          <label>FX for products (KZT / USD)</label>
+          <input id="prodFx" type="number" step="0.01" min="1"/>
+        </div>
+        <div class="field" style="display:flex;align-items:end;gap:8px;padding-bottom:4px">
+          <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;cursor:pointer">
+            <input id="prodUseAnalysisFx" type="checkbox"/> Use Analysis FX
+          </label>
+        </div>
+      </div>
+      <div class="row2" style="margin-top:8px">
+        <div class="field">
+          <label>Feedstock = domestic crude (KZT/t, VAT-incl from Analysis)</label>
+          <input id="prodFeedKzt" type="number" step="500" min="0"/>
+        </div>
+        <div class="field">
+          <label>VAT factor (strip for ex-VAT cost)</label>
+          <input id="prodVat" type="number" step="0.01" min="1" max="1.3"/>
+        </div>
+        <div class="field">
+          <label>Feedstock ex-VAT $/t (live)</label>
+          <input id="prodFeedUsd" type="text" readonly style="background:#f5f2ea"/>
+        </div>
+        <div class="field" style="display:flex;align-items:end">
+          <button type="button" class="ghost" id="btnProdSyncAnalysis">Pull domestic price from Analysis</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="section">
+        <h2>Product slate — sell all</h2>
+        <p class="lead" style="margin-bottom:8px">Revenue/t = Σ (yield × price KZT) ÷ FX. Edit yield % or price; losses / tech fuel stay non-sold.</p>
+        <div style="overflow:auto">
+          <table class="calc" id="prodTable">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Yield %</th>
+                <th>Price KZT/t</th>
+                <th>Tons</th>
+                <th>$/t contrib</th>
+                <th>Month $</th>
+                <th>Sold?</th>
+              </tr>
+            </thead>
+            <tbody id="prodTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Refining costs (KZT / t crude)</h2>
+        <p class="lead" style="margin-bottom:8px">From Excel expense block. Converted at products FX.</p>
+        <div class="tax-factors" id="prodCostFields">
+          <div class="field"><label>Processing</label><input id="prodProc" type="number" step="1"/></div>
+          <div class="field"><label>Additives (1)</label><input id="prodAdd1" type="number" step="1"/></div>
+          <div class="field"><label>Additives (2)</label><input id="prodAdd2" type="number" step="1"/></div>
+          <div class="field"><label>Other additives</label><input id="prodAdd0" type="number" step="1"/></div>
+          <div class="field"><label>Admin</label><input id="prodAdmin" type="number" step="1"/></div>
+          <div class="field"><label>Excise gasoline</label><input id="prodExcGas" type="number" step="1"/></div>
+          <div class="field"><label>Excise diesel</label><input id="prodExcDt" type="number" step="1"/></div>
+        </div>
+        <div class="kpi-grid" style="margin-top:12px">
+          <div class="k"><span>Product revenue</span><b id="prodKpiRev">—</b></div>
+          <div class="k"><span>Feedstock (ex-VAT)</span><b id="prodKpiFeed">—</b></div>
+          <div class="k"><span>Refining opex</span><b id="prodKpiOpex">—</b></div>
+          <div class="k"><span>Products NB</span><b id="prodKpiNb">—</b></div>
+          <div class="k"><span>Crude domestic NB</span><b id="prodKpiDomNb">—</b></div>
+          <div class="k"><span>Δ vs crude domestic</span><b id="prodKpiDelta">—</b></div>
+        </div>
+        <div id="prodCalcBody" style="margin-top:12px"></div>
+        <div id="prodChart" style="height:280px;margin-top:10px"></div>
       </div>
     </div>
   </div>
@@ -1363,8 +1481,297 @@ function resetFromTransport() {
   resetToMonthId(id);
 }
 
+
+/* ===== Products / refining (EOT Excel) ===== */
+const EOT_PRODUCTS_EMBED = {"source":"eot oil products.xlsx","note":"Yields & KZT prices from PKOP monthly sheets. Sell-all scenario uses yield×price; feedstock = domestic crude price from Analysis; refining costs from Excel expense block.","defaultMonthId":"2026-10","months":[{"id":"2026-06","label":"June'26 PKOP","refinery":"pkop","volumeT":3600.0,"fx":485.82,"yieldSum":0.9498,"products":[{"name":"AI92","yield":0.3183,"priceKzt":252058.82,"tons":1145.88,"sellable":true},{"name":"AI95","yield":0.0679,"priceKzt":295000.0,"tons":244.44,"sellable":true},{"name":"AI98","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Diesel fuel","yield":0.3678,"priceKzt":333000.0,"tons":1324.08,"sellable":true},{"name":"Kerosene (Aviation fuel)","yield":0.0727,"priceKzt":553000.0,"tons":261.72,"sellable":true},{"name":"Fuel oil","yield":0.0652,"priceKzt":130000.0,"tons":234.72,"sellable":true},{"name":"Vacuum gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Light gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Sulphur","yield":0.003,"priceKzt":1000.0,"tons":10.8,"sellable":true},{"name":"Coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Baked coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Benzene","yield":0.0,"priceKzt":221533.92,"tons":0.0,"sellable":false},{"name":"Propane-Butane Fraction","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Heating oil","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Liquefied gas","yield":0.0549,"priceKzt":69277.52,"tons":197.64,"sellable":true},{"name":"Bitumen","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"raw materials at the UPW","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"не г/о д/т","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"fuel gas","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"ВСГ","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"нафта","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Technical fuel","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Semi-finished products","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Losses","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false}],"costs":{"processingKzt":26029.0,"additive1Kzt":600.0,"additive2Kzt":240.0,"additivesKzt":0.0,"adminKzt":300.0,"exciseGasolineKzt":14727.3508,"exciseDieselKzt":13140.022800000002,"excelRevenuePerTonKzt":255190.1593774118,"excelNetbackKzt":200153.78577741177}},{"id":"2026-07","label":"July'26 PKOP","refinery":"pkop","volumeT":3500.0,"fx":485.82,"yieldSum":0.9571,"products":[{"name":"AI92","yield":0.2989,"priceKzt":277000.0,"tons":1046.15,"sellable":true},{"name":"AI95","yield":0.0679,"priceKzt":338120.57,"tons":237.65,"sellable":true},{"name":"AI98","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Diesel fuel","yield":0.3538,"priceKzt":337714.23,"tons":1238.3,"sellable":true},{"name":"Kerosene (Aviation fuel)","yield":0.0812,"priceKzt":968000.0,"tons":284.2,"sellable":true},{"name":"Fuel oil","yield":0.0842,"priceKzt":130000.0,"tons":294.7,"sellable":true},{"name":"Vacuum gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Light gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Sulphur","yield":0.0029,"priceKzt":60000.0,"tons":10.15,"sellable":true},{"name":"Coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Baked coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Benzene","yield":0.0,"priceKzt":221533.92,"tons":0.0,"sellable":false},{"name":"Propane-Butane Fraction","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Heating oil","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Liquefied gas","yield":0.0523,"priceKzt":69277.52,"tons":183.05,"sellable":true},{"name":"Bitumen","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"raw materials at the UPW","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"не г/о д/т","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"fuel gas","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"ВСГ","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"нафта","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Technical fuel","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Semi-finished products","yield":0.0109,"priceKzt":0.0,"tons":38.15,"sellable":false},{"name":"Losses","yield":0.005,"priceKzt":0.0,"tons":17.5,"sellable":false}],"costs":{"processingKzt":26029.0,"additive1Kzt":600.0,"additive2Kzt":240.0,"additivesKzt":0.0,"adminKzt":300.0,"exciseGasolineKzt":13987.551200000004,"exciseDieselKzt":12639.8588,"excelRevenuePerTonKzt":335631.64032207476,"excelNetbackKzt":281835.2303220747}},{"id":"2026-08","label":"Aug'26 PKOP","refinery":"pkop","volumeT":4000.0,"fx":485.82,"yieldSum":0.9414,"products":[{"name":"AI92","yield":0.2956,"priceKzt":283000.0,"tons":1182.4,"sellable":true},{"name":"AI95","yield":0.068,"priceKzt":345000.0,"tons":272.0,"sellable":true},{"name":"AI98","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Diesel fuel","yield":0.3707,"priceKzt":358398.42,"tons":1482.8,"sellable":true},{"name":"Kerosene (Aviation fuel)","yield":0.0621,"priceKzt":968000.0,"tons":248.4,"sellable":true},{"name":"Fuel oil","yield":0.064,"priceKzt":130000.0,"tons":256.0,"sellable":true},{"name":"Vacuum gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Light gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Sulphur","yield":0.0028,"priceKzt":70000.0,"tons":11.2,"sellable":true},{"name":"Coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Baked coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Benzene","yield":0.0,"priceKzt":221533.92,"tons":0.0,"sellable":false},{"name":"Propane-Butane Fraction","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Heating oil","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Liquefied gas","yield":0.0533,"priceKzt":69277.52,"tons":213.2,"sellable":true},{"name":"Bitumen","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"raw materials at the UPW","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"не г/о д/т","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"fuel gas","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"ВСГ","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"нафта","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Technical fuel","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Semi-finished products","yield":0.0199,"priceKzt":0.0,"tons":79.6,"sellable":false},{"name":"Losses","yield":0.005,"priceKzt":0.0,"tons":20.0,"sellable":false}],"costs":{"processingKzt":26029.0,"additive1Kzt":600.0,"additive2Kzt":240.0,"additivesKzt":0.0,"adminKzt":300.0,"exciseGasolineKzt":13865.522399999998,"exciseDieselKzt":13243.6282,"excelRevenuePerTonKzt":271064.84715609474,"excelNetbackKzt":216786.69655609474}},{"id":"2026-09","label":"Sep'26 PKOP","refinery":"pkop","volumeT":5200.0,"fx":485.82,"yieldSum":1.007986,"products":[{"name":"AI92","yield":0.3144,"priceKzt":280582.09,"tons":1634.88,"sellable":true},{"name":"AI95","yield":0.0681,"priceKzt":342666.67,"tons":354.12,"sellable":true},{"name":"AI98","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Diesel fuel","yield":0.3839,"priceKzt":364656.05,"tons":1996.28,"sellable":true},{"name":"Kerosene (Aviation fuel)","yield":0.063,"priceKzt":550000.0,"tons":327.6,"sellable":true},{"name":"Fuel oil","yield":0.0377,"priceKzt":130000.0,"tons":196.04,"sellable":true},{"name":"Vacuum gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Light gas oil","yield":0.0,"priceKzt":265257.72,"tons":0.0,"sellable":false},{"name":"Sulphur","yield":0.0028,"priceKzt":70000.0,"tons":14.56,"sellable":true},{"name":"Coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Baked coke","yield":0.0,"priceKzt":116596.8,"tons":0.0,"sellable":false},{"name":"Benzene","yield":0.0,"priceKzt":221533.92,"tons":0.0,"sellable":false},{"name":"Propane-Butane Fraction","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Heating oil","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Liquefied gas","yield":0.0549,"priceKzt":69277.52,"tons":285.48,"sellable":true},{"name":"Bitumen","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"raw materials at the UPW","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"не г/о д/т","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"fuel gas","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"ВСГ","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"нафта","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Technical fuel","yield":0.065166,"priceKzt":0.0,"tons":338.866,"sellable":false},{"name":"Semi-finished products","yield":0.008369,"priceKzt":0.0,"tons":43.52,"sellable":false},{"name":"Losses","yield":0.009651,"priceKzt":0.0,"tons":50.183,"sellable":false}],"costs":{"processingKzt":26029.0,"additive1Kzt":600.0,"additive2Kzt":240.0,"additivesKzt":0.0,"adminKzt":300.0,"exciseGasolineKzt":14586.255,"exciseDieselKzt":13715.2114,"excelRevenuePerTonKzt":338681.104920678,"excelNetbackKzt":283210.63852067804}},{"id":"2026-10","label":"Oct'26 PKOP","refinery":"pkop","volumeT":4500.0,"fx":450.0,"yieldSum":1.013786,"products":[{"name":"AI92","yield":0.3139,"priceKzt":283591.13,"tons":1412.55,"sellable":true},{"name":"AI95","yield":0.0681,"priceKzt":330000.0,"tons":306.45,"sellable":true},{"name":"AI98","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Diesel fuel","yield":0.3643,"priceKzt":363230.53,"tons":1639.35,"sellable":true},{"name":"Kerosene (Aviation fuel)","yield":0.0609,"priceKzt":530000.0,"tons":274.05,"sellable":true},{"name":"Fuel oil","yield":0.065,"priceKzt":125833.33,"tons":292.5,"sellable":true},{"name":"Vacuum gas oil","yield":0.0,"priceKzt":245700.0,"tons":0.0,"sellable":false},{"name":"Light gas oil","yield":0.0,"priceKzt":245700.0,"tons":0.0,"sellable":false},{"name":"Sulphur","yield":0.0028,"priceKzt":70000.0,"tons":12.6,"sellable":true},{"name":"Coke","yield":0.0,"priceKzt":108000.0,"tons":0.0,"sellable":false},{"name":"Baked coke","yield":0.0,"priceKzt":108000.0,"tons":0.0,"sellable":false},{"name":"Benzene","yield":0.0,"priceKzt":205200.0,"tons":0.0,"sellable":false},{"name":"Propane-Butane Fraction","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Heating oil","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Liquefied gas","yield":0.0556,"priceKzt":69277.52,"tons":250.2,"sellable":true},{"name":"Bitumen","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"raw materials at the UPW","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"не г/о д/т","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"fuel gas","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"ВСГ","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"нафта","yield":0.0,"priceKzt":0.0,"tons":0.0,"sellable":false},{"name":"Technical fuel","yield":0.065166,"priceKzt":0.0,"tons":293.249,"sellable":false},{"name":"Semi-finished products","yield":0.008369,"priceKzt":0.0,"tons":37.662,"sellable":false},{"name":"Losses","yield":0.009651,"priceKzt":0.0,"tons":43.427,"sellable":false}],"costs":{"processingKzt":26029.0,"additive1Kzt":600.0,"additive2Kzt":240.0,"additivesKzt":0.0,"adminKzt":300.0,"exciseGasolineKzt":14567.188,"exciseDieselKzt":13014.9818,"excelRevenuePerTonKzt":323248.4549987082,"excelNetbackKzt":268497.2851987082}}]};
+let eotDb = EOT_PRODUCTS_EMBED;
+let prodState = {
+  monthId: (EOT_PRODUCTS_EMBED && EOT_PRODUCTS_EMBED.defaultMonthId) || '2026-10',
+  useAnalysisFx: true,
+  volumeT: null,
+  fx: null,
+  feedKzt: null,
+  vat: null,
+  products: null,
+  costs: null
+};
+
+function eotMonth(id) {
+  const months = (eotDb && eotDb.months) || [];
+  return months.find(m => m.id === id) || months[months.length - 1] || null;
+}
+function cloneProdMonth(m) {
+  if (!m) return null;
+  return {
+    ...m,
+    products: (m.products || []).map(p => ({ ...p })),
+    costs: { ...(m.costs || {}) }
+  };
+}
+function ensureProdStateFromMonth(force) {
+  const m = eotMonth(prodState.monthId);
+  if (!m) return;
+  if (force || !prodState.products) {
+    const c = cloneProdMonth(m);
+    prodState.products = c.products;
+    prodState.costs = c.costs;
+    if (prodState.volumeT == null) prodState.volumeT = m.volumeT;
+    if (prodState.fx == null) prodState.fx = m.fx;
+  }
+}
+function syncProdDefaultsFromAnalysis() {
+  const c = calcNetback();
+  if (prodState.feedKzt == null) prodState.feedKzt = c.LOC;
+  if (prodState.vat == null) prodState.vat = c.VAT;
+  if (prodState.useAnalysisFx) prodState.fx = c.FX;
+}
+function calcProducts() {
+  ensureProdStateFromMonth(false);
+  syncProdDefaultsFromAnalysis();
+  const c = calcNetback();
+  const fx = Math.max(1e-9, num(prodState.useAnalysisFx ? c.FX : prodState.fx, c.FX));
+  const vat = safeRate(prodState.vat != null ? prodState.vat : c.VAT, c.VAT);
+  const feedKzt = num(prodState.feedKzt, c.LOC);
+  const feedUsd = feedKzt / fx / vat;
+  const vol = Math.max(0, num(prodState.volumeT, 0));
+  const costs = prodState.costs || {};
+  const opexKzt =
+    num(costs.processingKzt) + num(costs.additive1Kzt) + num(costs.additive2Kzt) +
+    num(costs.additivesKzt) + num(costs.adminKzt) +
+    num(costs.exciseGasolineKzt) + num(costs.exciseDieselKzt);
+  const opexUsd = opexKzt / fx;
+  const rows = [];
+  let revKzt = 0;
+  let yieldSold = 0;
+  for (const p of (prodState.products || [])) {
+    const y = Math.max(0, num(p.yield));
+    const price = Math.max(0, num(p.priceKzt));
+    const sold = !!p.sellable && y > 0;
+    const tons = vol * y;
+    const contribKzt = sold ? y * price : 0;
+    if (sold) { revKzt += contribKzt; yieldSold += y; }
+    rows.push({
+      name: p.name, yield: y, priceKzt: price, sellable: !!p.sellable, sold,
+      tons, contribKzt, contribUsd: contribKzt / fx, monthUsd: (contribKzt / fx) * vol
+    });
+  }
+  const revUsd = revKzt / fx;
+  const nb = revUsd - feedUsd - opexUsd;
+  const monthPl = nb * vol;
+  return {
+    fx, vat, feedKzt, feedUsd, vol, opexKzt, opexUsd, revKzt, revUsd, yieldSold,
+    nb, monthPl, rows, domNb: c.nbDom, deltaVsDom: nb - c.nbDom, c
+  };
+}
+function fillProdMonthSelect() {
+  const sel = document.getElementById('prodMonthSelect');
+  if (!sel) return;
+  const months = (eotDb && eotDb.months) || [];
+  const cur = prodState.monthId;
+  sel.innerHTML = months.map(m =>
+    `<option value="${m.id}" ${m.id === cur ? 'selected' : ''}>${m.label} · ${fmtInt(m.volumeT)} t</option>`
+  ).join('');
+}
+function renderProductsPage() {
+  ensureProdStateFromMonth(false);
+  syncProdDefaultsFromAnalysis();
+  fillProdMonthSelect();
+  const r = calcProducts();
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (!el || document.activeElement === el) return;
+    el.value = v;
+  };
+  setVal('prodVol', prodState.volumeT);
+  setVal('prodFx', num(prodState.fx, r.fx).toFixed(2));
+  setVal('prodFeedKzt', prodState.feedKzt);
+  setVal('prodVat', num(prodState.vat, r.vat).toFixed(2));
+  const feedOut = document.getElementById('prodFeedUsd');
+  if (feedOut) feedOut.value = fmt(r.feedUsd, 2) + ' $/t';
+  const useFx = document.getElementById('prodUseAnalysisFx');
+  if (useFx && document.activeElement !== useFx) useFx.checked = !!prodState.useAnalysisFx;
+  document.getElementById('prodFx').disabled = !!prodState.useAnalysisFx;
+
+  setVal('prodProc', num((prodState.costs || {}).processingKzt));
+  setVal('prodAdd1', num((prodState.costs || {}).additive1Kzt));
+  setVal('prodAdd2', num((prodState.costs || {}).additive2Kzt));
+  setVal('prodAdd0', num((prodState.costs || {}).additivesKzt));
+  setVal('prodAdmin', num((prodState.costs || {}).adminKzt));
+  setVal('prodExcGas', num((prodState.costs || {}).exciseGasolineKzt));
+  setVal('prodExcDt', num((prodState.costs || {}).exciseDieselKzt));
+
+  const body = document.getElementById('prodTableBody');
+  const editingProd = document.activeElement && document.activeElement.matches && document.activeElement.matches('input[data-prod-i]');
+  if (body && !editingProd) {
+    body.innerHTML = (prodState.products || []).map((p, i) => {
+      const y = num(p.yield);
+      const price = num(p.priceKzt);
+      const sold = !!p.sellable && y > 0;
+      const tons = r.vol * y;
+      const contrib = sold ? (y * price / r.fx) : 0;
+      const month = contrib * r.vol;
+      const muted = (!p.sellable || y <= 0) ? 'style="opacity:.55"' : '';
+      return `<tr ${muted}>
+        <td>${p.name}</td>
+        <td><input data-prod-i="${i}" data-prod-f="yield" type="number" step="0.0001" min="0" max="1" value="${y}" style="width:5.5rem"/></td>
+        <td><input data-prod-i="${i}" data-prod-f="priceKzt" type="number" step="100" min="0" value="${price}" style="width:7rem"/></td>
+        <td class="num" data-prod-tons="${i}">${fmt(tons, 1)}</td>
+        <td class="num" data-prod-contrib="${i}">${sold ? fmt(contrib, 2) : '—'}</td>
+        <td class="num" data-prod-month="${i}">${sold ? fmt(month, 0) : '—'}</td>
+        <td>${sold ? 'yes' : (p.sellable ? '—' : 'no')}</td>
+      </tr>`;
+    }).join('') + `<tr class="total"><td>Sellable yield</td><td class="num">${(r.yieldSold * 100).toFixed(2)}%</td><td></td><td class="num">${fmt(r.vol * r.yieldSold, 1)}</td><td class="num">${fmt(r.revUsd, 2)}</td><td class="num">${fmt(r.revUsd * r.vol, 0)}</td><td></td></tr>`;
+  } else if (body && editingProd) {
+    // live-update computed columns without destroying the focused input
+    (prodState.products || []).forEach((p, i) => {
+      const y = num(p.yield), price = num(p.priceKzt);
+      const sold = !!p.sellable && y > 0;
+      const tons = r.vol * y;
+      const contrib = sold ? (y * price / r.fx) : 0;
+      const tEl = body.querySelector(`[data-prod-tons="${i}"]`);
+      const cEl = body.querySelector(`[data-prod-contrib="${i}"]`);
+      const mEl = body.querySelector(`[data-prod-month="${i}"]`);
+      if (tEl) tEl.textContent = fmt(tons, 1);
+      if (cEl) cEl.textContent = sold ? fmt(contrib, 2) : '—';
+      if (mEl) mEl.textContent = sold ? fmt(contrib * r.vol, 0) : '—';
+    });
+  }
+
+  const box = document.getElementById('prodVerdict');
+  if (box) {
+    box.className = 'verdict ' + (r.nb >= r.domNb ? 'export' : 'domestic');
+    document.getElementById('prodVerdictTxt').textContent = r.nb >= 0 ? 'PRODUCTS margin' : 'PRODUCTS loss';
+    document.getElementById('prodVerdictSub').textContent =
+      `${eotMonth(prodState.monthId)?.label || ''} · sell-all · FX ${fmt(r.fx, 2)} · vol ${fmtInt(r.vol)} t`;
+    document.getElementById('prodRev').textContent = fmt(r.revUsd, 1) + ' $/t';
+    document.getElementById('prodCost').textContent = fmt(r.feedUsd + r.opexUsd, 1) + ' $/t';
+    document.getElementById('prodNb').textContent = fmt(r.nb, 1) + ' $/t';
+    document.getElementById('prodMonth').textContent = (r.monthPl >= 0 ? '+' : '') + fmt(r.monthPl, 0) + ' $';
+  }
+  const k = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  k('prodKpiRev', fmt(r.revUsd, 2) + ' $/t');
+  k('prodKpiFeed', fmt(r.feedUsd, 2) + ' $/t');
+  k('prodKpiOpex', fmt(r.opexUsd, 2) + ' $/t');
+  k('prodKpiNb', fmt(r.nb, 2) + ' $/t');
+  k('prodKpiDomNb', fmt(r.domNb, 2) + ' $/t');
+  k('prodKpiDelta', (r.deltaVsDom >= 0 ? '+' : '') + fmt(r.deltaVsDom, 2) + ' $/t');
+
+  const calcHost = document.getElementById('prodCalcBody');
+  if (calcHost) {
+    calcHost.innerHTML = `<table class="calc"><tbody>
+      <tr class="secIn"><td colspan="3">Economics per tonne of crude</td></tr>
+      <tr><td>Product revenue</td><td>Σ yield × price ÷ FX</td><td class="num">${fmt(r.revUsd, 2)} $/t</td></tr>
+      <tr><td>Feedstock (domestic)</td><td>${fmtInt(r.feedKzt)} KZT ÷ ${fmt(r.fx, 2)} ÷ ${fmt(r.vat, 2)}</td><td class="num">${fmt(r.feedUsd, 2)} $/t</td></tr>
+      <tr><td>Refining opex</td><td>${fmtInt(r.opexKzt)} KZT ÷ FX</td><td class="num">${fmt(r.opexUsd, 2)} $/t</td></tr>
+      <tr class="total"><td>Products netback</td><td>revenue − feedstock − opex</td><td class="num">${fmt(r.nb, 2)} $/t</td></tr>
+      <tr><td>Month P&amp;L</td><td>× ${fmtInt(r.vol)} t</td><td class="num">${fmt(r.monthPl, 0)} $</td></tr>
+      <tr class="secDom"><td colspan="3">Compare to selling crude (no refine)</td></tr>
+      <tr><td>Domestic crude NB</td><td>from Analysis</td><td class="num">${fmt(r.domNb, 2)} $/t</td></tr>
+      <tr class="total"><td>Δ Products − Domestic crude</td><td>refining uplift</td><td class="num">${(r.deltaVsDom >= 0 ? '+' : '') + fmt(r.deltaVsDom, 2)} $/t</td></tr>
+    </tbody></table>`;
+  }
+
+  if (window.Plotly && document.getElementById('prodChart')) {
+    const sold = r.rows.filter(x => x.sold).sort((a, b) => b.contribUsd - a.contribUsd);
+    Plotly.newPlot('prodChart', [{
+      type: 'bar',
+      x: sold.map(x => x.name),
+      y: sold.map(x => x.contribUsd),
+      marker: { color: '#0f766e' },
+      text: sold.map(x => fmt(x.contribUsd, 1)),
+      textposition: 'auto'
+    }], {
+      margin: { t: 30, r: 10, b: 80, l: 50 },
+      yaxis: { title: '$/t of crude' },
+      title: { text: 'Revenue contribution by product', font: { size: 13 } },
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    }, { responsive: true, displayModeBar: false });
+  }
+}
+function applyProdCostInputs() {
+  if (!prodState.costs) prodState.costs = {};
+  prodState.costs.processingKzt = num(document.getElementById('prodProc').value);
+  prodState.costs.additive1Kzt = num(document.getElementById('prodAdd1').value);
+  prodState.costs.additive2Kzt = num(document.getElementById('prodAdd2').value);
+  prodState.costs.additivesKzt = num(document.getElementById('prodAdd0').value);
+  prodState.costs.adminKzt = num(document.getElementById('prodAdmin').value);
+  prodState.costs.exciseGasolineKzt = num(document.getElementById('prodExcGas').value);
+  prodState.costs.exciseDieselKzt = num(document.getElementById('prodExcDt').value);
+  renderProductsPage();
+}
+function wireProductsPage() {
+  const sel = document.getElementById('prodMonthSelect');
+  if (!sel || sel.dataset.wired) return;
+  sel.dataset.wired = '1';
+  sel.addEventListener('change', () => {
+    prodState.monthId = sel.value;
+    const m = eotMonth(prodState.monthId);
+    if (m) {
+      prodState.volumeT = m.volumeT;
+      if (!prodState.useAnalysisFx) prodState.fx = m.fx;
+      prodState.products = null;
+      prodState.costs = null;
+      ensureProdStateFromMonth(true);
+    }
+    renderProductsPage();
+  });
+  document.getElementById('prodVol').addEventListener('input', e => {
+    prodState.volumeT = num(e.target.value); renderProductsPage();
+  });
+  document.getElementById('prodFx').addEventListener('input', e => {
+    prodState.fx = num(e.target.value); renderProductsPage();
+  });
+  document.getElementById('prodFeedKzt').addEventListener('input', e => {
+    prodState.feedKzt = num(e.target.value); renderProductsPage();
+  });
+  document.getElementById('prodVat').addEventListener('input', e => {
+    prodState.vat = num(e.target.value); renderProductsPage();
+  });
+  document.getElementById('prodUseAnalysisFx').addEventListener('change', e => {
+    prodState.useAnalysisFx = !!e.target.checked;
+    if (prodState.useAnalysisFx) prodState.fx = calcNetback().FX;
+    renderProductsPage();
+  });
+  document.getElementById('btnProdSyncAnalysis').addEventListener('click', () => {
+    const c = calcNetback();
+    prodState.feedKzt = c.LOC;
+    prodState.vat = c.VAT;
+    if (prodState.useAnalysisFx) prodState.fx = c.FX;
+    renderProductsPage();
+  });
+  ['prodProc','prodAdd1','prodAdd2','prodAdd0','prodAdmin','prodExcGas','prodExcDt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', applyProdCostInputs);
+      el.addEventListener('change', applyProdCostInputs);
+    }
+  });
+  document.getElementById('prodTableBody').addEventListener('input', e => {
+    const inp = e.target.closest('input[data-prod-i]');
+    if (!inp) return;
+    const i = Number(inp.dataset.prodI);
+    const f = inp.dataset.prodF;
+    if (!prodState.products || !prodState.products[i]) return;
+    prodState.products[i][f] = num(inp.value);
+    renderProductsPage();
+  });
+}
+async function loadEotProductsCloud() {
+  try {
+    const res = await fetch('profiles/eot_products.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.months) && data.months.length) {
+        eotDb = data;
+        if (!eotMonth(prodState.monthId)) prodState.monthId = data.defaultMonthId || data.months[data.months.length - 1].id;
+      }
+    }
+  } catch {}
+}
+
 function showPage(name) {
-  const pages = ['netback','transport','route-map','taxes','profiles','profile-edit','reports'];
+  const pages = ['netback','transport','route-map','taxes','products','profiles','profile-edit','reports'];
   if (!pages.includes(name)) name = 'netback';
   pages.forEach(id => {
     const el = document.getElementById('page-' + id);
@@ -1378,6 +1785,7 @@ function showPage(name) {
   if (name==='transport') refreshTransportUI();
   if (name==='route-map') renderRouteMap();
   if (name==='taxes') renderTaxPage();
+  if (name==='products') { wireProductsPage(); renderProductsPage(); }
   if (name==='profile-edit') refreshProfileEditorPreview();
   if (name==='profiles') renderProfileUI();
   if (name==='reports') renderProfileUI();
@@ -3654,7 +4062,8 @@ async function startApp() {
   renderNetback();
   const hash=(location.hash||'#netback').replace('#','');
   wireRouteMap();
-  showPage(['netback','transport','route-map','taxes','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
+  await loadEotProductsCloud();
+  showPage(['netback','transport','route-map','taxes','products','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
   await initProfilesReports();
 }
 
