@@ -1079,10 +1079,12 @@ function renderNetback() {
     row('Duty $/t',`duty ladder(Kebco ${fmt(c.kebco,1)}) · MoF uses avg Kebco+Brent`, fmt(c.duty,0)),
     row('Export netback','D18', fmt(c.nbExp,2)+' $/t','total'),
     row('DOMESTIC '+domesticLabel(),'','','secDom'),
-    row('Price ex-VAT','local KZT / FX / VAT', fmt(c.priceTdom,2)),
+    row('Price ex-VAT',`${fmtInt(c.LOC)} KZT ÷ ${fmt(c.FX,2)} ÷ VAT ${fmt(c.VAT,2)}`, fmt(c.priceTdom,2)+' $/t'),
     row('Transport $/t',`domestic KZT / FX${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
-    row('Dom MET',`ex-VAT local × MET% × ${(c.domMetShare).toFixed(2)} (art. 778)`, fmt(c.metDom,2)),
-    row('Domestic netback','G18', fmt(c.nbDom,2)+' $/t','total'),
+    row('Rental $/t','export-only (art. 749) — not on domestic', '0'),
+    row('Duty $/t','export customs duty — not on domestic', '0'),
+    row('Dom MET',`ex-VAT ${fmt(c.priceTdom,2)} × ${(c.MET*100).toFixed(1)}% × ${fmt(c.domMetShare,2)} (art. 778)`, fmt(c.metDom,2)),
+    row('Domestic netback','ex-VAT − transport − Dom MET', fmt(c.nbDom,2)+' $/t','total'),
     row('RESULT','','','secIn'),
     row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
     row('BREAKEVEN (export = domestic)','','','secIn'),
@@ -2254,10 +2256,12 @@ function calcTableHtml(c, params) {
       <tr><td>Rental</td><td>rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Kebco × ${fmt(c.kbRent,1)}</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
       <tr><td>Export MET</td><td>Kebco × MET% × ${fmt(c.kbMet,1)}</td><td class="num">${fmt(c.metExp,2)} $/t</td></tr>
       <tr><td><b>Export netback</b></td><td>D18</td><td class="num"><b>${fmt(c.nbExp,2)} $/t</b></td></tr>
-      <tr><td>Local price ex-VAT</td><td>KZT / FX / VAT</td><td class="num">${fmt(c.priceTdom,2)} $/t</td></tr>
+      <tr><td>Local price ex-VAT</td><td>${fmtInt(c.LOC)} ÷ ${fmt(c.FX,2)} ÷ ${fmt(c.VAT,2)}</td><td class="num">${fmt(c.priceTdom,2)} $/t</td></tr>
       <tr><td>Domestic transport (${route})</td><td>Tr.cost path</td><td class="num">${fmt(c.trDom,2)} $/t</td></tr>
-      <tr><td>Domestic MET</td><td>ex-VAT local × MET% × ${fmt(c.domMetShare,2)} (no rental/duty)</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
-      <tr><td><b>Domestic netback</b></td><td>G18 / F18</td><td class="num"><b>${fmt(c.nbDom,2)} $/t</b></td></tr>
+      <tr><td>Domestic rental</td><td>export-only — not on domestic</td><td class="num">0</td></tr>
+      <tr><td>Domestic duty</td><td>export-only — not on domestic</td><td class="num">0</td></tr>
+      <tr><td>Domestic MET</td><td>ex-VAT × ${(c.MET*100).toFixed(1)}% × ${fmt(c.domMetShare,2)} (art. 778)</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
+      <tr><td><b>Domestic netback</b></td><td>ex-VAT − transport − Dom MET</td><td class="num"><b>${fmt(c.nbDom,2)} $/t</b></td></tr>
       <tr><td><b>Δ Export − Domestic</b></td><td>export NB − domestic NB</td><td class="num"><b>${(c.spread>=0?'+':'')+fmt(c.spread,2)} $/t</b></td></tr>
       <tr><td>Breakeven Skebco</td><td>Hold Discount fixed</td><td class="num">${fmt(c.skStar,2)} $/bbl</td></tr>
       <tr><td>Breakeven Discount</td><td>Hold Skebco fixed</td><td class="num">${fmt(c.discStar,2)} $/bbl</td></tr>
