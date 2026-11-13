@@ -667,9 +667,9 @@
           <div class="big" id="prodVerdictTxt">Products</div>
           <div class="sub" id="prodVerdictSub"></div>
         </div>
-        <div><span class="nb-label">Revenue (sell-all)</span><div class="nb-val" id="prodRev">—</div></div>
-        <div><span class="nb-label">Feed + opex</span><div class="nb-val" id="prodCost">—</div></div>
-        <div><span class="nb-label">Products NB</span><div class="nb-val" id="prodNb">—</div></div>
+        <div><span class="nb-label">Revenue (KZT/t)</span><div class="nb-val" id="prodRev">—</div></div>
+        <div><span class="nb-label">Feed + opex (KZT)</span><div class="nb-val" id="prodCost">—</div></div>
+        <div><span class="nb-label">Products NB (KZT/t)</span><div class="nb-val" id="prodNb">—</div></div>
         <div><span class="nb-label">Gasoline basket</span><div class="nb-val" id="prodGasBasket">—</div></div>
       </div>
     </div>
@@ -689,7 +689,7 @@
       <div class="row2" style="margin-top:8px">
         <div class="field"><label>Feedstock domestic (KZT/t VAT-incl)</label><input id="prodFeedKzt" type="number" step="500"/></div>
         <div class="field"><label>VAT factor</label><input id="prodVat" type="number" step="0.01" min="1" max="1.3"/></div>
-        <div class="field"><label>Feedstock ex-VAT $/t</label><input id="prodFeedUsd" type="text" readonly style="background:#f5f2ea"/></div>
+        <div class="field"><label>Feedstock ex-VAT</label><input id="prodFeedUsd" type="text" readonly style="background:#f5f2ea"/></div>
         <div class="field" style="display:flex;align-items:end"><button type="button" class="ghost" id="btnProdSyncAnalysis">Pull from Analysis</button></div>
       </div>
       <p class="lead" id="prodWeightNote" style="margin-top:8px;font-size:.82rem"></p>
@@ -700,7 +700,7 @@
         <h2 id="prodSlateTitle">Forecast slate — sell all</h2>
                 <div style="overflow:auto">
           <table class="calc"><thead><tr>
-            <th>Product</th><th>Yield %</th><th>Mode</th><th>Price</th><th>Eff. KZT/t</th><th id="prodContribHead">$/t contrib</th>
+            <th>Product</th><th>Yield %</th><th>Price KZT/t</th><th>Eff. KZT/t</th><th id="prodContribHead">KZT/t contrib</th>
           </tr></thead><tbody id="prodTableBody"></tbody></table>
         </div>
       </div>
@@ -745,9 +745,10 @@
     </div>
 
     <p class="prod-footnote" id="prodFootnote">
-      Sell-all month (no inventory). Product price trends = posted <b>KZT/t</b> from Jan 2026 (≤12 months); empty = no data.
-      Hover a tile to enlarge. Formula-costs toggle switches KPI/netback between $/t and $/bbl.
-      Forecast yields = recency-weighted average within the selected refinery. Feedstock defaults from Analysis domestic.
+      Sell-all in <b>KZT / t crude</b> first: Revenue = Σ(yield × product price KZT);
+      Feedstock = local VAT-incl ÷ VAT; Opex = processing + additives + admin + excise (+ duty×FX);
+      NB = rev − feed − opex; then $/t = NB ÷ FX (toggle → $/bbl).
+      Price trends = posted KZT/t from Jan 2026 (≤12 months). Hover a tile to enlarge.
     </p>
 
   </div>
@@ -1522,6 +1523,12 @@ function prodPerUnit(usdPerT){
   return prodUnitIsBbl() ? usdPerT / kb : usdPerT;
 }
 function fmtProdUnit(usdPerT, d=2){ return fmt(prodPerUnit(usdPerT), d) + ' ' + prodUnitLabel(); }
+/** Display a KZT/t-crude amount: keep KZT, or ÷ FX → $/t, or ÷ FX ÷ bbl/t → $/bbl */
+function fmtProdFromKzt(kztPerT, fx, d=2){
+  const f = Math.max(1e-9, num(fx));
+  if (prodState.unit === 'kzt') return fmtInt(kztPerT) + ' KZT/t';
+  return fmtProdUnit(kztPerT / f, d);
+}
 
 function refBlock(id){
   const r = (eotProj && eotProj.refineries) || {};
@@ -1556,13 +1563,13 @@ function ensureProdModel(force){
   if (force || !prodState.products) {
     if (prodState.mode === 'historic') {
       const m = histMonth(prodState.monthId);
-      prodState.products = cloneProds(m ? m.products : []);
+      prodState.products = cloneProds(m ? m.products : []).map(p => ({...p, priceMode:'kzt'}));
       if (m && !prodState.useAnalysisFx) {
         const pfx = profileFxForMonth(m.id);
         prodState.fx = pfx != null ? pfx : m.fx;
       }
     } else {
-      prodState.products = cloneProds(block.forecastProducts || []);
+      prodState.products = cloneProds(block.forecastProducts || []).map(p => ({...p, priceMode:'kzt'}));
     }
   }
 }
@@ -1597,8 +1604,8 @@ function calcProducts(){
   }
   const fx = Math.max(1e-9, fxSrc);
   const vat = safeRate(prodState.vat != null ? prodState.vat : c.VAT, c.VAT);
-  const feedKzt = num(prodState.feedKzt, c.LOC);
-  const feedUsd = feedKzt / fx / vat;
+  const feedKztVat = num(prodState.feedKzt, c.LOC); // VAT-incl posted local
+  const feedKzt = feedKztVat / Math.max(vat, 1e-9);  // ex-VAT KZT/t crude
   const esc = num(prodState.priceEscPct, 0);
   const rates = prodState.rates || {};
   let yGas = 0, yDt = 0, revKzt = 0, yieldSold = 0;
@@ -1607,10 +1614,11 @@ function calcProducts(){
     const y = Math.max(0, num(p.yield));
     if (isGasoline(p)) yGas += y;
     if (isDiesel(p)) yDt += y;
-    const priceKzt = effectivePriceKzt(p, fx, esc);
-    // Sell-all: any sellable yield with price is sold this month (no inventory)
+    // Force posted KZT unit price (sell-all in local currency first)
+    const pKzt = { ...p, priceMode: 'kzt' };
+    const priceKzt = effectivePriceKzt(pKzt, fx, esc);
     const sold = !!p.sellable && y > 0 && priceKzt > 0;
-    const contribKzt = sold ? y * priceKzt : 0;
+    const contribKzt = sold ? y * priceKzt : 0; // KZT per t crude
     if (sold) { revKzt += contribKzt; yieldSold += y; }
     rows.push({ name:p.name, yield:y, priceKzt, sellable:!!p.sellable, sold,
       contribKzt, contribUsd: contribKzt / fx, isGas: isGasoline(p) });
@@ -1620,16 +1628,24 @@ function calcProducts(){
   const excDtKzt = yDt * num(rates.exciseDieselRateKzt);
   const excKzt = excGasKzt + excDtKzt;
   const dutyUsd = num(rates.fuelOilDutyUsd);
-  const opexUsd = fixedKzt / fx + excKzt / fx + dutyUsd;
+  const dutyKzt = dutyUsd * fx;
+  const opexKzt = fixedKzt + excKzt + dutyKzt;
+  // Products NB in KZT/t crude first, then ÷ FX → $/t
+  const nbKzt = revKzt - feedKzt - opexKzt;
+  const feedUsd = feedKzt / fx;
+  const opexUsd = opexKzt / fx;
   const revUsd = revKzt / fx;
-  const nb = revUsd - feedUsd - opexUsd;
+  const nb = nbKzt / fx;
+  const domNbKzt = c.nbDom * fx;
   let gasRev=0, gasY=0;
   for (const row of rows) { if (row.isGas && row.sold) { gasRev += row.contribKzt; gasY += row.yield; } }
   const gasBasketKzt = gasY > 0 ? (gasRev / gasY) : 0;
-  const gasBasketUsd = gasBasketKzt / fx;
-  return { fx, vat, feedKzt, feedUsd, esc, yGas, yDt, fixedKzt, fixedUsd: fixedKzt/fx,
-    excGasKzt, excDtKzt, excKzt, excUsd: excKzt/fx, dutyUsd, opexUsd, revKzt, revUsd, yieldSold,
-    nb, rows, gasBasketKzt, gasBasketUsd, gasY, domNb: c.nbDom, deltaVsDom: nb - c.nbDom, rates, kb: c.KB };
+  return { fx, vat, feedKztVat, feedKzt, feedUsd, esc, yGas, yDt,
+    fixedKzt, fixedUsd: fixedKzt/fx, excGasKzt, excDtKzt, excKzt, excUsd: excKzt/fx,
+    dutyUsd, dutyKzt, opexKzt, opexUsd, revKzt, revUsd, yieldSold,
+    nbKzt, nb, rows, gasBasketKzt, gasY,
+    domNb: c.nbDom, domNbKzt, deltaVsDom: nb - c.nbDom, deltaVsDomKzt: nbKzt - domNbKzt,
+    rates, kb: c.KB };
 }
 function fillProdMonthSelect(){
   const sel = document.getElementById('prodMonthSelect');
@@ -1830,7 +1846,7 @@ function renderProdTrends(){
     if (!(fx > 1)) return null;
     const vat = num(pf && pf.params && pf.params.vat, 1.16);
     const feedKzt = num(pf && pf.params && pf.params.localKzt, 130000);
-    const feedUsd = feedKzt / fx / Math.max(vat, 1e-9);
+    const feedEx = feedKzt / Math.max(vat, 1e-9);
     let yGas=0, yDt=0, revKzt=0;
     for (const p of m.products) {
       const y = Math.max(0, num(p.yield));
@@ -1840,9 +1856,9 @@ function renderProdTrends(){
     }
     const fixedKzt = num(rates.processingKzt,26029)+num(rates.additive1Kzt,600)+num(rates.additive2Kzt,240)+num(rates.additivesKzt,0)+num(rates.adminKzt,300);
     const excKzt = yGas*num(rates.exciseGasRateKzt,38134) + yDt*num(rates.exciseDieselRateKzt,35726);
-    const opexUsd = fixedKzt/fx + excKzt/fx + num(rates.fuelOilDutyUsd,0);
-    const nb = revKzt/fx - feedUsd - opexUsd;
-    return toNb(nb);
+    const opexKzt = fixedKzt + excKzt + num(rates.fuelOilDutyUsd,0)*fx;
+    const nbKzt = revKzt - feedEx - opexKzt;
+    return toNb(nbKzt / fx);
   });
   if (window.Plotly && document.getElementById('prodNbChart')) {
     Plotly.newPlot('prodNbChart', [{
@@ -1865,7 +1881,7 @@ function renderProductsPage(){
     b.classList.toggle('active', b.dataset.prodUnit === (prodUnitIsBbl() ? 'bbl' : 't'));
   });
   const contribHead = document.getElementById('prodContribHead');
-  if (contribHead) contribHead.textContent = prodUnitLabel() + ' contrib';
+  if (contribHead) contribHead.textContent = 'KZT/t contrib';
   const r = calcProducts();
   const setVal = (id, v) => { const el = document.getElementById(id); if (!el || document.activeElement === el) return; el.value = v; };
   setVal('prodFx', num(prodState.fx, r.fx).toFixed(2));
@@ -1873,7 +1889,7 @@ function renderProductsPage(){
   setVal('prodVat', num(prodState.vat, r.vat).toFixed(2));
   setVal('prodEsc', num(prodState.priceEscPct, 0));
   const feedOut = document.getElementById('prodFeedUsd');
-  if (feedOut) feedOut.value = fmt(r.feedUsd, 2) + ' $/t';
+  if (feedOut) feedOut.value = fmtInt(r.feedKzt) + ' KZT · ' + fmt(r.feedUsd, 2) + ' $/t';
   const useFx = document.getElementById('prodUseAnalysisFx');
   if (useFx && document.activeElement !== useFx) useFx.checked = !!prodState.useAnalysisFx;
   const fxEl = document.getElementById('prodFx');
@@ -1889,29 +1905,25 @@ function renderProductsPage(){
 
   const body = document.getElementById('prodTableBody');
   const editing = document.activeElement && document.activeElement.matches &&
-    (document.activeElement.matches('input[data-prod-i]') || document.activeElement.matches('select[data-prod-i]'));
+    document.activeElement.matches('input[data-prod-i]');
   if (body && !editing) {
     body.innerHTML = (prodState.products || []).map((p, i) => {
       const row = r.rows[i] || {};
       const y = num(p.yield);
-      const mode = p.priceMode === 'usd' ? 'usd' : 'kzt';
-      const priceVal = mode === 'usd' ? num(p.priceUsd) : num(p.priceKzt);
+      const priceVal = num(p.priceKzt);
       const muted = (!p.sellable || y <= 0) ? 'style="opacity:.55"' : '';
       return `<tr ${muted}><td>${p.name}</td>
         <td><input data-prod-i="${i}" data-prod-f="yield" type="number" step="0.0001" min="0" max="1" value="${y}" style="width:5.2rem"/></td>
-        <td><select data-prod-i="${i}" data-prod-f="priceMode" style="width:4.5rem">
-          <option value="kzt" ${mode==='kzt'?'selected':''}>KZT</option>
-          <option value="usd" ${mode==='usd'?'selected':''}>$/t</option></select></td>
-        <td><input data-prod-i="${i}" data-prod-f="${mode==='usd'?'priceUsd':'priceKzt'}" type="number" step="${mode==='usd'?1:100}" min="0" value="${priceVal}" style="width:6.5rem"/></td>
+        <td><input data-prod-i="${i}" data-prod-f="priceKzt" type="number" step="100" min="0" value="${priceVal}" style="width:7rem"/></td>
         <td class="num" data-prod-eff="${i}">${fmt(row.priceKzt||0,0)}</td>
-        <td class="num" data-prod-contrib="${i}">${row.sold?fmt(prodPerUnit(row.contribUsd),2):'—'}</td></tr>`;
-    }).join('') + `<tr class="total"><td>Sellable (sold now)</td><td class="num">${(r.yieldSold*100).toFixed(2)}%</td><td colspan="2"></td><td></td><td class="num">${fmt(prodPerUnit(r.revUsd),2)}</td></tr>`;
+        <td class="num" data-prod-contrib="${i}">${row.sold?fmtInt(row.contribKzt):'—'}</td></tr>`;
+    }).join('') + `<tr class="total"><td>Sellable (sold now)</td><td class="num">${(r.yieldSold*100).toFixed(2)}%</td><td colspan="2"></td><td class="num">${fmtInt(r.revKzt)}</td></tr>`;
   } else if (body && editing) {
     r.rows.forEach((row, i) => {
       const e = body.querySelector(`[data-prod-eff="${i}"]`);
       const c = body.querySelector(`[data-prod-contrib="${i}"]`);
       if (e) e.textContent = fmt(row.priceKzt, 0);
-      if (c) c.textContent = row.sold ? fmt(prodPerUnit(row.contribUsd), 2) : '—';
+      if (c) c.textContent = row.sold ? fmtInt(row.contribKzt) : '—';
     });
   }
 
@@ -1921,14 +1933,15 @@ function renderProductsPage(){
     document.getElementById('prodVerdictTxt').textContent = (prodState.mode === 'forecast' ? 'FORECAST' : 'HISTORIC') + ' · ' + String(prodState.refinery).toUpperCase();
     document.getElementById('prodVerdictSub').textContent =
       (prodState.mode === 'historic' ? (histMonth(prodState.monthId)?.label || '') : 'Weighted yields · sell-all')
-      + ` · FX ${fmt(r.fx,2)}`;
-    document.getElementById('prodRev').textContent = fmtProdUnit(r.revUsd, 2);
-    document.getElementById('prodCost').textContent = fmtProdUnit(r.feedUsd+r.opexUsd, 2);
-    document.getElementById('prodNb').textContent = fmtProdUnit(r.nb, 2);
+      + ` · ${fmtInt(r.nbKzt)} KZT/t · FX ${fmt(r.fx,2)}`;
+    document.getElementById('prodRev').textContent = fmtInt(r.revKzt) + ' KZT';
+    document.getElementById('prodCost').textContent = fmtInt(r.feedKzt + r.opexKzt) + ' KZT';
+    document.getElementById('prodNb').textContent = fmtInt(r.nbKzt) + ' KZT/t';
     const gasEl = document.getElementById('prodGasBasket');
     if (gasEl) gasEl.textContent = fmtInt(r.gasBasketKzt||0) + ' KZT/t';
   }
   const k=(id,t)=>{const el=document.getElementById(id); if(el) el.textContent=t;};
+  // KPIs: derived from KZT ÷ FX (toggle $/t or $/bbl)
   k('prodKpiRev', fmtProdUnit(r.revUsd, 2));
   k('prodKpiFeed', fmtProdUnit(r.feedUsd, 2));
   k('prodKpiFixed', fmtProdUnit(r.fixedUsd, 2));
@@ -1939,25 +1952,27 @@ function renderProductsPage(){
   const calcHost = document.getElementById('prodCalcBody');
   if (calcHost) {
     calcHost.innerHTML = `<table class="calc"><tbody>
-      <tr class="secIn"><td colspan="3">Sell-all month economics (no product balance)</td></tr>
-      <tr><td>Revenue</td><td>Σ yield × price ÷ FX (produced = sold)</td><td class="num">${fmt(r.revUsd,2)} $/t</td></tr>
-      <tr><td>Feedstock</td><td>${fmtInt(r.feedKzt)} ÷ ${fmt(r.fx,2)} ÷ ${fmt(r.vat,2)}</td><td class="num">${fmt(r.feedUsd,2)} $/t</td></tr>
-      <tr><td>Fixed opex</td><td>processing + additives + admin</td><td class="num">${fmt(r.fixedUsd,2)} $/t</td></tr>
-      <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)} ÷ FX</td><td class="num">${fmt(r.excGasKzt/r.fx,2)} $/t</td></tr>
-      <tr><td>Excise diesel</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)} ÷ FX</td><td class="num">${fmt(r.excDtKzt/r.fx,2)} $/t</td></tr>
-      <tr class="total"><td>Products NB</td><td>rev − feed − opex</td><td class="num">${fmt(r.nb,2)} $/t</td></tr>
-      <tr class="secDom"><td colspan="3">vs selling crude domestically</td></tr>
-      <tr><td>Domestic crude NB</td><td>Analysis</td><td class="num">${fmt(r.domNb,2)} $/t</td></tr>
-      <tr class="total"><td>Δ Products − Domestic</td><td></td><td class="num">${(r.deltaVsDom>=0?'+':'')+fmt(r.deltaVsDom,2)} $/t</td></tr>
+      <tr class="secIn"><td colspan="3">Sell-all in local KZT / t crude (then ÷ FX → $)</td></tr>
+      <tr><td>Revenue</td><td>Σ (yield × price KZT/t product)</td><td class="num">${fmtInt(r.revKzt)} KZT</td></tr>
+      <tr><td>Feedstock ex-VAT</td><td>${fmtInt(r.feedKztVat)} ÷ VAT ${fmt(r.vat,2)}</td><td class="num">${fmtInt(r.feedKzt)} KZT</td></tr>
+      <tr><td>Fixed opex</td><td>processing + additives + admin</td><td class="num">${fmtInt(r.fixedKzt)} KZT</td></tr>
+      <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)}</td><td class="num">${fmtInt(r.excGasKzt)} KZT</td></tr>
+      <tr><td>Excise diesel</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)}</td><td class="num">${fmtInt(r.excDtKzt)} KZT</td></tr>
+      <tr><td>Fuel-oil duty</td><td>${fmt(r.dutyUsd,2)} $/t × FX ${fmt(r.fx,2)}</td><td class="num">${fmtInt(r.dutyKzt)} KZT</td></tr>
+      <tr class="total"><td>Products NB</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT/t</td></tr>
+      <tr><td>Products NB $</td><td>${fmtInt(r.nbKzt)} ÷ FX ${fmt(r.fx,2)}</td><td class="num">${fmt(r.nb,2)} $/t</td></tr>
+      <tr class="secDom"><td colspan="3">vs selling crude domestically (Analysis)</td></tr>
+      <tr><td>Domestic crude NB</td><td>Analysis × FX</td><td class="num">${fmtInt(r.domNbKzt)} KZT · ${fmt(r.domNb,2)} $/t</td></tr>
+      <tr class="total"><td>Δ Products − Domestic</td><td></td><td class="num">${(r.deltaVsDomKzt>=0?'+':'')+fmtInt(r.deltaVsDomKzt)} KZT · ${(r.deltaVsDom>=0?'+':'')+fmt(r.deltaVsDom,2)} $/t</td></tr>
     </tbody></table>`;
   }
   if (window.Plotly && document.getElementById('prodChart')) {
-    const sold = r.rows.filter(x => x.sold).sort((a,b)=>b.contribUsd-a.contribUsd);
+    const sold = r.rows.filter(x => x.sold).sort((a,b)=>b.contribKzt-a.contribKzt);
     Plotly.newPlot('prodChart', [{
-      type:'bar', x:sold.map(x=>x.name), y:sold.map(x=>x.contribUsd),
-      marker:{color:'#0f766e'}, text:sold.map(x=>fmt(x.contribUsd,1)), textposition:'auto'
-    }], { margin:{t:28,r:10,b:80,l:50}, yaxis:{title:'$/t crude'},
-      title:{text:'Sell-all revenue by product', font:{size:13}},
+      type:'bar', x:sold.map(x=>x.name), y:sold.map(x=>x.contribKzt),
+      marker:{color:'#0f766e'}, text:sold.map(x=>fmtInt(x.contribKzt)), textposition:'auto'
+    }], { margin:{t:28,r:10,b:80,l:55}, yaxis:{title:'KZT / t crude'},
+      title:{text:'Sell-all revenue by product (KZT)', font:{size:13}},
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
   }
