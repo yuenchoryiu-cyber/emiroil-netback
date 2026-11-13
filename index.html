@@ -348,7 +348,7 @@
   @media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}}
   .preview-box{background:#eef6f4; border:1px solid #99f6e4; border-radius:12px; padding:12px; margin-top:10px}
   .preview-box .kpi-grid{margin:0}
-  #singleChart{min-height:320px; width:100%; margin-top:10px}
+  #singleChart{min-height:580px; width:100%; margin-top:16px; padding-top:8px}
   .report-section{margin-top:16px}
   .report-section h2{font-size:.95rem; margin:0 0 6px; color:var(--accent)}
   @media print{
@@ -4100,9 +4100,9 @@ function buildSingleReport(id) {
     Plotly.newPlot('singleChart', [
       {
         type:'indicator', mode:'gauge+number+delta', value:c.spread,
-        domain:{x:[0,0.48], y:[0.52,1]},
+        domain:{x:[0,0.48], y:[0.48,0.92]},
         number:{suffix:' $/t', valueformat:'.1f'},
-        title:{text:'Δ Export − Domestic'},
+        title:{text:'Δ Export − Domestic', font:{size:14}},
         delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
         gauge:{
           axis:{range:[-150,150]},
@@ -4113,9 +4113,9 @@ function buildSingleReport(id) {
       },
       {
         type:'indicator', mode:'gauge+number+delta', value:oilSpread,
-        domain:{x:[0.52,1], y:[0.52,1]},
+        domain:{x:[0.52,1], y:[0.48,0.92]},
         number:{suffix:' $/t', valueformat:'.1f'},
-        title:{text: oil.ok ? `Δ Export − (${pct}%+Dom)` : 'Oil products n/a'},
+        title:{text: oil.ok ? `Δ Export − (${pct}%+Dom)` : 'Oil products n/a', font:{size:14}},
         delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
         gauge:{
           axis:{range:[-150,150]},
@@ -4130,9 +4130,9 @@ function buildSingleReport(id) {
         xaxis:'x2', yaxis:'y2'
       }
     ], {
-      margin:{t:40,r:20,b:40,l:150}, height:520,
+      margin:{t:72,r:24,b:48,l:150}, height:580,
       xaxis:{domain:[0,1]},
-      xaxis2:{domain:[0,1], title:'$/t', anchor:'y2'}, yaxis2:{domain:[0,0.45]},
+      xaxis2:{domain:[0,1], title:'$/t', anchor:'y2'}, yaxis2:{domain:[0,0.40]},
       paper_bgcolor:'rgba(0,0,0,0)', showlegend:false
     }, {responsive:true, displayModeBar:false});
   }, 40);
