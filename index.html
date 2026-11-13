@@ -471,7 +471,16 @@
         </table>
       </aside>
       <section class="panel">
-        <h2>Live scenario</h2>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
+          <h2 style="margin:0">Live scenario</h2>
+          <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;cursor:pointer;margin:0">
+            <input id="includeOilProducts" type="checkbox"/>
+            Include oil product income (<span id="oilShareLbl">60</span>% refine + Dom)
+          </label>
+        </div>
+        <p class="lead" id="oilProductsNote" style="display:none;margin:0 0 8px;font-size:.8rem">
+          Gauge &amp; bars compare Export to <b>Domestic crude + our share of Products sell-all NB</b> (same decision case as Products). Crude-only domestic stays in the formula table.
+        </p>
         <div id="chart"></div>
       </section>
     </div>
@@ -1073,6 +1082,7 @@ let state = {
   ...BASE,
   domesticRoute: 'pkop',
   resultUnit: 't', // 't' = $/tonne, 'bbl' = $/barrel (÷ export bbl/t)
+  includeOilProducts: false,
   transportPct: {},
   bulkExp: 0,
   bulkDom: 0
@@ -1112,7 +1122,8 @@ function hydrate() {
         bulkExp: num(raw.bulkExp, 0),
         bulkDom: num(raw.bulkDom, 0),
         domesticRoute: (raw.domesticRoute === 'pavlodar') ? 'pavlodar' : 'pkop',
-        resultUnit: (raw.resultUnit === 'bbl') ? 'bbl' : 't'
+        resultUnit: (raw.resultUnit === 'bbl') ? 'bbl' : 't',
+        includeOilProducts: !!raw.includeOilProducts
       };
     }
   } catch {}
@@ -1190,6 +1201,39 @@ function row(name, formula, value, cls='') {
   return `<tr class="${cls}"><td class="name">${name}</td><td class="formula">${formula}</td><td class="value">${value}</td></tr>`;
 }
 
+/** Live Analysis: Products forecast NB for current domestic route (does not mutate Products UI). */
+function oilProductIncomeForAnalysis(){
+  if (typeof calcProducts !== 'function' || typeof prodState === 'undefined') return null;
+  const snap = {
+    mode: prodState.mode,
+    refinery: prodState.refinery,
+    products: prodState.products,
+    rates: prodState.rates,
+    useAnalysisFeed: prodState.useAnalysisFeed,
+    monthId: prodState.monthId,
+    refineShare: prodState.refineShare
+  };
+  try {
+    prodState.mode = 'forecast';
+    prodState.refinery = state.domesticRoute === 'pavlodar' ? 'pnhz' : 'pkop';
+    prodState.useAnalysisFeed = true;
+    prodState.products = null;
+    prodState.rates = null;
+    ensureProdModel(true);
+    return calcProducts();
+  } catch (e) {
+    return null;
+  } finally {
+    prodState.mode = snap.mode;
+    prodState.refinery = snap.refinery;
+    prodState.products = snap.products;
+    prodState.rates = snap.rates;
+    prodState.useAnalysisFeed = snap.useAnalysisFeed;
+    prodState.monthId = snap.monthId;
+    prodState.refineShare = snap.refineShare;
+  }
+}
+
 function renderNetback() {
   // sync controls from state (without fighting active drag: only when not the event source — callers set state first)
   const els = ['brent','fx','sk','disc','ru','localKzt','kb','metRate','vat'];
@@ -1218,6 +1262,20 @@ function renderNetback() {
   const c = calcNetback();
   syncUnitToggle();
   const u = unitLabel();
+  const oilOn = !!state.includeOilProducts;
+  const oil = oilOn ? oilProductIncomeForAnalysis() : null;
+  const pct = oil ? Math.round(num(oil.share, 0.6) * 100) : Math.round(num(typeof prodState !== 'undefined' ? prodState.refineShare : 0.6, 0.6) * 100);
+  const nbDomView = (oilOn && oil) ? oil.sharePlusDom : c.nbDom;
+  const spreadView = c.nbExp - nbDomView;
+  const oilShareNb = (oilOn && oil) ? oil.shareNb : 0;
+  const oilRefineNb = (oilOn && oil) ? oil.nb : 0;
+  const oilChk = document.getElementById('includeOilProducts');
+  if (oilChk && document.activeElement !== oilChk) oilChk.checked = oilOn;
+  const oilLbl = document.getElementById('oilShareLbl');
+  if (oilLbl) oilLbl.textContent = String(pct);
+  const oilNote = document.getElementById('oilProductsNote');
+  if (oilNote) oilNote.style.display = oilOn ? '' : 'none';
+
   const taxAtBase =
     Math.abs(c.kbRent-7.5)<1e-9 && Math.abs(c.kbMet-7.5)<1e-9 && Math.abs(c.domMetShare-0.5)<1e-9;
   const atBase = !c.trAdj && taxAtBase &&
@@ -1227,16 +1285,24 @@ function renderNetback() {
   const baselinePass = atBase && Math.abs(c.nbExp-288.2938839248377)<1e-6 && Math.abs(c.nbDom-211.16610217392645)<1e-6;
 
   const box = document.getElementById('verdict');
-  box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
-  document.getElementById('verdictTxt').textContent = Math.abs(c.spread)<0.5?'BREAKEVEN':c.spread>0?'EXPORT wins':'DOMESTIC wins';
+  box.className = 'verdict ' + (Math.abs(spreadView)<0.5?'tie':spreadView>0?'export':'domestic');
+  const winName = oilOn ? (spreadView>0?'EXPORT':'DOM+PRODUCTS') : (spreadView>0?'EXPORT':'DOMESTIC');
+  document.getElementById('verdictTxt').textContent = Math.abs(spreadView)<0.5?'BREAKEVEN':(winName+' wins');
   document.getElementById('verdictSub').textContent =
     (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
     (c.trAdj?'Transport % ON · ':'') +
+    (oilOn ? `Oil products ON · ${pct}% refine + Dom · ` : '') +
     `Unit ${u} · Domestic ${domesticLabel()} · RUB×${fmt(c.RU,2)} · BE Sk ${fmt(c.skStar,2)} · BE Disc ${fmt(c.discStar,2)} · BE Sk+Disc ${fmt(c.skDiscStar,2)}` +
     (resultUnitIsBbl() ? ` · ÷ ${fmt(c.KB,4)} bbl/t` : '');
   document.getElementById('verdictExpNb').textContent = fmtUnit(c.nbExp, c.KB, 2);
-  document.getElementById('verdictDomNb').textContent = fmtUnit(c.nbDom, c.KB, 2);
-  document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmtUnit(c.spread, c.KB, 2);
+  const verdictDomLabel = document.querySelector('#verdictExpNb')?.parentElement?.nextElementSibling?.querySelector('.nb-label');
+  if (verdictDomLabel) verdictDomLabel.textContent = oilOn ? (`Dom + ${pct}% products`) : 'Domestic netback';
+  const verdictSpreadLabel = document.querySelector('#verdictSpread')?.previousElementSibling;
+  if (verdictSpreadLabel && verdictSpreadLabel.classList.contains('nb-label')) {
+    verdictSpreadLabel.textContent = oilOn ? `Δ Export − (Dom+${pct}% prod)` : 'Δ Export − Domestic';
+  }
+  document.getElementById('verdictDomNb').textContent = fmtUnit(nbDomView, c.KB, 2);
+  document.getElementById('verdictSpread').textContent = (spreadView>=0?'+':'')+fmtUnit(spreadView, c.KB, 2);
   const vFx = document.getElementById('verdictFx');
   const vRu = document.getElementById('verdictRu');
   if (vFx) vFx.textContent = fmt(c.FX,2);
@@ -1244,6 +1310,13 @@ function renderNetback() {
 
   const pu = (v, d=2) => fmtUnit(v, c.KB, d);
   const puBare = (v, d=2) => fmt(perUnit(v, c.KB), d);
+  const oilRows = (oilOn && oil) ? [
+    row('OIL PRODUCTS (live)','','','secIn'),
+    row('Refinery NB (100%)','Products sell-all · forecast slate', pu(oilRefineNb)),
+    row(`Our share (${pct}%)`,`${pct}% × refinery NB`, pu(oilShareNb)),
+    row(`Dom + ${pct}% products`,`Domestic crude + share`, pu(nbDomView),'total'),
+    row(`Δ Export − (Dom+${pct}% prod)`,'decision vs export', (spreadView>=0?'+':'')+pu(spreadView),'total'),
+  ] : [];
   document.getElementById('calcBody').innerHTML = [
     row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
     row('DISPLAY UNIT', resultUnitIsBbl() ? `$/t ÷ export bbl/t ${fmt(c.KB,4)}` : 'Native tonne basis', u),
@@ -1271,25 +1344,40 @@ function renderNetback() {
     row('Rental','export-only (art. 749) — not on domestic', '0'),
     row('Duty','export customs duty — not on domestic', '0'),
     row('Dom MET',`ex-VAT ${fmt(c.priceTdom,2)} $/t × ${(c.MET*100).toFixed(1)}% × ${fmt(c.domMetShare,2)} (art. 778)`, pu(c.metDom)),
-    row('Domestic netback','ex-VAT − transport − Dom MET', pu(c.nbDom),'total'),
+    row('Domestic netback (crude)','ex-VAT − transport − Dom MET', pu(c.nbDom),'total'),
+    ...oilRows,
     row('RESULT','','','secIn'),
-    row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+pu(c.spread),'total'),
+    row(oilOn ? `Δ Export − (Dom+${pct}% prod)` : 'Δ Netback (Export−Domestic)',
+      oilOn ? 'export NB − (domestic + share×products)' : 'export NB − domestic NB',
+      (spreadView>=0?'+':'')+pu(spreadView),'total'),
     row('BREAKEVEN (export = domestic)','','','secIn'),
     row('Breakeven Skebco',`Hold Discount ${fmt(c.DISC,2)} · S* = Brent − Disc − needed $/bbl`, fmt(c.skStar,2)+' $/bbl'),
     row('Breakeven Discount',`Hold Skebco ${fmt(c.S,3)} · D* = Brent − Skebco − needed $/bbl`, fmt(c.discStar,2)+' $/bbl'),
     row('Breakeven Skebco + Discount',`(S+D)* = Brent − needed $/bbl · now S+D=${fmt(c.S+c.DISC,2)}`, fmt(c.skDiscStar,2)+' $/bbl'),
   ].join('');
 
-  const spreadU = perUnit(c.spread, c.KB);
+  const spreadU = perUnit(spreadView, c.KB);
   const nbExpU = perUnit(c.nbExp, c.KB);
-  const nbDomU = perUnit(c.nbDom, c.KB);
+  const nbDomU = perUnit(nbDomView, c.KB);
+  const nbDomCrudeU = perUnit(c.nbDom, c.KB);
   const gaugeMax = resultUnitIsBbl() ? 25 : 150;
+  const barY = oilOn
+    ? ['Export netback', `Dom+${pct}% products`, 'Domestic crude only']
+    : ['Export netback', 'Domestic netback'];
+  const barX = oilOn ? [nbExpU, nbDomU, nbDomCrudeU] : [nbExpU, nbDomU];
+  const barColors = oilOn ? ['#0f766e', '#7c3aed', '#b45309'] : ['#0f766e', '#b45309'];
+  const barText = oilOn
+    ? [puBare(c.nbExp,2)+' '+u, puBare(nbDomView,2)+' '+u, puBare(c.nbDom,2)+' '+u]
+    : [puBare(c.nbExp,2)+' '+u, puBare(c.nbDom,2)+' '+u];
+  const gaugeTitle = oilOn
+    ? `Export − (Dom + ${pct}% products)<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · products ON · ${u}</span>`
+    : `Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · ${u}</span>`;
   Plotly.newPlot('chart', [
     {
       type:'indicator', mode:'gauge+number+delta', value:spreadU,
       domain:{x:[0,1], y:[0.52,1]},
       number:{suffix:' '+u, valueformat:'.2f'},
-      title:{text:`Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · ${u}</span>`},
+      title:{text:gaugeTitle},
       delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
       gauge:{
         axis:{range:[-gaugeMax,gaugeMax]},
@@ -1303,8 +1391,8 @@ function renderNetback() {
         threshold:{line:{color:'#1e3a5f',width:3}, value:0}
       }
     },
-    { type:'bar', orientation:'h', x:[nbExpU,nbDomU], y:['Export netback','Domestic netback'],
-      marker:{color:['#0f766e','#b45309']}, text:[puBare(c.nbExp,2)+' '+u, puBare(c.nbDom,2)+' '+u], textposition:'auto' },
+    { type:'bar', orientation:'h', x:barX, y:barY,
+      marker:{color:barColors}, text:barText, textposition:'auto' },
     { type:'bar', orientation:'h',
       x:[perUnit(c.rental,c.KB),perUnit(c.metExp,c.KB),perUnit(c.duty,c.KB),perUnit(c.trExp,c.KB)],
       y:['Rental','MET','Duty','Export transport'],
@@ -1312,7 +1400,7 @@ function renderNetback() {
       text:[puBare(c.rental,2),puBare(c.metExp,2),puBare(c.duty, resultUnitIsBbl()?2:0),puBare(c.trExp,2)],
       textposition:'auto', xaxis:'x2', yaxis:'y2' }
   ], {
-    margin:{t:70,r:30,b:40,l:130},
+    margin:{t:70,r:30,b:40,l:150},
     xaxis:{title:u, domain:[0,0.46], anchor:'y'}, yaxis:{domain:[0,0.42]},
     xaxis2:{title:u, domain:[0.54,1], anchor:'y2'}, yaxis2:{domain:[0,0.42]},
     paper_bgcolor:'rgba(0,0,0,0)', showlegend:false
@@ -2238,6 +2326,7 @@ function wireProductsPage(){
   document.getElementById('prodRefineShare').addEventListener('input', e => {
     prodState.refineShare = Math.max(0, Math.min(100, num(e.target.value, 60))) / 100;
     renderProductsPage();
+    if (state.includeOilProducts) renderNetback();
   });
   document.getElementById('prodUseAnalysisFeed').addEventListener('change', e => {
     prodState.useAnalysisFeed = !!e.target.checked;
@@ -2931,6 +3020,11 @@ function bind(id, key, transform=(x)=>num(x)) {
 }
 bind('brent','brent'); bind('fx','fx'); bind('sk','sk'); bind('disc','disc');
 bind('ru','ru'); bind('localKzt','localKzt'); bind('kb','kb'); bind('metRate','metRate'); bind('vat','vat');
+document.getElementById('includeOilProducts').addEventListener('change', (e) => {
+  state.includeOilProducts = !!e.target.checked;
+  persist();
+  renderNetback();
+});
 
 document.getElementById('trFx').addEventListener('input', (e) => {
   state.fx = num(e.target.value); persist(); refreshTransportUI(); renderNetback();
