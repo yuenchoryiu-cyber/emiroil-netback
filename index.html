@@ -375,14 +375,14 @@
 <div id="app" class="wrap">
   <header class="app-brand">
     <h1 class="brand">Emir Oil Netback</h1>
-    <p class="brand-sub">Analysis, transport, taxes, oil products, month profiles, and reports</p>
+    <p class="brand-sub">Analysis, transport, taxes, EOT Netback, month profiles, and reports</p>
   </header>
   <nav class="subnav" aria-label="Netback tools">
     <span class="subnav-label">Tools</span>
     <button type="button" class="active" data-page="netback">Analysis</button>
     <button type="button" data-page="transport">Transport &amp; map</button>
     <button type="button" data-page="taxes">Taxes / fiscal</button>
-    <button type="button" data-page="products">Oil Products</button>
+    <button type="button" data-page="products">EOT Netback</button>
     <button type="button" data-page="profiles">Month profiles</button>
     <button type="button" data-page="reports">Reports</button>
   </nav>
@@ -498,14 +498,14 @@
       <section class="panel">
         <div class="live-head">
           <h2>Live scenario</h2>
-          <div class="route-toggle onoff-toggle" id="oilIncomeToggle" role="group" aria-label="Oil product income">
-            <span class="unit-lbl">Oil product income</span>
+          <div class="route-toggle onoff-toggle" id="oilIncomeToggle" role="group" aria-label="EOT income">
+            <span class="unit-lbl">EOT income</span>
             <button type="button" data-oil="off" class="active">Off</button>
             <button type="button" data-oil="on">On · <span id="oilShareLbl">60</span>%</button>
           </div>
         </div>
         <p class="lead" id="oilProductsNote" style="display:none;margin:0 0 8px;font-size:.78rem">
-          Comparing Export to Domestic + share of Oil Products NB. Crude-only domestic remains in the formula table.
+          Comparing Export to <b>Domestic + EOT</b>. Crude-only domestic remains in the formula table.
         </p>
         <div id="chart"></div>
       </section>
@@ -693,9 +693,9 @@
 
 
 
-  <!-- OIL PRODUCTS PAGE -->
+  <!-- EOT NETBACK PAGE -->
   <div id="page-products" class="page">
-    <h1>Oil Products</h1>
+    <h1>EOT Netback</h1>
 
     <div class="route-toggle" id="prodModeToggle" role="group" aria-label="Mode" style="margin-bottom:8px">
       <button type="button" data-prod-mode="forecast" class="active">Forecast</button>
@@ -709,14 +709,14 @@
     <div class="sticky-top">
       <div id="prodVerdict" class="verdict export" style="grid-template-columns:1.4fr repeat(5,1fr)">
         <div>
-          <div class="big" id="prodVerdictTxt">Oil Products</div>
+          <div class="big" id="prodVerdictTxt">EOT Netback</div>
           <div class="sub" id="prodVerdictSub"></div>
         </div>
         <div><span class="nb-label">Export NB</span><div class="nb-val" id="prodExpNb">—</div></div>
         <div><span class="nb-label">Domestic NB</span><div class="nb-val" id="prodDomNb">—</div></div>
-        <div><span class="nb-label">Refinery NB (100%)</span><div class="nb-val" id="prodNb">—</div></div>
-        <div><span class="nb-label" id="prodShareComboLbl">60% refine + Dom</span><div class="nb-val" id="prodShareCombo">—</div></div>
-        <div><span class="nb-label">Best vs Export</span><div class="nb-val" id="prodVsExp">—</div></div>
+        <div><span class="nb-label">EOT NB (100%)</span><div class="nb-val" id="prodNb">—</div></div>
+        <div><span class="nb-label" id="prodShareComboLbl">Domestic + EOT</span><div class="nb-val" id="prodShareCombo">—</div></div>
+        <div><span class="nb-label">Δ Export − (Domestic + EOT)</span><div class="nb-val" id="prodVsExp">—</div></div>
       </div>
     </div>
 
@@ -774,7 +774,7 @@
           <div class="field"><label>Fuel-oil duty KZT/t crude</label><input id="prodMazDuty" type="number" step="100"/></div>
         </div>
         <div class="field" style="margin-top:8px;max-width:12rem">
-          <label>Our refinery share %</label>
+          <label>Our EOT share %</label>
           <input id="prodRefineShare" type="number" step="1" min="0" max="100" value="60"/>
         </div>
         <div class="kpi-grid" style="margin-top:12px">
@@ -782,9 +782,9 @@
           <div class="k"><span>Feedstock</span><b id="prodKpiFeed">—</b></div>
           <div class="k"><span>Fixed opex</span><b id="prodKpiFixed">—</b></div>
           <div class="k"><span>Excise</span><b id="prodKpiExc">—</b></div>
-          <div class="k"><span>Refinery NB</span><b id="prodKpiNb">—</b></div>
-          <div class="k"><span>Δ Export − refine</span><b id="prodKpiDelta">—</b></div>
-          <div class="k"><span>Δ Export − (share+dom)</span><b id="prodKpiDeltaShare">—</b></div>
+          <div class="k"><span>EOT NB</span><b id="prodKpiNb">—</b></div>
+          <div class="k"><span>Δ Export − EOT</span><b id="prodKpiDelta">—</b></div>
+          <div class="k"><span>Δ Export − (Domestic + EOT)</span><b id="prodKpiDeltaShare">—</b></div>
         </div>
         <div id="prodCalcBody" style="margin-top:12px"></div>
         <div id="prodChart" style="height:280px;margin-top:10px"></div>
@@ -795,12 +795,12 @@
       <h2 style="margin:0 0 8px">Historic trends</h2>
       <h3 style="font-size:.85rem;margin:6px 0 4px" id="prodPriceHead">Products · KZT/t</h3>
       <div class="prod-tile-grid" id="prodPriceGrid"></div>
-      <h3 style="font-size:.85rem;margin:14px 0 4px">Products netback</h3>
+      <h3 style="font-size:.85rem;margin:14px 0 4px">EOT netback</h3>
       <div id="prodNbChart" style="height:280px"></div>
     </div>
 
     <div class="section report-section" id="prodCompareReport">
-      <h2>Decision report — Export vs Domestic + share of refinery</h2>
+      <h2>Decision report — Export vs Domestic + EOT</h2>
       <div id="prodCompareReportBody"></div>
     </div>
 
@@ -808,7 +808,7 @@
       Historic = merged PKOP+PNHZ from <b>Jan 2026</b> (tile badge / marker colour = price source).
       Forecast = choose refinery for weighted yields.
       Sell-all economics are <b>ex-VAT</b> on both sides (Excel product prices are VAT-incl → ÷ VAT; feedstock VAT-incl → ÷ VAT), then ÷ FX → $/t.
-      Decision vs <b>Export</b>: full refinery NB, and <b>our share × refine + Domestic</b> (default 60%) — not vs selling crude alone.
+      Decision vs <b>Export</b>: full EOT NB, and <b>Domestic + EOT</b> (our share of EOT, default 60%) — not vs selling crude alone.
       Fuel-oil duty is entered in <b>KZT/t crude</b>. Hover a tile to enlarge.
     </p>
 
@@ -960,7 +960,7 @@
   <!-- REPORTS PAGE -->
   <div id="page-reports" class="page">
     <h1>Monthly reports</h1>
-    <p class="lead">1-month and multi-month reports include Export vs Domestic and <b>Oil Products</b> (refinery NB + share% + Dom vs Export), recalculated live for each month — not snapshots.</p>
+    <p class="lead">1-month and multi-month reports include Export vs Domestic and <b>EOT Netback</b> (EOT NB + Domestic + EOT vs Export), recalculated live for each month — not snapshots.</p>
     <div class="report-toolbar no-print controls">
       <div class="field">
         <label>Report type</label>
@@ -986,7 +986,7 @@
         </select>
       </div>
       <div class="field" style="min-width:7rem">
-        <label>Oil products share %</label>
+        <label>EOT share %</label>
         <input id="reportRefineShare" type="number" min="0" max="100" step="1" value="60"/>
       </div>
       <button type="button" class="ok" id="btnBuildReport">Build report</button>
@@ -1236,7 +1236,7 @@ function row(name, formula, value, cls='') {
   return `<tr class="${cls}"><td class="name">${name}</td><td class="formula">${formula}</td><td class="value">${value}</td></tr>`;
 }
 
-/** Shared compare month: Oil Products historic selection, else active Analysis profile month. */
+/** Shared compare month: EOT Netback historic selection, else active Analysis profile month. */
 function getCompareMonthId(){
   if (typeof prodState !== 'undefined' && prodState.mode === 'historic' && prodState.monthId)
     return prodState.monthId;
@@ -1296,7 +1296,7 @@ function liveBenchForMonth(monthId){
 }
 /**
  * Oil-product income for the shared compare month (historic slate if available, else forecast).
- * Does not permanently mutate Oil Products UI state.
+ * Does not permanently mutate EOT Netback UI state.
  */
 function oilProductIncomeForAnalysis(){
   if (typeof calcProducts !== 'function' || typeof prodState === 'undefined') return null;
@@ -1364,7 +1364,7 @@ function renderNetback() {
   const oilOn = !!state.includeOilProducts;
   const compareMid = getCompareMonthId();
   const oil = oilOn ? oilProductIncomeForAnalysis() : null;
-  // When oil income ON, Export/Dom/share must match Oil Products + decision report for compare month
+  // When EOT income ON, Export/Dom/share must match EOT Netback + decision report for compare month
   const nbExpView = (oilOn && oil) ? oil.expNb : c.nbExp;
   const nbDomView = (oilOn && oil) ? oil.sharePlusDom : c.nbDom;
   const spreadView = nbExpView - nbDomView;
@@ -1381,7 +1381,7 @@ function renderNetback() {
   if (oilNote) {
     oilNote.style.display = oilOn ? '' : 'none';
     if (oilOn) {
-      oilNote.innerHTML = `Same month as Oil Products / decision report: <b>${compareMonthLabel(compareMid)}</b> · Export &amp; Dom recalculated live (not snapshot) · ${pct}% refine + Dom.`;
+      oilNote.innerHTML = `Same month as EOT Netback / decision report: <b>${compareMonthLabel(compareMid)}</b> · Export &amp; Dom recalculated live (not snapshot) · ${labelDomesticEot(pct)}.`;
     }
   }
 
@@ -1395,20 +1395,20 @@ function renderNetback() {
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(spreadView)<0.5?'tie':spreadView>0?'export':'domestic');
-  const winName = oilOn ? (spreadView>0?'EXPORT':'DOM+PRODUCTS') : (spreadView>0?'EXPORT':'DOMESTIC');
+  const winName = oilOn ? (spreadView>0?'EXPORT':'DOMESTIC + EOT') : (spreadView>0?'EXPORT':'DOMESTIC');
   document.getElementById('verdictTxt').textContent = Math.abs(spreadView)<0.5?'BREAKEVEN':(winName+' wins');
   document.getElementById('verdictSub').textContent =
     (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
     (c.trAdj?'Transport % ON · ':'') +
-    (oilOn ? `Oil products ON · ${compareMonthLabel(compareMid)} · ${pct}% refine + Dom · ` : '') +
+    (oilOn ? `EOT ON · ${compareMonthLabel(compareMid)} · ${labelDomesticEot(pct)} · ` : '') +
     `Unit ${u} · Domestic ${domesticLabel()} · RUB×${fmt(c.RU,2)} · BE Sk ${fmt(c.skStar,2)} · BE Disc ${fmt(c.discStar,2)} · BE Sk+Disc ${fmt(c.skDiscStar,2)}` +
     (resultUnitIsBbl() ? ` · ÷ ${fmt(c.KB,4)} bbl/t` : '');
   document.getElementById('verdictExpNb').textContent = fmtUnit(nbExpView, c.KB, 2);
   const verdictDomLabel = document.querySelector('#verdictExpNb')?.parentElement?.nextElementSibling?.querySelector('.nb-label');
-  if (verdictDomLabel) verdictDomLabel.textContent = oilOn ? (`Dom + ${pct}% products`) : 'Domestic netback';
+  if (verdictDomLabel) verdictDomLabel.textContent = oilOn ? labelDomesticEot(pct) : 'Domestic netback';
   const verdictSpreadLabel = document.querySelector('#verdictSpread')?.previousElementSibling;
   if (verdictSpreadLabel && verdictSpreadLabel.classList.contains('nb-label')) {
-    verdictSpreadLabel.textContent = oilOn ? `Δ Export − (Dom+${pct}% prod)` : 'Δ Export − Domestic';
+    verdictSpreadLabel.textContent = oilOn ? labelExportMinusDomEot(pct) : 'Δ Export − Domestic';
   }
   document.getElementById('verdictDomNb').textContent = fmtUnit(nbDomView, c.KB, 2);
   document.getElementById('verdictSpread').textContent = (spreadView>=0?'+':'')+fmtUnit(spreadView, c.KB, 2);
@@ -1420,14 +1420,14 @@ function renderNetback() {
   const pu = (v, d=2) => fmtUnit(v, c.KB, d);
   const puBare = (v, d=2) => fmt(perUnit(v, c.KB), d);
   const oilRows = (oilOn && oil) ? [
-    row('OIL PRODUCTS COMPARE','','','secIn'),
-    row('Compare month', 'Same as Oil Products / decision report', compareMonthLabel(compareMid)),
+    row('EOT NETBACK COMPARE','','','secIn'),
+    row('Compare month', 'Same as EOT Netback / decision report', compareMonthLabel(compareMid)),
     row('Export (compare month)', 'Live recalc from profile params', pu(nbExpView),'total'),
     row('Domestic crude (compare month)', 'Live recalc', pu(oilDomCrude)),
-    row('Refinery NB (100%)', 'Sell-all for compare month', pu(oilRefineNb)),
-    row(`Our share (${pct}%)`, `${pct}% × refinery NB`, pu(oilShareNb)),
-    row(`Dom + ${pct}% products`, 'Domestic crude + share', pu(nbDomView),'total'),
-    row(`Δ Export − (Dom+${pct}% prod)`, 'decision vs export', (spreadView>=0?'+':'')+pu(spreadView),'total'),
+    row('EOT NB (100%)', 'Sell-all for compare month', pu(oilRefineNb)),
+    row(`Our EOT share (${pct}%)`, `${pct}% × EOT NB`, pu(oilShareNb)),
+    row(labelDomesticEot(pct), 'Domestic crude + our EOT share', pu(nbDomView),'total'),
+    row(labelExportMinusDomEot(pct), 'decision vs export', (spreadView>=0?'+':'')+pu(spreadView),'total'),
   ] : [];
   document.getElementById('calcBody').innerHTML = [
     row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
@@ -1459,8 +1459,8 @@ function renderNetback() {
     row('Domestic netback (crude)','ex-VAT − transport − Dom MET', pu(c.nbDom),'total'),
     ...oilRows,
     row('RESULT','','','secIn'),
-    row(oilOn ? `Δ Export − (Dom+${pct}% prod)` : 'Δ Netback (Export−Domestic)',
-      oilOn ? 'export NB − (domestic + share×products)' : 'export NB − domestic NB',
+    row(oilOn ? labelExportMinusDomEot(pct) : 'Δ Netback (Export−Domestic)',
+      oilOn ? 'export NB − (Domestic + EOT)' : 'export NB − domestic NB',
       (spreadView>=0?'+':'')+pu(spreadView),'total'),
     row('BREAKEVEN (export = domestic)','','','secIn'),
     row('Breakeven Skebco',`Hold Discount ${fmt(c.DISC,2)} · S* = Brent − Disc − needed $/bbl`, fmt(c.skStar,2)+' $/bbl'),
@@ -1474,7 +1474,7 @@ function renderNetback() {
   const nbDomCrudeU = perUnit(oilOn ? oilDomCrude : c.nbDom, c.KB);
   const gaugeMax = resultUnitIsBbl() ? 25 : 150;
   const barY = oilOn
-    ? ['Export netback', `Dom+${pct}% products`, 'Domestic crude only']
+    ? ['Export netback', labelDomesticEot(pct), 'Domestic crude only']
     : ['Export netback', 'Domestic netback'];
   const barX = oilOn ? [nbExpU, nbDomU, nbDomCrudeU] : [nbExpU, nbDomU];
   const barColors = oilOn ? ['#0f766e', '#7c3aed', '#b45309'] : ['#0f766e', '#b45309'];
@@ -1482,7 +1482,7 @@ function renderNetback() {
     ? [puBare(nbExpView,2)+' '+u, puBare(nbDomView,2)+' '+u, puBare(oilDomCrude,2)+' '+u]
     : [puBare(c.nbExp,2)+' '+u, puBare(c.nbDom,2)+' '+u];
   const gaugeTitle = oilOn
-    ? `Export − (Dom + ${pct}% products)<br><span style="font-size:12px;color:#78716c">${compareMonthLabel(compareMid)} · live recalc · ${u}</span>`
+    ? `Export − (${labelDomesticEot(pct)})<br><span style="font-size:12px;color:#78716c">${compareMonthLabel(compareMid)} · live recalc · ${u}</span>`
     : `Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · ${u}</span>`;
   Plotly.newPlot('chart', [
     {
@@ -1739,6 +1739,14 @@ let prodState = {
 };
 function prodUnitIsBbl(){ return prodState.unit === 'bbl'; }
 function prodUnitLabel(){ return prodUnitIsBbl() ? '$/bbl' : '$/t'; }
+/** User-facing: Domestic + EOT (optional share %). */
+function labelDomesticEot(pct){
+  const p = pct != null ? Math.round(num(pct, 60)) : null;
+  return p != null ? (`Domestic + EOT (${p}%)`) : 'Domestic + EOT';
+}
+function labelExportMinusDomEot(pct){
+  return 'Δ Export − (' + labelDomesticEot(pct) + ')';
+}
 function prodPerUnit(usdPerT){
   const kb = Math.max(1e-9, num(calcNetback().KB, 7.2223));
   return prodUnitIsBbl() ? usdPerT / kb : usdPerT;
@@ -1853,7 +1861,7 @@ function effectivePriceKzt(p, fx, escPct){
   if (p.sellable) base *= esc;
   return Math.max(0, base);
 }
-/** Export/Domestic for Oil Products + decision report — same month as Analysis oil toggle; live recalc only. */
+/** Export/Domestic for EOT Netback + decision report — same month as Analysis EOT toggle; live recalc only. */
 function analysisBenchForProducts(){
   return liveBenchForMonth(getCompareMonthId());
 }
@@ -2256,9 +2264,9 @@ function renderProdTrends(){
     }
     const shareDomY = nbSeries.map((v, i) => (v == null || domY[i] == null ? null : v * share + domY[i]));
     Plotly.newPlot('prodNbChart', [
-      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Refinery NB (100%)',
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'EOT NB (100%)',
         x:xLab, y:nbSeries, line:{color:'#0f766e', width:3}, marker:{size:7} },
-      { type:'scatter', mode:'lines+markers', connectgaps:false, name:(share*100).toFixed(0)+'% refine + Dom',
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:labelDomesticEot(share*100),
         x:xLab, y:shareDomY, line:{color:'#7c3aed', width:2, dash:'dot'}, marker:{size:6} },
       { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Export (month profile)',
         x:xLab, y:expY, line:{color:'#b45309', width:2, dash:'dash'}, marker:{size:5} },
@@ -2354,10 +2362,10 @@ function renderProductsPage(){
     document.getElementById('prodNb').textContent = fmtProdUnit(r.nb, 2);
     document.getElementById('prodShareCombo').textContent = fmtProdUnit(r.sharePlusDom, 2);
     const scl = document.getElementById('prodShareComboLbl');
-    if (scl) scl.textContent = `${(r.share*100).toFixed(0)}% refine + Dom`;
+    if (scl) scl.textContent = labelDomesticEot(r.share*100);
     const vs = document.getElementById('prodVsExp');
     if (vs) {
-      vs.textContent = (tie ? 'TIE · ' : (exportWins ? 'EXPORT +' : 'DOM+SHARE +')) + fmtProdUnit(Math.abs(dExpMinusAlt), 2);
+      vs.textContent = (tie ? 'TIE · ' : (exportWins ? 'EXPORT +' : 'DOMESTIC + EOT +')) + fmtProdUnit(Math.abs(dExpMinusAlt), 2);
     }
   }
   const k=(id,t)=>{const el=document.getElementById(id); if(el) el.textContent=t;};
@@ -2379,22 +2387,23 @@ function renderProductsPage(){
       <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)}</td><td class="num">${fmtInt(r.excGasKzt)} KZT</td></tr>
       <tr><td>Excise diesel</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)}</td><td class="num">${fmtInt(r.excDtKzt)} KZT</td></tr>
       <tr><td>Fuel-oil duty</td><td>KZT/t crude</td><td class="num">${fmtInt(r.dutyKzt)} KZT</td></tr>
-      <tr class="total"><td>Refinery NB (100%)</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT · ${fmt(r.nb,2)} $/t</td></tr>
+      <tr class="total"><td>EOT NB (100%)</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT · ${fmt(r.nb,2)} $/t</td></tr>
     </tbody></table>`;
   }
   const reportHost = document.getElementById('prodCompareReportBody');
   if (reportHost) {
     const pct = (r.share * 100).toFixed(0);
     const u = prodUnitLabel();
+    const domEot = labelDomesticEot(pct);
     // delta* = Export − path (positive ⇒ Export ahead)
     const exportBeatsShare = r.deltaShareDomVsExp > 0.5;
     const exportBeatsFull = r.deltaVsExp > 0.5;
     const shareTie = Math.abs(r.deltaShareDomVsExp) <= 0.5;
     const winner = shareTie
-      ? `Breakeven: Export ≈ ${pct}% refine + Domestic`
+      ? `Breakeven: Export ≈ ${domEot}`
       : (exportBeatsShare
-        ? `Export beats ${pct}% refine + Domestic by ${fmtProdUnit(r.deltaShareDomVsExp, 2)}`
-        : `${pct}% refine + Domestic beats Export by ${fmtProdUnit(-r.deltaShareDomVsExp, 2)}`);
+        ? `Export beats ${domEot} by ${fmtProdUnit(r.deltaShareDomVsExp, 2)}`
+        : `${domEot} beats Export by ${fmtProdUnit(-r.deltaShareDomVsExp, 2)}`);
     const modeLbl = prodState.mode === 'historic'
       ? ('Historic · ' + (histMonth(prodState.monthId)?.label || prodState.monthId || ''))
       : ('Forecast · ' + String(prodState.refinery).toUpperCase());
@@ -2402,11 +2411,11 @@ function renderProductsPage(){
       ? (`Live recalc · ${r.benchLabel}`)
       : (r.benchMonth ? `No profile for ${r.benchLabel}` : 'Live Analysis');
     reportHost.innerHTML = `
-      <p class="meta" style="margin:0 0 10px">${modeLbl} · FX ${fmt(r.fx,2)} · share ${pct}% · feed ${fmtInt(r.feedKztVat)} KZT/t VAT-incl · compare month <b>${r.benchLabel || 'Analysis'}</b> (same as Analysis oil toggle · not snapshot)</p>
+      <p class="meta" style="margin:0 0 10px">${modeLbl} · FX ${fmt(r.fx,2)} · EOT share ${pct}% · feed ${fmtInt(r.feedKztVat)} KZT/t VAT-incl · compare month <b>${r.benchLabel || 'Analysis'}</b> (same as Analysis EOT toggle · not snapshot)</p>
       <p style="margin:0 0 12px;font-size:.92rem;line-height:1.45"><b>Verdict:</b> ${winner}
         ${exportBeatsFull
-          ? ` (Export also ahead of full refinery by ${fmtProdUnit(r.deltaVsExp, 2)})`
-          : ` (full refinery ahead of Export by ${fmtProdUnit(-r.deltaVsExp, 2)})`}.</p>
+          ? ` (Export also ahead of full EOT by ${fmtProdUnit(r.deltaVsExp, 2)})`
+          : ` (full EOT ahead of Export by ${fmtProdUnit(-r.deltaVsExp, 2)})`}.</p>
       <table class="report-table">
         <thead><tr>
           <th>Path</th><th class="num">${u}</th><th class="num">Δ Export − path</th><th>Notes</th>
@@ -2425,22 +2434,22 @@ function renderProductsPage(){
             <td>${benchNote}</td>
           </tr>
           <tr>
-            <td>Refinery NB (100%)</td>
+            <td>EOT NB (100%)</td>
             <td class="num">${fmt(prodPerUnit(r.nb),2)}</td>
             <td class="num">${(r.deltaVsExp>=0?'+':'')+fmt(prodPerUnit(r.deltaVsExp),2)}</td>
-            <td>Full sell-all products netback</td>
+            <td>Full sell-all EOT netback</td>
           </tr>
           <tr>
-            <td>Our share (${pct}%) of refine</td>
+            <td>Our EOT share (${pct}%)</td>
             <td class="num">${fmt(prodPerUnit(r.shareNb),2)}</td>
             <td class="num">${(r.expNb-r.shareNb>=0?'+':'')+fmt(prodPerUnit(r.expNb-r.shareNb),2)}</td>
-            <td>${pct}% × refinery NB only</td>
+            <td>${pct}% × EOT NB only</td>
           </tr>
           <tr style="font-weight:700;background:#f5f5f4">
-            <td>${pct}% refine + Domestic</td>
+            <td>${domEot}</td>
             <td class="num">${fmt(prodPerUnit(r.sharePlusDom),2)}</td>
             <td class="num">${(r.deltaShareDomVsExp>=0?'+':'')+fmt(prodPerUnit(r.deltaShareDomVsExp),2)}</td>
-            <td>Decision case · Export − (${pct}%+Dom)</td>
+            <td>Decision case · ${labelExportMinusDomEot(pct)}</td>
           </tr>
         </tbody>
       </table>
@@ -2518,7 +2527,7 @@ function wireProductsPage(){
       ensureProdModel(true);
     }
     renderProductsPage();
-    // Keep Analysis oil-products compare on the same month
+    // Keep Analysis EOT compare on the same month
     if (state.includeOilProducts) renderNetback();
   });
   document.getElementById('btnProdLoadHistoricToForecast').addEventListener('click', () => {
@@ -3942,7 +3951,7 @@ function reportRefineShare(){
   return pct / 100;
 }
 /**
- * Live Oil Products sell-all + Dom/Export compare for a report month (merged history + profile params).
+ * Live EOT Netback sell-all + Dom/Export compare for a report month (merged history + profile params).
  * Never uses cached snapshot NBs.
  */
 function computeOilCompareForMonth(monthId, share){
@@ -3957,7 +3966,7 @@ function computeOilCompareForMonth(monthId, share){
     return {
       ok:false, bench, share, sharePct, nb:null, shareNb:null, sharePlusDom:null,
       deltaVsExp:null, deltaShareDomVsExp:null,
-      reason: 'No Oil Products history for ' + ((typeof monthLabel === 'function') ? monthLabel(monthId) : monthId)
+      reason: 'No EOT Netback history for ' + ((typeof monthLabel === 'function') ? monthLabel(monthId) : monthId)
     };
   }
   const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(monthId) : null;
@@ -4011,11 +4020,12 @@ function computeOilCompareForMonth(monthId, share){
 }
 function oilDecisionWinner(oil){
   if (!oil || !oil.ok) return '—';
-  const d = oil.deltaShareDomVsExp; // Export − (share+Dom)
+  const d = oil.deltaShareDomVsExp; // Export − (Domestic + EOT)
+  const label = labelDomesticEot(oil.sharePct);
   if (Math.abs(d) < 0.5) return 'Breakeven vs Export';
   return d > 0
-    ? (`Export beats ${oil.sharePct}%+Dom`)
-    : (`${oil.sharePct}%+Dom beats Export`);
+    ? (`Export beats ${label}`)
+    : (`${label} beats Export`);
 }
 function diffItemsFromComputed(a, b) {
   const items = [
@@ -4033,10 +4043,10 @@ function diffItemsFromComputed(a, b) {
   if (a.oil && a.oil.ok && b.oil && b.oil.ok) {
     const pct = a.oil.sharePct || b.oil.sharePct || 60;
     items.push(
-      ['Refinery NB (100%)', a.oil.nb, b.oil.nb, 2, '$/t'],
-      [`${pct}% refine + Dom`, a.oil.sharePlusDom, b.oil.sharePlusDom, 2, '$/t'],
-      ['Δ Export − Refine', a.oil.deltaVsExp, b.oil.deltaVsExp, 2, '$/t'],
-      [`Δ Export − (${pct}%+Dom)`, a.oil.deltaShareDomVsExp, b.oil.deltaShareDomVsExp, 2, '$/t']
+      ['EOT NB (100%)', a.oil.nb, b.oil.nb, 2, '$/t'],
+      [labelDomesticEot(pct), a.oil.sharePlusDom, b.oil.sharePlusDom, 2, '$/t'],
+      ['Δ Export − EOT', a.oil.deltaVsExp, b.oil.deltaVsExp, 2, '$/t'],
+      [labelExportMinusDomEot(pct), a.oil.deltaShareDomVsExp, b.oil.deltaShareDomVsExp, 2, '$/t']
     );
   }
   return items;
@@ -4050,9 +4060,9 @@ function vsPriorHtml(cur, prior, priorYm) {
   }
   const items = diffItemsFromComputed(prior, cur);
   const oilKpis = (cur.oil && cur.oil.ok && prior.oil && prior.oil.ok) ? `
-      <div class="k"><span>Δ Refinery NB</span><b class="${deltaClass(cur.oil.nb-prior.oil.nb)}">${(cur.oil.nb-prior.oil.nb>=0?'+':'')+fmt(cur.oil.nb-prior.oil.nb,1)}</b></div>
-      <div class="k"><span>Δ ${cur.oil.sharePct}%+Dom</span><b class="${deltaClass(cur.oil.sharePlusDom-prior.oil.sharePlusDom)}">${(cur.oil.sharePlusDom-prior.oil.sharePlusDom>=0?'+':'')+fmt(cur.oil.sharePlusDom-prior.oil.sharePlusDom,1)}</b></div>
-      <div class="k"><span>Δ Exp−(${cur.oil.sharePct}%+Dom)</span><b class="${deltaClass(cur.oil.deltaShareDomVsExp-prior.oil.deltaShareDomVsExp)}">${(cur.oil.deltaShareDomVsExp-prior.oil.deltaShareDomVsExp>=0?'+':'')+fmt(cur.oil.deltaShareDomVsExp-prior.oil.deltaShareDomVsExp,1)}</b></div>
+      <div class="k"><span>Δ EOT NB</span><b class="${deltaClass(cur.oil.nb-prior.oil.nb)}">${(cur.oil.nb-prior.oil.nb>=0?'+':'')+fmt(cur.oil.nb-prior.oil.nb,1)}</b></div>
+      <div class="k"><span>Δ ${labelDomesticEot(cur.oil.sharePct)}</span><b class="${deltaClass(cur.oil.sharePlusDom-prior.oil.sharePlusDom)}">${(cur.oil.sharePlusDom-prior.oil.sharePlusDom>=0?'+':'')+fmt(cur.oil.sharePlusDom-prior.oil.sharePlusDom,1)}</b></div>
+      <div class="k"><span>${labelExportMinusDomEot(cur.oil.sharePct)}</span><b class="${deltaClass(cur.oil.deltaShareDomVsExp-prior.oil.deltaShareDomVsExp)}">${(cur.oil.deltaShareDomVsExp-prior.oil.deltaShareDomVsExp>=0?'+':'')+fmt(cur.oil.deltaShareDomVsExp-prior.oil.deltaShareDomVsExp,1)}</b></div>
     ` : '';
   return `<div class="report-section">
     <h2>Vs last month — ${monthLabel(prior.p.month)} → ${monthLabel(cur.p.month)}</h2>
@@ -4097,7 +4107,7 @@ function buildSingleReport(id) {
       ? [c.nbExp, oil.sharePlusDom, c.nbDom, oil.nb, c.trExp, c.trDom, c.rental, c.metExp, c.duty]
       : [c.nbExp, c.nbDom, c.trExp, c.trDom, c.rental, c.metExp, c.duty];
     const barY = oil.ok
-      ? ['Export NB', pct+'%+Dom', 'Domestic crude', 'Refinery 100%', 'Export transport', 'Domestic transport', 'Rental', 'MET', 'Duty']
+      ? ['Export NB', labelDomesticEot(pct), 'Domestic crude', 'EOT 100%', 'Export transport', 'Domestic transport', 'Rental', 'MET', 'Duty']
       : ['Export NB', 'Domestic NB', 'Export transport', 'Domestic transport', 'Rental', 'MET', 'Duty'];
     const barColors = oil.ok
       ? ['#0f766e','#7c3aed','#b45309','#0d9488','#64748b','#a8a29e','#7c3aed','#0ea5e9','#f43f5e']
@@ -4123,7 +4133,7 @@ function buildSingleReport(id) {
         type:'indicator', mode:'gauge+number+delta', value:oilSpread,
         domain:{x:[0.52,1], y:[0.48,0.92]},
         number:{suffix:' $/t', valueformat:'.1f'},
-        title:{text: oil.ok ? `Δ Export − (${pct}%+Dom)` : 'Oil products n/a', font:{size:14}},
+        title:{text: oil.ok ? labelExportMinusDomEot(pct) : 'EOT n/a', font:{size:14}},
         delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
         gauge:{
           axis:{range:[-150,150]},
@@ -4146,44 +4156,44 @@ function buildSingleReport(id) {
   }, 40);
   const oilSection = oil.ok ? `
     <div class="report-section">
-      <h2>Oil Products decision — Export vs Dom + ${pct}% refine</h2>
-      <p class="lead" style="margin:0 0 8px">Live recalc for <b>${monthLabel(p.month)}</b> (same logic as Oil Products / Analysis oil toggle). Share ${pct}%.</p>
+      <h2>EOT Netback decision — Export vs Domestic + EOT</h2>
+      <p class="lead" style="margin:0 0 8px">Live recalc for <b>${monthLabel(p.month)}</b> (same logic as EOT Netback / Analysis EOT toggle). Share ${pct}%.</p>
       <div class="kpi-grid">
-        <div class="k"><span>Oil decision</span><b>${oilWin}</b></div>
-        <div class="k"><span>Refinery NB (100%)</span><b>${fmt(oil.nb,1)} $/t</b></div>
-        <div class="k"><span>${pct}% refine</span><b>${fmt(oil.shareNb,1)} $/t</b></div>
-        <div class="k"><span>${pct}% + Domestic</span><b>${fmt(oil.sharePlusDom,1)} $/t</b></div>
-        <div class="k"><span>Δ Export − Refine</span><b class="${deltaClass(oil.deltaVsExp)}">${(oil.deltaVsExp>=0?'+':'')+fmt(oil.deltaVsExp,1)}</b></div>
-        <div class="k"><span>Δ Export − (${pct}%+Dom)</span><b class="${deltaClass(oil.deltaShareDomVsExp)}">${(oil.deltaShareDomVsExp>=0?'+':'')+fmt(oil.deltaShareDomVsExp,1)}</b></div>
+        <div class="k"><span>EOT decision</span><b>${oilWin}</b></div>
+        <div class="k"><span>EOT NB (100%)</span><b>${fmt(oil.nb,1)} $/t</b></div>
+        <div class="k"><span>Our EOT share (${pct}%)</span><b>${fmt(oil.shareNb,1)} $/t</b></div>
+        <div class="k"><span>${labelDomesticEot(pct)}</span><b>${fmt(oil.sharePlusDom,1)} $/t</b></div>
+        <div class="k"><span>Δ Export − EOT</span><b class="${deltaClass(oil.deltaVsExp)}">${(oil.deltaVsExp>=0?'+':'')+fmt(oil.deltaVsExp,1)}</b></div>
+        <div class="k"><span>${labelExportMinusDomEot(pct)}</span><b class="${deltaClass(oil.deltaShareDomVsExp)}">${(oil.deltaShareDomVsExp>=0?'+':'')+fmt(oil.deltaShareDomVsExp,1)}</b></div>
       </div>
       <table class="report-table">
         <thead><tr><th>Path</th><th class="num">$/t</th><th class="num">Δ Export − path</th><th>Notes</th></tr></thead>
         <tbody>
           <tr><td>Export crude</td><td class="num">${fmt(oil.expNb,2)}</td><td class="num">—</td><td>Live Analysis for month</td></tr>
           <tr><td>Domestic crude</td><td class="num">${fmt(oil.domNb,2)}</td><td class="num">${(oil.expNb-oil.domNb>=0?'+':'')+fmt(oil.expNb-oil.domNb,2)}</td><td>Live Analysis for month</td></tr>
-          <tr><td>Refinery NB (100%)</td><td class="num">${fmt(oil.nb,2)}</td><td class="num">${(oil.deltaVsExp>=0?'+':'')+fmt(oil.deltaVsExp,2)}</td><td>Sell-all · ${oil.routeKey.toUpperCase()} costs</td></tr>
-          <tr style="font-weight:700;background:#f5f5f4"><td>${pct}% refine + Domestic</td><td class="num">${fmt(oil.sharePlusDom,2)}</td><td class="num">${(oil.deltaShareDomVsExp>=0?'+':'')+fmt(oil.deltaShareDomVsExp,2)}</td><td>Decision case</td></tr>
+          <tr><td>EOT NB (100%)</td><td class="num">${fmt(oil.nb,2)}</td><td class="num">${(oil.deltaVsExp>=0?'+':'')+fmt(oil.deltaVsExp,2)}</td><td>Sell-all · ${oil.routeKey.toUpperCase()} costs</td></tr>
+          <tr style="font-weight:700;background:#f5f5f4"><td>${labelDomesticEot(pct)}</td><td class="num">${fmt(oil.sharePlusDom,2)}</td><td class="num">${(oil.deltaShareDomVsExp>=0?'+':'')+fmt(oil.deltaShareDomVsExp,2)}</td><td>Decision case</td></tr>
         </tbody>
       </table>
     </div>` : `
     <div class="report-section">
-      <h2>Oil Products decision</h2>
-      <p class="lead">${oil.reason || 'Oil Products history not available for this month.'}</p>
+      <h2>EOT Netback decision</h2>
+      <p class="lead">${oil.reason || 'EOT Netback history not available for this month.'}</p>
     </div>`;
   return `
     <h1>Netback monthly report — ${monthLabel(p.month)}</h1>
-    <div class="meta">${profileTitle(p, { current: true })} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'} · Auto vs ${monthLabel(priorYm)} · Oil share ${pct}%${p.notes ? `<br>${p.notes}` : ''}</div>
+    <div class="meta">${profileTitle(p, { current: true })} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'} · Auto vs ${monthLabel(priorYm)} · EOT share ${pct}%${p.notes ? `<br>${p.notes}` : ''}</div>
     <div class="kpi-grid">
       <div class="k"><span>Crude winner</span><b>${winner}</b></div>
       <div class="k"><span>Export NB</span><b>${fmt(c.nbExp,1)} $/t</b></div>
       <div class="k"><span>Domestic NB (${domesticLabelFrom(params.domesticRoute)})</span><b>${fmt(c.nbDom,1)} $/t</b></div>
       <div class="k"><span>Δ Export − Domestic</span><b>${(c.spread>=0?'+':'')+fmt(c.spread,1)} $/t</b></div>
-      <div class="k"><span>Oil decision</span><b>${oilWin}</b></div>
-      <div class="k"><span>${pct}%+Dom</span><b>${oil.ok?fmt(oil.sharePlusDom,1)+' $/t':'—'}</b></div>
+      <div class="k"><span>EOT decision</span><b>${oilWin}</b></div>
+      <div class="k"><span>${labelDomesticEot(pct)}</span><b>${oil.ok?fmt(oil.sharePlusDom,1)+' $/t':'—'}</b></div>
       <div class="k"><span>BE Skebco</span><b>${fmt(c.skStar,2)} $/bbl</b></div>
       <div class="k"><span>BE Discount</span><b>${fmt(c.discStar,2)} $/bbl</b></div>
     </div>
-    <div class="report-section"><h2>Graph — crude &amp; oil products</h2><div id="singleChart"></div></div>
+    <div class="report-section"><h2>Graph — crude &amp; EOT</h2><div id="singleChart"></div></div>
     ${oilSection}
     <div class="report-section"><h2>Parameters</h2>
       <table class="report-table">
@@ -4200,7 +4210,7 @@ function buildSingleReport(id) {
           <tr><td>VAT factor</td><td class="num">${fmt(params.vat,2)}</td></tr>
           <tr><td>Domestic route</td><td class="num">${domesticLabelFrom(params.domesticRoute)}</td></tr>
           <tr><td>Bulk % export / domestic</td><td class="num">${fmt(params.bulkExp,1)}% / ${fmt(params.bulkDom,1)}%</td></tr>
-          <tr><td>Oil products share</td><td class="num">${pct}%</td></tr>
+          <tr><td>EOT share</td><td class="num">${pct}%</td></tr>
         </tbody>
       </table>
     </div>
@@ -4259,10 +4269,10 @@ function buildTrendReport(endYm, nMonths) {
     Plotly.newPlot('trendChart', [
       { x, y: yOrNull(s => s.c.nbExp), name: 'Export NB', mode:'lines+markers', connectgaps:false, line:{color:'#0f766e', width:2.5}, marker:{size:mk, color:'#0f766e'} },
       { x, y: yOrNull(s => s.c.nbDom), name: 'Domestic NB', mode:'lines+markers', connectgaps:false, line:{color:'#b45309', width:2.5}, marker:{size:mk, color:'#b45309'} },
-      { x, y: yOrNull(s => (s.oil && s.oil.ok) ? s.oil.nb : null), name: 'Refinery NB', mode:'lines+markers', connectgaps:false, line:{color:'#0d9488', width:2}, marker:{size:mk-1, color:'#0d9488'} },
-      { x, y: yOrNull(s => (s.oil && s.oil.ok) ? s.oil.sharePlusDom : null), name: pct+'% refine + Dom', mode:'lines+markers', connectgaps:false, line:{color:'#7c3aed', width:2, dash:'dot'}, marker:{size:mk-1, color:'#7c3aed'} },
+      { x, y: yOrNull(s => (s.oil && s.oil.ok) ? s.oil.nb : null), name: 'EOT NB', mode:'lines+markers', connectgaps:false, line:{color:'#0d9488', width:2}, marker:{size:mk-1, color:'#0d9488'} },
+      { x, y: yOrNull(s => (s.oil && s.oil.ok) ? s.oil.sharePlusDom : null), name: labelDomesticEot(pct), mode:'lines+markers', connectgaps:false, line:{color:'#7c3aed', width:2, dash:'dot'}, marker:{size:mk-1, color:'#7c3aed'} },
       { x, y: yOrNull(s => s.c.spread), name: 'Δ Exp−Dom', mode:'lines+markers', connectgaps:false, line:{color:'#1e3a5f', width:2, dash:'dot'}, marker:{size:mk-1, color:'#1e3a5f'}, yaxis:'y2' },
-      { x, y: yOrNull(s => (s.oil && s.oil.ok) ? s.oil.deltaShareDomVsExp : null), name: 'Δ Exp−('+pct+'%+Dom)', mode:'lines+markers', connectgaps:false, line:{color:'#a855f7', width:2, dash:'dash'}, marker:{size:mk-2, color:'#a855f7'}, yaxis:'y2' },
+      { x, y: yOrNull(s => (s.oil && s.oil.ok) ? s.oil.deltaShareDomVsExp : null), name: labelExportMinusDomEot(pct), mode:'lines+markers', connectgaps:false, line:{color:'#a855f7', width:2, dash:'dash'}, marker:{size:mk-2, color:'#a855f7'}, yaxis:'y2' },
     ], {
       margin:{t:36,r:56,b:chartH.bottom,l:54}, height:chartH.trend + 40,
       xaxis:{tickangle: chartH.tickAngle, automargin:true},
@@ -4434,10 +4444,10 @@ function buildTrendReport(endYm, nMonths) {
     ['Domestic NB', first.c.nbDom, last.c.nbDom, '$/t'],
     ['Δ Exp−Dom', first.c.spread, last.c.spread, '$/t'],
     ...(firstOil && lastOil ? [
-      ['Refinery NB (100%)', firstOil.oil.nb, lastOil.oil.nb, '$/t'],
-      [pct+'% refine + Dom', firstOil.oil.sharePlusDom, lastOil.oil.sharePlusDom, '$/t'],
-      ['Δ Export − Refine', firstOil.oil.deltaVsExp, lastOil.oil.deltaVsExp, '$/t'],
-      [`Δ Export − (${pct}%+Dom)`, firstOil.oil.deltaShareDomVsExp, lastOil.oil.deltaShareDomVsExp, '$/t'],
+      ['EOT NB (100%)', firstOil.oil.nb, lastOil.oil.nb, '$/t'],
+      [labelDomesticEot(pct), firstOil.oil.sharePlusDom, lastOil.oil.sharePlusDom, '$/t'],
+      ['Δ Export − EOT', firstOil.oil.deltaVsExp, lastOil.oil.deltaVsExp, '$/t'],
+      [labelExportMinusDomEot(pct), firstOil.oil.deltaShareDomVsExp, lastOil.oil.deltaShareDomVsExp, '$/t'],
     ] : []),
   ] : [];
 
@@ -4465,7 +4475,7 @@ function buildTrendReport(endYm, nMonths) {
     }
     const win = Math.abs(s.c.spread)<0.5 ? 'Tie' : (s.c.spread>0 ? 'Export' : 'Domestic');
     const oilTag = (s.oil && s.oil.ok)
-      ? ` · oil ${s.oil.deltaShareDomVsExp>0?'Export':(s.oil.deltaShareDomVsExp<-0.5?'Dom+share':'Tie')}`
+      ? ` · EOT ${s.oil.deltaShareDomVsExp>0?'Export':(s.oil.deltaShareDomVsExp<-0.5?'Dom+EOT':'Tie')}`
       : '';
     return `<div class="month-mini ${rangeCls}">
       <div class="mh">${monthLabel(s.p.month)}</div>
@@ -4474,20 +4484,20 @@ function buildTrendReport(endYm, nMonths) {
       <div class="mk">
         <span>Export<br><b>${fmt(s.c.nbExp,1)}</b></span>
         <span>Domestic<br><b>${fmt(s.c.nbDom,1)}</b></span>
-        <span>${pct}%+D<br><b>${(s.oil&&s.oil.ok)?fmt(s.oil.sharePlusDom,1):'—'}</b></span>
+        <span>Dom+EOT<br><b>${(s.oil&&s.oil.ok)?fmt(s.oil.sharePlusDom,1):'—'}</b></span>
       </div>
     </div>`;
   }).join('');
 
   const oilKpiBlock = (firstOil && lastOil) ? `
-      <div class="k"><span>Δ Refinery NB</span><b class="${deltaClass(lastOil.oil.nb-firstOil.oil.nb)}">${(lastOil.oil.nb-firstOil.oil.nb>=0?'+':'')+fmt(lastOil.oil.nb-firstOil.oil.nb,1)}</b></div>
-      <div class="k"><span>Δ ${pct}%+Dom</span><b class="${deltaClass(lastOil.oil.sharePlusDom-firstOil.oil.sharePlusDom)}">${(lastOil.oil.sharePlusDom-firstOil.oil.sharePlusDom>=0?'+':'')+fmt(lastOil.oil.sharePlusDom-firstOil.oil.sharePlusDom,1)}</b></div>
-      <div class="k"><span>Δ Exp−(${pct}%+Dom)</span><b class="${deltaClass(lastOil.oil.deltaShareDomVsExp-firstOil.oil.deltaShareDomVsExp)}">${(lastOil.oil.deltaShareDomVsExp-firstOil.oil.deltaShareDomVsExp>=0?'+':'')+fmt(lastOil.oil.deltaShareDomVsExp-firstOil.oil.deltaShareDomVsExp,1)}</b></div>
+      <div class="k"><span>Δ EOT NB</span><b class="${deltaClass(lastOil.oil.nb-firstOil.oil.nb)}">${(lastOil.oil.nb-firstOil.oil.nb>=0?'+':'')+fmt(lastOil.oil.nb-firstOil.oil.nb,1)}</b></div>
+      <div class="k"><span>Δ ${labelDomesticEot(pct)}</span><b class="${deltaClass(lastOil.oil.sharePlusDom-firstOil.oil.sharePlusDom)}">${(lastOil.oil.sharePlusDom-firstOil.oil.sharePlusDom>=0?'+':'')+fmt(lastOil.oil.sharePlusDom-firstOil.oil.sharePlusDom,1)}</b></div>
+      <div class="k"><span>${labelExportMinusDomEot(pct)}</span><b class="${deltaClass(lastOil.oil.deltaShareDomVsExp-firstOil.oil.deltaShareDomVsExp)}">${(lastOil.oil.deltaShareDomVsExp-firstOil.oil.deltaShareDomVsExp>=0?'+':'')+fmt(lastOil.oil.deltaShareDomVsExp-firstOil.oil.deltaShareDomVsExp,1)}</b></div>
     ` : '';
 
   return `
     <h1>Netback ${nMonths}-month comparison</h1>
-    <div class="meta">Window end: ${monthLabel(endYm)} · Lookback ${nMonths} months · ${windowLabel}${missingCount ? ` · ${missingCount} month(s) not yet saved` : ''} · Oil share ${pct}% · live Oil Products recalc</div>
+    <div class="meta">Window end: ${monthLabel(endYm)} · Lookback ${nMonths} months · ${windowLabel}${missingCount ? ` · ${missingCount} month(s) not yet saved` : ''} · EOT share ${pct}% · live EOT Netback recalc</div>
     <div class="kpi-grid">
       <div class="k"><span>First with data</span><b>${monthLabel(first.p.month)}</b></div>
       <div class="k"><span>Last with data</span><b>${monthLabel(last.p.month)}</b></div>
@@ -4497,10 +4507,10 @@ function buildTrendReport(endYm, nMonths) {
     </div>
     <div class="report-section">
       <h2>Month snapshots</h2>
-      <p class="lead" style="margin:0 0 6px">Export, Domestic, and ${pct}% refine + Dom (when Oil Products history exists).</p>
+      <p class="lead" style="margin:0 0 6px">Export, Domestic, and ${labelDomesticEot(pct)} (when EOT Netback history exists).</p>
       <div class="month-mini-grid ${rangeCls}">${miniCards}</div>
     </div>
-    <div class="report-section"><h2>Netback &amp; oil-products trend</h2><div id="trendChart" class="${rangeCls}"></div></div>
+    <div class="report-section"><h2>Netback &amp; EOT trend</h2><div id="trendChart" class="${rangeCls}"></div></div>
     <div class="report-section">
       <h2>Driver parameters (separate scales)</h2>
       <p class="lead" style="margin:0 0 6px">Each driver uses its own axis so small series are not crushed by Brent/FX magnitude.</p>
@@ -4546,7 +4556,7 @@ function buildTrendReport(endYm, nMonths) {
       </div>`).join('')}
     <div class="report-section"><h2>All months in window — parameters &amp; results</h2>
       <table class="report-table">
-        <thead><tr><th>Month</th><th>Status</th><th>Route</th><th class="num">Brent</th><th class="num">FX</th><th class="num">Skebco</th><th class="num">Disc</th><th class="num">Local</th><th class="num">Exp NB</th><th class="num">Dom NB</th><th class="num">Refine</th><th class="num">${pct}%+Dom</th><th class="num">Δ Exp−Dom</th><th class="num">Δ Exp−(${pct}%+D)</th></tr></thead>
+        <thead><tr><th>Month</th><th>Status</th><th>Route</th><th class="num">Brent</th><th class="num">FX</th><th class="num">Skebco</th><th class="num">Disc</th><th class="num">Local</th><th class="num">Exp NB</th><th class="num">Dom NB</th><th class="num">EOT</th><th class="num">Dom+EOT</th><th class="num">Δ Exp−Dom</th><th class="num">Δ Exp−(Dom+EOT)</th></tr></thead>
         <tbody>
           ${slots.map(s => s.missing ? `<tr>
             <td>${monthLabel(s.ym)}</td>
@@ -4576,15 +4586,15 @@ function buildTrendReport(endYm, nMonths) {
     </div>
     ${(last.oil && last.oil.ok) ? `
     <div class="report-section">
-      <h2>Oil Products decision (latest: ${monthLabel(last.p.month)})</h2>
-      <p class="lead" style="margin:0 0 8px">${oilDecisionWinner(last.oil)} · share ${pct}% · live recalc</p>
+      <h2>EOT Netback decision (latest: ${monthLabel(last.p.month)})</h2>
+      <p class="lead" style="margin:0 0 8px">${oilDecisionWinner(last.oil)} · EOT share ${pct}% · live recalc</p>
       <table class="report-table">
         <thead><tr><th>Path</th><th class="num">$/t</th><th class="num">Δ Export − path</th></tr></thead>
         <tbody>
           <tr><td>Export</td><td class="num">${fmt(last.oil.expNb,2)}</td><td class="num">—</td></tr>
           <tr><td>Domestic</td><td class="num">${fmt(last.oil.domNb,2)}</td><td class="num">${(last.oil.expNb-last.oil.domNb>=0?'+':'')+fmt(last.oil.expNb-last.oil.domNb,2)}</td></tr>
-          <tr><td>Refinery NB (100%)</td><td class="num">${fmt(last.oil.nb,2)}</td><td class="num">${(last.oil.deltaVsExp>=0?'+':'')+fmt(last.oil.deltaVsExp,2)}</td></tr>
-          <tr style="font-weight:700;background:#f5f5f4"><td>${pct}% refine + Domestic</td><td class="num">${fmt(last.oil.sharePlusDom,2)}</td><td class="num">${(last.oil.deltaShareDomVsExp>=0?'+':'')+fmt(last.oil.deltaShareDomVsExp,2)}</td></tr>
+          <tr><td>EOT NB (100%)</td><td class="num">${fmt(last.oil.nb,2)}</td><td class="num">${(last.oil.deltaVsExp>=0?'+':'')+fmt(last.oil.deltaVsExp,2)}</td></tr>
+          <tr style="font-weight:700;background:#f5f5f4"><td>${labelDomesticEot(pct)}</td><td class="num">${fmt(last.oil.sharePlusDom,2)}</td><td class="num">${(last.oil.deltaShareDomVsExp>=0?'+':'')+fmt(last.oil.deltaShareDomVsExp,2)}</td></tr>
         </tbody>
       </table>
     </div>` : ''}
