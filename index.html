@@ -179,12 +179,15 @@
   #app{display:none}
   #app.ready{display:block}
 
-  .route-toggle{display:flex; gap:6px; flex-wrap:wrap; margin:0 0 8px}
+  .route-toggle{display:flex; gap:6px; flex-wrap:wrap; margin:0 0 8px; align-items:center}
   .route-toggle button{
     border:1px solid var(--line); background:#fff; color:var(--accent);
     border-radius:999px; padding:8px 14px; cursor:pointer; font-size:.84rem; font-weight:600;
   }
   .route-toggle button.active{background:var(--domestic); color:#fff; border-color:var(--domestic)}
+  .unit-toggle{margin-left:auto}
+  .unit-toggle button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+  .unit-toggle .unit-lbl{font-size:.78rem; color:var(--muted); margin-right:4px; font-weight:600}
 
   .btn-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px}
   button.danger{background:#9a3412; color:#fff; border:0; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:.82rem}
@@ -361,6 +364,11 @@
       <div class="route-toggle" id="domRoute" role="group" aria-label="Domestic destination">
         <button type="button" data-route="pkop" class="active">Domestic: Shymkent (PKOP)</button>
         <button type="button" data-route="pavlodar">Domestic: Pavlodar (PNHZ)</button>
+        <div class="route-toggle unit-toggle" id="unitToggle" role="group" aria-label="Result unit" style="margin:0 0 0 auto">
+          <span class="unit-lbl">Results</span>
+          <button type="button" data-unit="t" class="active">$/t</button>
+          <button type="button" data-unit="bbl">$/bbl</button>
+        </div>
       </div>
       <div class="row">
         <div>
@@ -908,6 +916,7 @@ const TR_LINES = [
 let state = {
   ...BASE,
   domesticRoute: 'pkop',
+  resultUnit: 't', // 't' = $/tonne, 'bbl' = $/barrel (÷ export bbl/t)
   transportPct: {},
   bulkExp: 0,
   bulkDom: 0
@@ -917,6 +926,21 @@ function num(v, fb=0){ const n=Number(v); return Number.isFinite(n)?n:fb; }
 function fmt(n,d=2){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d}); }
 function fmtInt(n){ return Math.round(n).toLocaleString(); }
 function vlookup(x, table){ let r=table[0][1]; for(const [k,v] of table){ if(x>=k) r=v; else break; } return r; }
+function resultUnitIsBbl(){ return state.resultUnit === 'bbl'; }
+function unitLabel(){ return resultUnitIsBbl() ? '$/bbl' : '$/t'; }
+/** Convert a $/t fiscal or netback amount to the selected display unit. */
+function perUnit(usdPerT, kb){
+  const k = num(kb, BASE.kb) || BASE.kb;
+  return resultUnitIsBbl() ? usdPerT / k : usdPerT;
+}
+function fmtUnit(usdPerT, kb, d=2){
+  return fmt(perUnit(usdPerT, kb), d) + ' ' + unitLabel();
+}
+function syncUnitToggle(){
+  document.querySelectorAll('#unitToggle button[data-unit]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.unit === (resultUnitIsBbl() ? 'bbl' : 't'));
+  });
+}
 
 function persist() {
   try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {}
@@ -931,7 +955,8 @@ function hydrate() {
         transportPct: (raw.transportPct && typeof raw.transportPct === 'object') ? { ...raw.transportPct } : {},
         bulkExp: num(raw.bulkExp, 0),
         bulkDom: num(raw.bulkDom, 0),
-        domesticRoute: (raw.domesticRoute === 'pavlodar') ? 'pavlodar' : 'pkop'
+        domesticRoute: (raw.domesticRoute === 'pavlodar') ? 'pavlodar' : 'pkop',
+        resultUnit: (raw.resultUnit === 'bbl') ? 'bbl' : 't'
       };
     }
   } catch {}
@@ -1035,6 +1060,8 @@ function renderNetback() {
   document.getElementById('trRuLbl').textContent = num(state.ru).toFixed(4);
 
   const c = calcNetback();
+  syncUnitToggle();
+  const u = unitLabel();
   const taxAtBase =
     Math.abs(c.kbRent-7.5)<1e-9 && Math.abs(c.kbMet-7.5)<1e-9 && Math.abs(c.domMetShare-0.5)<1e-9;
   const atBase = !c.trAdj && taxAtBase &&
@@ -1049,17 +1076,21 @@ function renderNetback() {
   document.getElementById('verdictSub').textContent =
     (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
     (c.trAdj?'Transport % ON · ':'') +
-    `Domestic ${domesticLabel()} · RUB×${fmt(c.RU,2)} · BE Sk ${fmt(c.skStar,2)} · BE Disc ${fmt(c.discStar,2)} · BE Sk+Disc ${fmt(c.skDiscStar,2)}`;
-  document.getElementById('verdictExpNb').textContent = fmt(c.nbExp,1)+' $/t';
-  document.getElementById('verdictDomNb').textContent = fmt(c.nbDom,1)+' $/t';
-  document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmt(c.spread,1)+' $/t';
+    `Unit ${u} · Domestic ${domesticLabel()} · RUB×${fmt(c.RU,2)} · BE Sk ${fmt(c.skStar,2)} · BE Disc ${fmt(c.discStar,2)} · BE Sk+Disc ${fmt(c.skDiscStar,2)}` +
+    (resultUnitIsBbl() ? ` · ÷ ${fmt(c.KB,4)} bbl/t` : '');
+  document.getElementById('verdictExpNb').textContent = fmtUnit(c.nbExp, c.KB, 2);
+  document.getElementById('verdictDomNb').textContent = fmtUnit(c.nbDom, c.KB, 2);
+  document.getElementById('verdictSpread').textContent = (c.spread>=0?'+':'')+fmtUnit(c.spread, c.KB, 2);
   const vFx = document.getElementById('verdictFx');
   const vRu = document.getElementById('verdictRu');
   if (vFx) vFx.textContent = fmt(c.FX,2);
   if (vRu) vRu.textContent = fmt(c.RU,2);
 
+  const pu = (v, d=2) => fmtUnit(v, c.KB, d);
+  const puBare = (v, d=2) => fmt(perUnit(v, c.KB), d);
   document.getElementById('calcBody').innerHTML = [
     row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
+    row('DISPLAY UNIT', resultUnitIsBbl() ? `$/t ÷ export bbl/t ${fmt(c.KB,4)}` : 'Native tonne basis', u),
     row('INPUTS','','','secIn'),
     row('Brent','L3', fmt(c.B,1)+' $/bbl'),
     row('FX (KZT per 1 USD)','All KZT totals ÷ FX → $/t', fmt(c.FX,2)+' KZT/USD'),
@@ -1071,51 +1102,63 @@ function renderNetback() {
     row('Domestic destination','Shymkent (PKOP) or Pavlodar/PNHZ', domesticLabel()),
     row('EXPORT Novoros','','','sec'),
     row('Realized $/bbl',`D11=D5−D6−D7<br><span class="sub">${fmt(c.B,1)} − ${fmt(c.S,3)} − ${fmt(c.DISC,2)}</span>`, fmt(c.priceBbl,3)),
-    row('Realized $/t',`D12=D11×D8`, fmt(c.priceTexp,2)),
+    row(resultUnitIsBbl()?'Realized (same)':'Realized $/t', resultUnitIsBbl()?`already $/bbl · × ${fmt(c.KB,4)} = ${fmt(c.priceTexp,2)} $/t`:`D12=D11×D8`, resultUnitIsBbl()?fmt(c.priceBbl,3)+' $/bbl':fmt(c.priceTexp,2)+' $/t'),
     row('Export RUB legs',`Σ RUB tariffs × RUB→KZT ${fmt(c.RU,2)}`, fmt(c.expRubKzt,0)+' KZT'),
-    row('Transport $/t',`Σ(KZT + RUB×${fmt(c.RU,2)}) / FX${c.trAdj?' · % adj':''}`, fmt(c.trExp,2)),
-    row('Rental $/t',`rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Kebco ${fmt(c.kebco,1)} × ${fmt(c.kbRent,1)}`, fmt(c.rental,2)),
-    row('MET $/t',`Kebco ${fmt(c.kebco,1)} × MET% × ${fmt(c.kbMet,1)}`, fmt(c.metExp,2)),
-    row('Duty $/t',`duty ladder(Kebco ${fmt(c.kebco,1)}) · MoF uses avg Kebco+Brent`, fmt(c.duty,0)),
-    row('Export netback','D18', fmt(c.nbExp,2)+' $/t','total'),
+    row('Transport',`Σ(KZT + RUB×${fmt(c.RU,2)}) / FX${c.trAdj?' · % adj':''}`, pu(c.trExp)),
+    row('Rental',`rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Kebco ${fmt(c.kebco,1)} × ${fmt(c.kbRent,1)}`, pu(c.rental)),
+    row('MET',`Kebco ${fmt(c.kebco,1)} × MET% × ${fmt(c.kbMet,1)}`, pu(c.metExp)),
+    row('Duty',`duty ladder(Kebco ${fmt(c.kebco,1)}) · MoF uses avg Kebco+Brent`, pu(c.duty, resultUnitIsBbl()?2:0)),
+    row('Export netback','D18', pu(c.nbExp),'total'),
     row('DOMESTIC '+domesticLabel(),'','','secDom'),
-    row('Price ex-VAT',`${fmtInt(c.LOC)} KZT ÷ ${fmt(c.FX,2)} ÷ VAT ${fmt(c.VAT,2)}`, fmt(c.priceTdom,2)+' $/t'),
-    row('Transport $/t',`domestic KZT / FX${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
-    row('Rental $/t','export-only (art. 749) — not on domestic', '0'),
-    row('Duty $/t','export customs duty — not on domestic', '0'),
-    row('Dom MET',`ex-VAT ${fmt(c.priceTdom,2)} × ${(c.MET*100).toFixed(1)}% × ${fmt(c.domMetShare,2)} (art. 778)`, fmt(c.metDom,2)),
-    row('Domestic netback','ex-VAT − transport − Dom MET', fmt(c.nbDom,2)+' $/t','total'),
+    row('Price ex-VAT',`${fmtInt(c.LOC)} KZT ÷ ${fmt(c.FX,2)} ÷ VAT ${fmt(c.VAT,2)}`, pu(c.priceTdom)),
+    row('Transport',`domestic KZT / FX${c.trAdj?' · % adj':''}`, pu(c.trDom)),
+    row('Rental','export-only (art. 749) — not on domestic', '0'),
+    row('Duty','export customs duty — not on domestic', '0'),
+    row('Dom MET',`ex-VAT ${fmt(c.priceTdom,2)} $/t × ${(c.MET*100).toFixed(1)}% × ${fmt(c.domMetShare,2)} (art. 778)`, pu(c.metDom)),
+    row('Domestic netback','ex-VAT − transport − Dom MET', pu(c.nbDom),'total'),
     row('RESULT','','','secIn'),
-    row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
+    row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+pu(c.spread),'total'),
     row('BREAKEVEN (export = domestic)','','','secIn'),
     row('Breakeven Skebco',`Hold Discount ${fmt(c.DISC,2)} · S* = Brent − Disc − needed $/bbl`, fmt(c.skStar,2)+' $/bbl'),
     row('Breakeven Discount',`Hold Skebco ${fmt(c.S,3)} · D* = Brent − Skebco − needed $/bbl`, fmt(c.discStar,2)+' $/bbl'),
     row('Breakeven Skebco + Discount',`(S+D)* = Brent − needed $/bbl · now S+D=${fmt(c.S+c.DISC,2)}`, fmt(c.skDiscStar,2)+' $/bbl'),
   ].join('');
 
+  const spreadU = perUnit(c.spread, c.KB);
+  const nbExpU = perUnit(c.nbExp, c.KB);
+  const nbDomU = perUnit(c.nbDom, c.KB);
+  const gaugeMax = resultUnitIsBbl() ? 25 : 150;
   Plotly.newPlot('chart', [
     {
-      type:'indicator', mode:'gauge+number+delta', value:c.spread,
+      type:'indicator', mode:'gauge+number+delta', value:spreadU,
       domain:{x:[0,1], y:[0.52,1]},
-      number:{suffix:' $/t', valueformat:'.1f'},
-      title:{text:`Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)}</span>`},
+      number:{suffix:' '+u, valueformat:'.2f'},
+      title:{text:`Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · ${u}</span>`},
       delta:{reference:0, increasing:{color:'#0f766e'}, decreasing:{color:'#b45309'}},
       gauge:{
-        axis:{range:[-150,150]},
-        bar:{color:c.spread>=0?'#0f766e':'#b45309'},
-        steps:[{range:[-150,-40],color:'#fed7aa'},{range:[-40,0],color:'#ffedd5'},{range:[0,40],color:'#ccfbf1'},{range:[40,150],color:'#99f6e4'}],
+        axis:{range:[-gaugeMax,gaugeMax]},
+        bar:{color:spreadU>=0?'#0f766e':'#b45309'},
+        steps:[
+          {range:[-gaugeMax,-gaugeMax*0.27],color:'#fed7aa'},
+          {range:[-gaugeMax*0.27,0],color:'#ffedd5'},
+          {range:[0,gaugeMax*0.27],color:'#ccfbf1'},
+          {range:[gaugeMax*0.27,gaugeMax],color:'#99f6e4'}
+        ],
         threshold:{line:{color:'#1e3a5f',width:3}, value:0}
       }
     },
-    { type:'bar', orientation:'h', x:[c.nbExp,c.nbDom], y:['Export netback','Domestic netback'],
-      marker:{color:['#0f766e','#b45309']}, text:[fmt(c.nbExp,1)+' $/t', fmt(c.nbDom,1)+' $/t'], textposition:'auto' },
-    { type:'bar', orientation:'h', x:[c.rental,c.metExp,c.duty,c.trExp], y:['Rental','MET','Duty','Export transport'],
+    { type:'bar', orientation:'h', x:[nbExpU,nbDomU], y:['Export netback','Domestic netback'],
+      marker:{color:['#0f766e','#b45309']}, text:[puBare(c.nbExp,2)+' '+u, puBare(c.nbDom,2)+' '+u], textposition:'auto' },
+    { type:'bar', orientation:'h',
+      x:[perUnit(c.rental,c.KB),perUnit(c.metExp,c.KB),perUnit(c.duty,c.KB),perUnit(c.trExp,c.KB)],
+      y:['Rental','MET','Duty','Export transport'],
       marker:{color:['#7c3aed','#0ea5e9','#f43f5e','#64748b']},
-      text:[fmt(c.rental,1),fmt(c.metExp,1),fmt(c.duty,0),fmt(c.trExp,1)], textposition:'auto', xaxis:'x2', yaxis:'y2' }
+      text:[puBare(c.rental,2),puBare(c.metExp,2),puBare(c.duty, resultUnitIsBbl()?2:0),puBare(c.trExp,2)],
+      textposition:'auto', xaxis:'x2', yaxis:'y2' }
   ], {
     margin:{t:70,r:30,b:40,l:130},
-    xaxis:{title:'$/t', domain:[0,0.46], anchor:'y'}, yaxis:{domain:[0,0.42]},
-    xaxis2:{title:'$/t', domain:[0.54,1], anchor:'y2'}, yaxis2:{domain:[0,0.42]},
+    xaxis:{title:u, domain:[0,0.46], anchor:'y'}, yaxis:{domain:[0,0.42]},
+    xaxis2:{title:u, domain:[0.54,1], anchor:'y2'}, yaxis2:{domain:[0,0.42]},
     paper_bgcolor:'rgba(0,0,0,0)', showlegend:false
   }, {responsive:true, displayModeBar:false});
 }
@@ -2006,6 +2049,13 @@ function setDomesticRoute(route) {
   refreshTransportUI();
   renderNetback();
 }
+document.getElementById('unitToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-unit]');
+  if (!btn) return;
+  state.resultUnit = btn.dataset.unit === 'bbl' ? 'bbl' : 't';
+  persist();
+  renderNetback();
+});
 document.getElementById('domRoute').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-route]');
   if (!btn) return;
