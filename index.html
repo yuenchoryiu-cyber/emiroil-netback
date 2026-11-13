@@ -672,15 +672,16 @@
     </div>
 
     <div class="sticky-top">
-      <div id="prodVerdict" class="verdict export" style="grid-template-columns:1.5fr repeat(4,1fr)">
+      <div id="prodVerdict" class="verdict export" style="grid-template-columns:1.4fr repeat(5,1fr)">
         <div>
           <div class="big" id="prodVerdictTxt">Products</div>
           <div class="sub" id="prodVerdictSub"></div>
         </div>
-        <div><span class="nb-label">Revenue (KZT/t)</span><div class="nb-val" id="prodRev">—</div></div>
-        <div><span class="nb-label">Feed + opex (KZT)</span><div class="nb-val" id="prodCost">—</div></div>
-        <div><span class="nb-label">Products NB (KZT/t)</span><div class="nb-val" id="prodNb">—</div></div>
-        <div><span class="nb-label">Gasoline basket</span><div class="nb-val" id="prodGasBasket">—</div></div>
+        <div><span class="nb-label">Export NB</span><div class="nb-val" id="prodExpNb">—</div></div>
+        <div><span class="nb-label">Domestic NB</span><div class="nb-val" id="prodDomNb">—</div></div>
+        <div><span class="nb-label">Refinery NB (100%)</span><div class="nb-val" id="prodNb">—</div></div>
+        <div><span class="nb-label">60% refine + Dom</span><div class="nb-val" id="prodShareCombo">—</div></div>
+        <div><span class="nb-label">Best vs Export</span><div class="nb-val" id="prodVsExp">—</div></div>
       </div>
     </div>
 
@@ -733,13 +734,18 @@
           <div class="field"><label>Excise diesel rate (KZT/t product)</label><input id="prodExcDtRate" type="number" step="1"/></div>
           <div class="field"><label>Fuel-oil duty $/t crude</label><input id="prodMazDuty" type="number" step="0.1"/></div>
         </div>
+        <div class="field" style="margin-top:8px;max-width:12rem">
+          <label>Our refinery share %</label>
+          <input id="prodRefineShare" type="number" step="1" min="0" max="100" value="60"/>
+        </div>
         <div class="kpi-grid" style="margin-top:12px">
           <div class="k"><span>Revenue</span><b id="prodKpiRev">—</b></div>
           <div class="k"><span>Feedstock</span><b id="prodKpiFeed">—</b></div>
           <div class="k"><span>Fixed opex</span><b id="prodKpiFixed">—</b></div>
           <div class="k"><span>Excise</span><b id="prodKpiExc">—</b></div>
-          <div class="k"><span>Products NB</span><b id="prodKpiNb">—</b></div>
-          <div class="k"><span>Δ vs domestic crude</span><b id="prodKpiDelta">—</b></div>
+          <div class="k"><span>Refinery NB</span><b id="prodKpiNb">—</b></div>
+          <div class="k"><span>Δ refine − export</span><b id="prodKpiDelta">—</b></div>
+          <div class="k"><span>Δ (share+dom) − export</span><b id="prodKpiDeltaShare">—</b></div>
         </div>
         <div id="prodCalcBody" style="margin-top:12px"></div>
         <div id="prodChart" style="height:280px;margin-top:10px"></div>
@@ -758,6 +764,7 @@
       Historic = merged PKOP+PNHZ from <b>Jan 2026</b> (tile badge / marker colour = price source).
       Forecast = choose refinery for weighted yields.
       Sell-all economics are <b>ex-VAT</b> on both sides (Excel product prices are VAT-incl → ÷ VAT; feedstock VAT-incl → ÷ VAT), then ÷ FX → $/t.
+      Decision vs <b>Export</b>: full refinery NB, and <b>our share × refine + Domestic</b> (default 60%) — not vs selling crude alone.
       Hover a tile to enlarge.
     </p>
 
@@ -1523,6 +1530,7 @@ let prodState = {
   feedKzt: null,
   vat: null,
   priceEscPct: 0,
+  refineShare: 0.6,
   products: null,
   rates: null
 };
@@ -1658,7 +1666,19 @@ function calcProducts(){
   const opexUsd = opexKzt / fx;
   const revUsd = revKzt / fx;
   const nb = nbKzt / fx;
-  const domNbKzt = c.nbDom * fx;
+  const expNb = c.nbExp;
+  const domNb = c.nbDom;
+  const expNbKzt = expNb * fx;
+  const domNbKzt = domNb * fx;
+  const share = Math.max(0, Math.min(1, num(prodState.refineShare, 0.6)));
+  const shareNb = nb * share;
+  const shareNbKzt = nbKzt * share;
+  const sharePlusDom = shareNb + domNb;
+  const sharePlusDomKzt = shareNbKzt + domNbKzt;
+  const deltaVsExp = nb - expNb;
+  const deltaVsExpKzt = nbKzt - expNbKzt;
+  const deltaShareDomVsExp = sharePlusDom - expNb;
+  const deltaShareDomVsExpKzt = sharePlusDomKzt - expNbKzt;
   let gasRev=0, gasY=0;
   for (const row of rows) { if (row.isGas && row.sold) { gasRev += row.contribKzt; gasY += row.yield; } }
   const gasBasketKzt = gasY > 0 ? (gasRev / gasY) : 0;
@@ -1666,7 +1686,9 @@ function calcProducts(){
     fixedKzt, fixedUsd: fixedKzt/fx, excGasKzt, excDtKzt, excKzt, excUsd: excKzt/fx,
     dutyUsd, dutyKzt, opexKzt, opexUsd, revKzt, revUsd, yieldSold,
     nbKzt, nb, rows, gasBasketKzt, gasY,
-    domNb: c.nbDom, domNbKzt, deltaVsDom: nb - c.nbDom, deltaVsDomKzt: nbKzt - domNbKzt,
+    expNb, expNbKzt, domNb, domNbKzt, share, shareNb, shareNbKzt,
+    sharePlusDom, sharePlusDomKzt,
+    deltaVsExp, deltaVsExpKzt, deltaShareDomVsExp, deltaShareDomVsExpKzt,
     rates, kb: c.KB };
 }
 function fillProdMonthSelect(){
@@ -1910,12 +1932,24 @@ function renderProdTrends(){
     return toNb(nbKzt / fx);
   });
   if (window.Plotly && document.getElementById('prodNbChart')) {
-    Plotly.newPlot('prodNbChart', [{
-      type:'scatter', mode:'lines+markers', connectgaps:false, name:'Products NB',
-      x:labels.map(shortMonthLabel), y:nbSeries,
-      line:{color:'#0f766e', width:3}, marker:{size:7}
-    }], {
+    const cNow = calcNetback();
+    const share = Math.max(0, Math.min(1, num(prodState.refineShare, 0.6)));
+    const xLab = labels.map(shortMonthLabel);
+    const expY = labels.map(() => toNb(cNow.nbExp));
+    const domY = labels.map(() => toNb(cNow.nbDom));
+    const shareDomY = nbSeries.map(v => (v == null ? null : v * share + toNb(cNow.nbDom)));
+    Plotly.newPlot('prodNbChart', [
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Refinery NB (100%)',
+        x:xLab, y:nbSeries, line:{color:'#0f766e', width:3}, marker:{size:7} },
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:(share*100).toFixed(0)+'% refine + Dom',
+        x:xLab, y:shareDomY, line:{color:'#7c3aed', width:2, dash:'dot'}, marker:{size:6} },
+      { type:'scatter', mode:'lines', name:'Export (Analysis)',
+        x:xLab, y:expY, line:{color:'#b45309', width:2, dash:'dash'} },
+      { type:'scatter', mode:'lines', name:'Domestic (Analysis)',
+        x:xLab, y:domY, line:{color:'#1e3a5f', width:2, dash:'dash'} }
+    ], {
       margin:{t:16,r:20,b:50,l:55}, yaxis:{title:uNb},
+      legend:{orientation:'h', y:1.12},
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
   }
@@ -1951,6 +1985,7 @@ function renderProductsPage(){
   setVal('prodExcGasRate', r.rates.exciseGasRateKzt);
   setVal('prodExcDtRate', r.rates.exciseDieselRateKzt);
   setVal('prodMazDuty', r.rates.fuelOilDutyUsd);
+  setVal('prodRefineShare', Math.round(num(prodState.refineShare, 0.6) * 100));
 
   const body = document.getElementById('prodTableBody');
   const editing = document.activeElement && document.activeElement.matches &&
@@ -1978,30 +2013,37 @@ function renderProductsPage(){
 
   const box = document.getElementById('prodVerdict');
   if (box) {
-    box.className = 'verdict ' + (r.nb >= r.domNb ? 'export' : 'domestic');
+    const bestAlt = Math.max(r.nb, r.sharePlusDom);
+    const beatExp = bestAlt >= r.expNb;
+    box.className = 'verdict ' + (beatExp ? 'domestic' : 'export');
     document.getElementById('prodVerdictTxt').textContent = prodState.mode === 'forecast'
       ? ('FORECAST · ' + String(prodState.refinery).toUpperCase())
       : 'HISTORIC · MERGED';
     document.getElementById('prodVerdictSub').textContent =
       (prodState.mode === 'historic' ? (histMonth(prodState.monthId)?.label || '') : 'Weighted yields · sell-all')
-      + ` · ${fmtInt(r.nbKzt)} KZT/t · FX ${fmt(r.fx,2)}`;
-    document.getElementById('prodRev').textContent = fmtInt(r.revKzt) + ' KZT';
-    document.getElementById('prodCost').textContent = fmtInt(r.feedKzt + r.opexKzt) + ' KZT';
-    document.getElementById('prodNb').textContent = fmtInt(r.nbKzt) + ' KZT/t';
-    const gasEl = document.getElementById('prodGasBasket');
-    if (gasEl) gasEl.textContent = fmtInt(r.gasBasketKzt||0) + ' KZT/t';
+      + ` · share ${(r.share*100).toFixed(0)}% · FX ${fmt(r.fx,2)}`;
+    document.getElementById('prodExpNb').textContent = fmtProdUnit(r.expNb, 2);
+    document.getElementById('prodDomNb').textContent = fmtProdUnit(r.domNb, 2);
+    document.getElementById('prodNb').textContent = fmtProdUnit(r.nb, 2);
+    document.getElementById('prodShareCombo').textContent = fmtProdUnit(r.sharePlusDom, 2);
+    const vs = document.getElementById('prodVsExp');
+    if (vs) {
+      const d = bestAlt - r.expNb;
+      vs.textContent = (d >= 0 ? 'REFINE +' : 'EXPORT +') + fmtProdUnit(Math.abs(d), 2);
+    }
   }
   const k=(id,t)=>{const el=document.getElementById(id); if(el) el.textContent=t;};
-  // KPIs: derived from KZT ÷ FX (toggle $/t or $/bbl)
   k('prodKpiRev', fmtProdUnit(r.revUsd, 2));
   k('prodKpiFeed', fmtProdUnit(r.feedUsd, 2));
   k('prodKpiFixed', fmtProdUnit(r.fixedUsd, 2));
   k('prodKpiExc', fmtProdUnit(r.excUsd, 2));
   k('prodKpiNb', fmtProdUnit(r.nb, 2));
-  k('prodKpiDelta', (r.deltaVsDom>=0?'+':'')+fmtProdUnit(r.deltaVsDom, 2));
+  k('prodKpiDelta', (r.deltaVsExp>=0?'+':'')+fmtProdUnit(r.deltaVsExp, 2));
+  k('prodKpiDeltaShare', (r.deltaShareDomVsExp>=0?'+':'')+fmtProdUnit(r.deltaShareDomVsExp, 2));
 
   const calcHost = document.getElementById('prodCalcBody');
   if (calcHost) {
+    const pct = (r.share * 100).toFixed(0);
     calcHost.innerHTML = `<table class="calc"><tbody>
       <tr class="secIn"><td colspan="3">Sell-all ex-VAT KZT / t crude (then ÷ FX → $)</td></tr>
       <tr><td>Revenue</td><td>Σ yield × (VAT-incl price ÷ ${fmt(r.vat,2)})</td><td class="num">${fmtInt(r.revKzt)} KZT</td></tr>
@@ -2010,11 +2052,14 @@ function renderProductsPage(){
       <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)}</td><td class="num">${fmtInt(r.excGasKzt)} KZT</td></tr>
       <tr><td>Excise diesel</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)}</td><td class="num">${fmtInt(r.excDtKzt)} KZT</td></tr>
       <tr><td>Fuel-oil duty</td><td>${fmt(r.dutyUsd,2)} $/t × FX ${fmt(r.fx,2)}</td><td class="num">${fmtInt(r.dutyKzt)} KZT</td></tr>
-      <tr class="total"><td>Products NB</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT/t</td></tr>
-      <tr><td>Products NB $</td><td>${fmtInt(r.nbKzt)} ÷ FX ${fmt(r.fx,2)}</td><td class="num">${fmt(r.nb,2)} $/t</td></tr>
-      <tr class="secDom"><td colspan="3">vs selling crude domestically (Analysis)</td></tr>
-      <tr><td>Domestic crude NB</td><td>Analysis × FX</td><td class="num">${fmtInt(r.domNbKzt)} KZT · ${fmt(r.domNb,2)} $/t</td></tr>
-      <tr class="total"><td>Δ Products − Domestic</td><td></td><td class="num">${(r.deltaVsDomKzt>=0?'+':'')+fmtInt(r.deltaVsDomKzt)} KZT · ${(r.deltaVsDom>=0?'+':'')+fmt(r.deltaVsDom,2)} $/t</td></tr>
+      <tr class="total"><td>Refinery NB (100%)</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT · ${fmt(r.nb,2)} $/t</td></tr>
+      <tr class="secDom"><td colspan="3">Compare to Export (Analysis) — not vs selling crude alone</td></tr>
+      <tr><td>Export NB</td><td>Analysis</td><td class="num">${fmt(r.expNb,2)} $/t</td></tr>
+      <tr><td>Domestic NB</td><td>Analysis</td><td class="num">${fmt(r.domNb,2)} $/t</td></tr>
+      <tr><td>Δ Refinery − Export</td><td>100% refine vs export crude</td><td class="num">${(r.deltaVsExp>=0?'+':'')+fmt(r.deltaVsExp,2)} $/t</td></tr>
+      <tr><td>Our share (${pct}%)</td><td>${pct}% × refinery NB</td><td class="num">${fmt(r.shareNb,2)} $/t</td></tr>
+      <tr class="total"><td>${pct}% refine + Domestic</td><td>share + Analysis domestic NB</td><td class="num">${fmt(r.sharePlusDom,2)} $/t</td></tr>
+      <tr class="total"><td>Δ (share+Dom) − Export</td><td></td><td class="num">${(r.deltaShareDomVsExp>=0?'+':'')+fmt(r.deltaShareDomVsExp,2)} $/t</td></tr>
     </tbody></table>`;
   }
   if (window.Plotly && document.getElementById('prodChart')) {
@@ -2110,6 +2155,10 @@ function wireProductsPage(){
   document.getElementById('prodFeedKzt').addEventListener('input', e => { prodState.feedKzt = num(e.target.value); renderProductsPage(); });
   document.getElementById('prodVat').addEventListener('input', e => { prodState.vat = num(e.target.value); renderProductsPage(); });
   document.getElementById('prodEsc').addEventListener('input', e => { prodState.priceEscPct = num(e.target.value); renderProductsPage(); });
+  document.getElementById('prodRefineShare').addEventListener('input', e => {
+    prodState.refineShare = Math.max(0, Math.min(100, num(e.target.value, 60))) / 100;
+    renderProductsPage();
+  });
   document.getElementById('prodUseAnalysisFx').addEventListener('change', e => {
     prodState.useAnalysisFx = !!e.target.checked;
     if (prodState.useAnalysisFx) prodState.fx = calcNetback().FX;
