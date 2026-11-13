@@ -21,9 +21,31 @@
       var(--paper);
   }
   .wrap{max-width:1440px; margin:0 auto; padding:12px}
-  .app-brand{margin:0 0 10px}
+  .app-brand{
+    margin:0 0 10px; display:flex; flex-wrap:wrap; align-items:flex-start;
+    justify-content:space-between; gap:10px 16px;
+  }
+  .app-brand .brand-left{min-width:0; flex:1 1 14rem}
   .app-brand .brand{margin:0; font-size:1.45rem; color:var(--accent); letter-spacing:.01em}
   .app-brand .brand-sub{margin:3px 0 0; color:var(--muted); font-size:.86rem}
+  .app-brand .brand-meta{
+    display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+    flex:0 0 auto; margin-left:auto;
+  }
+  .app-updated{
+    font-size:.72rem; color:var(--muted); text-align:right; line-height:1.35;
+    white-space:nowrap;
+  }
+  .app-updated b{color:var(--ink); font-weight:650}
+  #langToggle{margin:0; gap:4px}
+  #langToggle button{
+    min-width:2.6rem; padding:6px 10px; font-size:.78rem; font-weight:700;
+  }
+  #langToggle button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+  @media(max-width:640px){
+    .app-brand .brand-meta{align-items:flex-start; width:100%}
+    .app-updated{text-align:left; white-space:normal}
+  }
   .subnav{
     display:flex; gap:6px; margin:0 0 14px; flex-wrap:wrap; padding:8px; border:1px solid var(--line);
     border-radius:12px; background:linear-gradient(180deg,#fffdf8,#f7f3ea);
@@ -204,7 +226,11 @@
     width:min(380px,92vw); background:var(--card); border:1px solid var(--line);
     border-radius:16px; padding:28px 24px; box-shadow:0 12px 40px rgba(0,0,0,.08);
   }
-  .gate-card h1{font-size:1.25rem; margin:0 0 6px; color:var(--accent)}
+  .gate-card .gate-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin:0 0 6px}
+  .gate-card h1{font-size:1.25rem; margin:0; color:var(--accent)}
+  .gate-card #langToggleGate{margin:0; flex:0 0 auto}
+  .gate-card #langToggleGate button{min-width:2.4rem; padding:5px 9px; font-size:.75rem; font-weight:700}
+  .gate-card #langToggleGate button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
   .gate-card p{margin:0 0 16px; color:var(--muted); font-size:.9rem}
   .gate-card input[type=password]{
     width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
@@ -412,7 +438,13 @@
 <body>
 <div id="gate">
   <div class="gate-card">
-    <h1>Netback analysis</h1>
+    <div class="gate-top">
+      <h1>Netback analysis</h1>
+      <div class="route-toggle" id="langToggleGate" role="group" aria-label="Language">
+        <button type="button" data-lang="en" class="active">EN</button>
+        <button type="button" data-lang="ru">RU</button>
+      </div>
+    </div>
     <p>Enter the shared password to open the tool.</p>
     <div class="gate-err" id="gateErr"></div>
     <input id="gatePw" type="password" placeholder="Password" autocomplete="current-password"/>
@@ -421,24 +453,33 @@
 </div>
 <div id="app" class="wrap">
   <header class="app-brand">
-    <h1 class="brand">Emir Oil Netback</h1>
-    <p class="brand-sub">Analysis, transport, taxes, EOT Netback, month profiles, and reports</p>
+    <div class="brand-left">
+      <h1 class="brand">Emir Oil Netback</h1>
+      <p class="brand-sub" data-i18n="brand_sub">Analysis, transport, taxes, EOT Netback, month profiles, and reports</p>
+    </div>
+    <div class="brand-meta">
+      <div class="app-updated"><span data-i18n="last_updated">Last updated</span>: <b id="appUpdatedAt">—</b></div>
+      <div class="route-toggle" id="langToggle" role="group" aria-label="Language">
+        <button type="button" data-lang="en" class="active">EN</button>
+        <button type="button" data-lang="ru">RU</button>
+      </div>
+    </div>
   </header>
   <nav class="subnav" aria-label="Netback tools">
-    <span class="subnav-label">Tools</span>
-    <button type="button" class="active" data-page="netback">Analysis</button>
-    <button type="button" data-page="transport">Transport &amp; map</button>
-    <button type="button" data-page="taxes">Taxes / fiscal</button>
-    <button type="button" data-page="products">EOT Netback</button>
-    <button type="button" data-page="profiles">Month profiles</button>
-    <button type="button" data-page="reports">Reports</button>
+    <span class="subnav-label" data-i18n="tools">Tools</span>
+    <button type="button" class="active" data-page="netback" data-i18n="nav_analysis">Analysis</button>
+    <button type="button" data-page="transport" data-i18n="nav_transport">Transport &amp; map</button>
+    <button type="button" data-page="taxes" data-i18n="nav_taxes">Taxes / fiscal</button>
+    <button type="button" data-page="products" data-i18n="nav_eot">EOT Netback</button>
+    <button type="button" data-page="profiles" data-i18n="nav_profiles">Month profiles</button>
+    <button type="button" data-page="reports" data-i18n="nav_reports">Reports</button>
   </nav>
 
   <!-- NETBACK PAGE -->
   <div id="page-netback" class="page active">
     <h1>Analysis — Novorossiysk vs <span id="domTitle">Shymkent (PKOP)</span></h1>
     <div class="month-head" id="netbackMonthHead">—</div>
-    <p class="lead">Primary netback view. Use the tools bar above for transport costs, tax tables, month profiles, and reports.</p>
+    <p class="lead" data-i18n="analysis_lead">Primary netback view. Use the tools bar above for transport costs, tax tables, month profiles, and reports.</p>
 
     <div class="sticky-top">
       <div id="verdict" class="verdict domestic">
@@ -447,15 +488,15 @@
           <div class="sub" id="verdictSub"></div>
         </div>
         <div>
-          <span class="nb-label">Export netback</span>
+          <span class="nb-label" data-i18n="export_nb">Export netback</span>
           <div class="nb-val" id="verdictExpNb">—</div>
         </div>
         <div>
-          <span class="nb-label">Domestic netback</span>
+          <span class="nb-label" data-i18n="domestic_nb">Domestic netback</span>
           <div class="nb-val" id="verdictDomNb">—</div>
         </div>
         <div>
-          <span class="nb-label">Δ Export − Domestic</span>
+          <span class="nb-label" data-i18n="delta_exp_dom">Δ Export − Domestic</span>
           <div class="nb-val" id="verdictSpread">—</div>
         </div>
         <div>
@@ -472,10 +513,10 @@
 
     <div class="controls">
       <div class="route-toggle" id="domRoute" role="group" aria-label="Domestic destination">
-        <button type="button" data-route="pkop" class="active">Domestic: Shymkent (PKOP)</button>
-        <button type="button" data-route="pavlodar">Domestic: Pavlodar (PNHZ)</button>
+        <button type="button" data-route="pkop" class="active" data-i18n="domestic_pkop">Domestic: Shymkent (PKOP)</button>
+        <button type="button" data-route="pavlodar" data-i18n="domestic_pnhz">Domestic: Pavlodar (PNHZ)</button>
         <div class="route-toggle unit-toggle" id="unitToggle" role="group" aria-label="Result unit" style="margin:0 0 0 auto">
-          <span class="unit-lbl">Results</span>
+          <span class="unit-lbl" data-i18n="results">Results</span>
           <button type="button" data-unit="t" class="active">$/t</button>
           <button type="button" data-unit="bbl">$/bbl</button>
         </div>
@@ -507,16 +548,16 @@
         </div>
         <div class="reset-pick">
           <div>
-            <label>Reset to month</label>
+            <label data-i18n="reset_to_month">Reset to month</label>
             <select id="resetMonthSelect" aria-label="Month to reset to"></select>
           </div>
-          <button type="button" id="btnReset">Reset</button>
+          <button type="button" id="btnReset" data-i18n="reset">Reset</button>
         </div>
       </div>
-      <p class="fx-footnote" id="fxRateNote">* FX: prior months use monthly average; current month uses daily rate on open.</p>
-      <button type="button" class="adv-toggle" id="btnAdv">Show structural parameters (VAT, bbl/t, MET%)</button>
+      <p class="fx-footnote" id="fxRateNote" data-i18n="fx_note_default">* FX: prior months use monthly average; current month uses daily rate on open.</p>
+      <button type="button" class="adv-toggle" id="btnAdv" data-i18n="show_structural">Show structural parameters (VAT, bbl/t, MET%)</button>
       <div class="adv-box" id="advBox">
-        <div class="adv-title">Structural — usually unchanged short term</div>
+        <div class="adv-title" data-i18n="structural_title">Structural — usually unchanged short term</div>
         <div class="row2">
           <div>
             <label>Export bbl/t <span class="val" id="kbLbl">7.2223</span></label>
@@ -546,13 +587,13 @@
         <div class="live-head">
           <h2>Live scenario</h2>
           <div class="route-toggle onoff-toggle" id="oilIncomeToggle" role="group" aria-label="EOT income">
-            <span class="unit-lbl">EOT income</span>
-            <button type="button" data-oil="off" class="active">Off</button>
-            <button type="button" data-oil="on">On · <span id="oilShareLbl">60</span>%</button>
+            <span class="unit-lbl" data-i18n="eot_income">EOT income</span>
+            <button type="button" data-oil="off" class="active" data-i18n="off">Off</button>
+            <button type="button" data-oil="on"><span data-i18n="on">On</span> · <span id="oilShareLbl">60</span>%</button>
           </div>
         </div>
         <p class="lead" id="oilProductsNote" style="display:none;margin:0 0 8px;font-size:.78rem">
-          Comparing Export to <b>Domestic + EOT</b>. Crude-only domestic remains in the formula table.
+          <span data-i18n-html="eot_compare_note">Comparing Export to <b>Domestic + EOT</b>. Crude-only domestic remains in the formula table.</span>
         </p>
         <div id="chart"></div>
       </section>
@@ -623,7 +664,7 @@
   <!-- TAXES / FISCAL PAGE -->
   <div id="page-taxes" class="page">
     <h1>Taxes / fiscal</h1>
-    <p class="lead">Structural fiscal layer — usually unchanged month to month. Edits apply immediately to netback. Separate from monthly price profiles.</p>
+    <p class="lead" data-i18n="taxes_lead">Structural fiscal layer — usually unchanged month to month. Edits apply immediately to netback. Separate from monthly price profiles.</p>
     <div class="btn-row no-print" style="margin-bottom:10px">
       <button type="button" class="ok" id="btnTaxResetAll">Reset all taxes to baseline</button>
       <button type="button" class="ghost" id="btnTaxResetLadders">Reset ladders only</button>
@@ -742,11 +783,11 @@
 
   <!-- EOT NETBACK PAGE -->
   <div id="page-products" class="page">
-    <h1>EOT Netback</h1>
+    <h1 data-i18n="eot_title">EOT Netback</h1>
 
     <div class="route-toggle" id="prodModeToggle" role="group" aria-label="Mode" style="margin-bottom:8px">
-      <button type="button" data-prod-mode="forecast" class="active">Forecast</button>
-      <button type="button" data-prod-mode="historic">Historic</button>
+      <button type="button" data-prod-mode="forecast" class="active" data-i18n="forecast">Forecast</button>
+      <button type="button" data-prod-mode="historic" data-i18n="historic">Historic</button>
     </div>
     <div class="route-toggle" id="prodRefToggle" role="group" aria-label="Refinery" style="margin-bottom:10px">
       <button type="button" data-prod-ref="pkop" class="active">PKOP (Shymkent)</button>
@@ -761,9 +802,9 @@
         </div>
         <div><span class="nb-label">Export NB</span><div class="nb-val" id="prodExpNb">—</div></div>
         <div><span class="nb-label">Domestic NB</span><div class="nb-val" id="prodDomNb">—</div></div>
-        <div><span class="nb-label">EOT NB (100%)</span><div class="nb-val" id="prodNb">—</div></div>
-        <div><span class="nb-label" id="prodShareComboLbl">Domestic + EOT</span><div class="nb-val" id="prodShareCombo">—</div></div>
-        <div><span class="nb-label">Δ Export − (Domestic + EOT)</span><div class="nb-val" id="prodVsExp">—</div></div>
+        <div><span class="nb-label" data-i18n="eot_nb_100">EOT NB (100%)</span><div class="nb-val" id="prodNb">—</div></div>
+        <div><span class="nb-label" id="prodShareComboLbl" data-i18n="domestic_eot">Domestic + EOT</span><div class="nb-val" id="prodShareCombo">—</div></div>
+        <div><span class="nb-label" data-i18n="delta_exp_dom_eot">Δ Export − (Domestic + EOT)</span><div class="nb-val" id="prodVsExp">—</div></div>
       </div>
     </div>
 
@@ -780,8 +821,8 @@
       <div class="feed-link-row">
         <div class="route-toggle onoff-toggle" id="prodFeedLinkToggle" role="group" aria-label="Link Analysis domestic price">
           <span class="unit-lbl">Analysis domestic price</span>
-          <button type="button" data-feed-link="on" class="active">On</button>
-          <button type="button" data-feed-link="off">Off</button>
+          <button type="button" data-feed-link="on" class="active" data-i18n="on">On</button>
+          <button type="button" data-feed-link="off" data-i18n="off">Off</button>
         </div>
         <div class="field" style="margin:0;min-width:12rem;flex:1 1 12rem">
           <label>Feedstock ex-VAT</label>
@@ -821,7 +862,7 @@
           <div class="field"><label>Fuel-oil duty KZT/t crude</label><input id="prodMazDuty" type="number" step="100"/></div>
         </div>
         <div class="field" style="margin-top:8px;max-width:12rem">
-          <label>Our EOT share %</label>
+          <label data-i18n="our_eot_share">Our EOT share %</label>
           <input id="prodRefineShare" type="number" step="1" min="0" max="100" value="60"/>
         </div>
         <div class="kpi-grid" style="margin-top:12px">
@@ -829,9 +870,9 @@
           <div class="k"><span>Feedstock</span><b id="prodKpiFeed">—</b></div>
           <div class="k"><span>Fixed opex</span><b id="prodKpiFixed">—</b></div>
           <div class="k"><span>Excise</span><b id="prodKpiExc">—</b></div>
-          <div class="k"><span>EOT NB</span><b id="prodKpiNb">—</b></div>
-          <div class="k"><span>Δ Export − EOT</span><b id="prodKpiDelta">—</b></div>
-          <div class="k"><span>Δ Export − (Domestic + EOT)</span><b id="prodKpiDeltaShare">—</b></div>
+          <div class="k"><span data-i18n="eot_nb">EOT NB</span><b id="prodKpiNb">—</b></div>
+          <div class="k"><span data-i18n="delta_exp_eot">Δ Export − EOT</span><b id="prodKpiDelta">—</b></div>
+          <div class="k"><span data-i18n="delta_exp_dom_eot">Δ Export − (Domestic + EOT)</span><b id="prodKpiDeltaShare">—</b></div>
         </div>
         <div id="prodCalcBody" style="margin-top:12px"></div>
         <div id="prodChart" style="height:280px;margin-top:10px"></div>
@@ -847,7 +888,7 @@
     </div>
 
     <div class="section report-section" id="prodCompareReport">
-      <h2>Decision report — Export vs Domestic + EOT</h2>
+      <h2 data-i18n="decision_report">Decision report — Export vs Domestic + EOT</h2>
       <div id="prodCompareReportBody"></div>
     </div>
 
@@ -863,43 +904,43 @@
 
   <!-- PROFILES PAGE -->
   <div id="page-profiles" class="page">
-    <h1>Month profiles</h1>
-    <p class="lead">Load, create, and edit months here — crude parameters <b>and</b> optional <b>EOT / refinery</b> monthly slate. Current/future months auto-refresh <b>FX</b> from the daily market rate. Tax tables are shared under <b>Taxes / fiscal</b>.</p>
+    <h1 data-i18n="profiles_title">Month profiles</h1>
+    <p class="lead" data-i18n="profiles_lead">Load, create, and edit months here — crude parameters and optional EOT / refinery monthly slate. Current/future months auto-refresh FX from the daily market rate. Tax tables are shared under Taxes / fiscal.</p>
     <div class="two-col">
       <div class="section">
-        <h2>1) Current month &amp; load</h2>
-        <p class="lead" style="margin-bottom:8px">Active profile: <b id="activeProfileLbl">Nov 2026</b></p>
+        <h2 data-i18n="current_load">1) Current month &amp; load</h2>
+        <p class="lead" style="margin-bottom:8px"><span data-i18n="active_profile">Active profile:</span> <b id="activeProfileLbl">Nov 2026</b></p>
         <div class="field">
-          <label>Choose profile to show</label>
+          <label data-i18n="choose_profile">Choose profile to show</label>
           <select id="profileSelect"></select>
         </div>
         <div class="btn-row no-print">
-          <button type="button" class="ok" id="btnLoadProfile">Load selected</button>
-          <button type="button" id="btnResetMonth">Reset analysis to selected month</button>
-          <button type="button" class="ghost" id="btnRefreshCloud">Refresh from online</button>
+          <button type="button" class="ok" id="btnLoadProfile" data-i18n="load_selected">Load selected</button>
+          <button type="button" id="btnResetMonth" data-i18n="reset_analysis">Reset analysis to selected month</button>
+          <button type="button" class="ghost" id="btnRefreshCloud" data-i18n="refresh_online">Refresh from online</button>
         </div>
         <div class="status" id="profileStatus"></div>
       </div>
       <div class="section">
-        <h2>2) Create / edit &amp; save</h2>
-        <p class="lead">Edit any saved month (parameters + transport), then <b>Save</b>. Or write Analysis sliders into the selected profile in one click.</p>
+        <h2 data-i18n="create_edit">2) Create / edit &amp; save</h2>
+        <p class="lead" data-i18n="create_edit_lead">Edit any saved month (parameters + transport), then Save. Or write Analysis sliders into the selected profile in one click.</p>
         <div class="btn-row">
-          <button type="button" class="ok" id="btnEditSelectedProfile">Edit selected profile</button>
-          <button type="button" class="ghost" id="btnSaveAnalysisToSelected">Save Analysis → selected</button>
-          <button type="button" class="ghost" id="btnOpenNewProfile">Create new month</button>
+          <button type="button" class="ok" id="btnEditSelectedProfile" data-i18n="edit_selected">Edit selected profile</button>
+          <button type="button" class="ghost" id="btnSaveAnalysisToSelected" data-i18n="save_analysis_sel">Save Analysis → selected</button>
+          <button type="button" class="ghost" id="btnOpenNewProfile" data-i18n="create_new_month">Create new month</button>
         </div>
         <div class="status" id="saveStatus"></div>
       </div>
     </div>
     <div class="section">
-      <h2>Saved profiles</h2>
+      <h2 data-i18n="saved_profiles">Saved profiles</h2>
       <p class="lead" style="margin-bottom:8px">Use <b>Edit</b> to change a month, then Save on the editor page. <b>Save←Analysis</b> overwrites that month with current Analysis values.</p>
       <table class="profile-list">
         <thead><tr><th>Month</th><th>Label</th><th>Author</th><th>Export NB</th><th>Domestic NB</th><th>Δ Exp−Dom</th><th>EOT</th><th>Actions</th></tr></thead>
         <tbody id="profileTable"></tbody>
       </table>
       <div class="btn-row no-print" style="margin-top:10px">
-        <button type="button" class="ghost" id="btnExportProfiles">Export JSON</button>
+        <button type="button" class="ghost" id="btnExportProfiles" data-i18n="export_json">Export JSON</button>
         <label class="ghost" style="display:inline-block;padding:9px 14px;border-radius:999px;border:1px solid var(--line);cursor:pointer">
           Import JSON <input id="btnImportProfiles" type="file" accept="application/json,.json" style="display:none"/>
         </label>
@@ -917,13 +958,13 @@
     </div>
 
     <div class="section" id="profileEditorSection">
-      <h2 style="margin-top:0">New / edit profile</h2>
+      <h2 style="margin-top:0" data-i18n="new_edit_profile">New / edit profile</h2>
       <h1 id="pePageTitle">Edit month profile</h1>
     <p class="lead" id="pePageLead">Change parameters and transport, check the live preview, then save.</p>
     <div class="btn-row no-print" style="margin-bottom:10px">
-      <button type="button" class="ok" id="btnPeSaveLocalTop">Save on this device</button>
-      <button type="button" class="ghost" id="btnPeSaveOnlineTop">Save online</button>
-      <button type="button" class="ghost" id="btnPeCancelTop">Close editor</button>
+      <button type="button" class="ok" id="btnPeSaveLocalTop" data-i18n="save_device">Save on this device</button>
+      <button type="button" class="ghost" id="btnPeSaveOnlineTop" data-i18n="save_online">Save online</button>
+      <button type="button" class="ghost" id="btnPeCancelTop" data-i18n="close_editor">Close editor</button>
     </div>
     <div class="status" id="peSaveStatusTop"></div>
     <div class="section">
@@ -935,13 +976,13 @@
       <div class="field" style="margin-top:8px"><label>Notes</label><textarea id="peNotes" placeholder="What changed vs prior month"></textarea></div>
     </div>
     <div class="section">
-      <h2>Parameters</h2>
+      <h2 data-i18n="parameters">Parameters</h2>
       <div class="param-grid">
         <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
         <div class="field"><label>FX (KZT per 1 USD)</label>
           <div style="display:flex;gap:6px;align-items:center">
             <input id="peFx" type="number" step="0.01" value="448.64" style="flex:1"/>
-            <button type="button" class="ghost" id="btnPeFetchFx" title="Pull live daily FX">Fetch FX</button>
+            <button type="button" class="ghost" id="btnPeFetchFx" title="Pull live daily FX" data-i18n="fetch_fx">Fetch FX</button>
           </div>
           <div class="sub" id="peFxHint">Current/future months auto-refresh FX on open.</div>
         </div>
@@ -969,7 +1010,7 @@
       </div>
     </div>
     <div class="section">
-      <h2>Transport costs (editable)</h2>
+      <h2 data-i18n="transport_editable">Transport costs (editable)</h2>
       <p class="lead">Edit adjusted KZT/t per leg. Totals and netback preview update live. RUB legs use RUB→KZT above.</p>
       <div class="tr-kpis" style="margin-bottom:10px">
         <div class="kpi export"><span>Export transport</span><b id="peTrExpTot">—</b></div>
@@ -988,19 +1029,19 @@
       </div>
     </div>
     <div class="section pe-eot-box" id="peEotSection">
-      <h2>EOT / refinery monthly data</h2>
+      <h2 data-i18n="eot_refinery_data">EOT / refinery monthly data</h2>
       <p class="lead">Optional sell-all slate for this month (yields + VAT-incl prices). Saved with the profile so future months can be created here and used by <b>EOT Netback</b> / reports. Leave Off to keep embedded history only.</p>
       <div class="pe-eot-tools">
         <div class="field" style="margin:0;min-width:9rem">
-          <label>Include EOT for this month</label>
+          <label data-i18n="include_eot">Include EOT for this month</label>
           <select id="peEotEnable">
-            <option value="off">Off</option>
-            <option value="on">On — edit &amp; save</option>
+            <option value="off" data-i18n="eot_off">Off</option>
+            <option value="on" data-i18n="eot_on">On — edit &amp; save</option>
           </select>
         </div>
-        <button type="button" class="ghost" id="btnPeEotFromHist">Fill from last historic</button>
-        <button type="button" class="ghost" id="btnPeEotFromPage">Fill from EOT Netback page</button>
-        <button type="button" class="ghost" id="btnPeEotClear">Clear slate</button>
+        <button type="button" class="ghost" id="btnPeEotFromHist" data-i18n="fill_historic">Fill from last historic</button>
+        <button type="button" class="ghost" id="btnPeEotFromPage" data-i18n="fill_eot_page">Fill from EOT Netback page</button>
+        <button type="button" class="ghost" id="btnPeEotClear" data-i18n="clear_slate">Clear slate</button>
         <span class="status" id="peEotStatus" style="margin:0"></span>
       </div>
       <div id="peEotEditor" style="display:none">
@@ -1035,9 +1076,9 @@
       <div class="status" id="peCalcHint" style="margin-top:8px"></div>
     </div>
     <div class="btn-row" style="margin-top:12px">
-      <button type="button" class="ok" id="btnPeSaveLocal">Save on this device</button>
-      <button type="button" class="ghost" id="btnPeSaveOnline">Save online</button>
-      <button type="button" class="ghost" id="btnPeCancel">Close editor</button>
+      <button type="button" class="ok" id="btnPeSaveLocal" data-i18n="save_device">Save on this device</button>
+      <button type="button" class="ghost" id="btnPeSaveOnline" data-i18n="save_online">Save online</button>
+      <button type="button" class="ghost" id="btnPeCancel" data-i18n="close_editor">Close editor</button>
     </div>
     <div class="status" id="peSaveStatus"></div>
     </div>
@@ -1046,14 +1087,14 @@
 
   <!-- REPORTS PAGE -->
   <div id="page-reports" class="page">
-    <h1>Monthly reports</h1>
-    <p class="lead">1-month and multi-month reports include Export vs Domestic and <b>EOT Netback</b> (EOT NB + Domestic + EOT vs Export), recalculated live for each month — not snapshots.</p>
+    <h1 data-i18n="reports_title">Monthly reports</h1>
+    <p class="lead" data-i18n="reports_lead">1-month and multi-month reports include Export vs Domestic and EOT Netback (EOT NB + Domestic + EOT vs Export), recalculated live for each month — not snapshots.</p>
     <div class="report-toolbar no-print controls">
       <div class="field">
-        <label>Report type</label>
+        <label data-i18n="report_type">Report type</label>
         <select id="reportType">
-          <option value="single">1-month report (+ vs last month)</option>
-          <option value="trend">Multi-month compare (3 / 6 / 12)</option>
+          <option value="single" data-i18n="report_single">1-month report (+ vs last month)</option>
+          <option value="trend" data-i18n="report_trend">Multi-month compare (3 / 6 / 12)</option>
         </select>
       </div>
       <div class="field" id="singlePickWrap">
@@ -1073,20 +1114,20 @@
         </select>
       </div>
       <div class="field" style="min-width:7rem">
-        <label>EOT share %</label>
+        <label data-i18n="eot_share_pct">EOT share %</label>
         <input id="reportRefineShare" type="number" min="0" max="100" step="1" value="60"/>
       </div>
-      <button type="button" class="ok" id="btnBuildReport">Build report</button>
-      <button type="button" class="ghost" id="btnPrintReport">Print / Save PDF</button>
+      <button type="button" class="ok" id="btnBuildReport" data-i18n="build_report">Build report</button>
+      <button type="button" class="ghost" id="btnPrintReport" data-i18n="print_pdf">Print / Save PDF</button>
     </div>
     <div id="reportOut" class="report-page">
-      <p class="lead">Choose options and click <b>Build report</b>.</p>
+      <p class="lead" data-i18n="report_choose">Choose options and click Build report.</p>
     </div>
   </div>
 
   <!-- AUDIT / RED-LIGHT (backdoor #audit) -->
   <div id="page-audit" class="page">
-    <h1>Red-light logic audit</h1>
+    <h1 data-i18n="audit_title">Red-light logic audit</h1>
     <p class="lead">Backdoor check: green = consistent; amber = review; red = contradicts model logic. Suggested auditor parameters — expand freely.</p>
     <div class="rl-hero ok" id="rlHero">
       <div>
@@ -1094,8 +1135,8 @@
         <div id="rlHeroSub">Run audit</div>
       </div>
       <div class="btn-row" style="margin:0">
-        <button type="button" class="ok" id="btnRunAudit">Re-run audit</button>
-        <button type="button" class="ghost" id="btnAuditExit">Exit audit</button>
+        <button type="button" class="ok" id="btnRunAudit" data-i18n="rerun_audit">Re-run audit</button>
+        <button type="button" class="ghost" id="btnAuditExit" data-i18n="exit_audit">Exit audit</button>
       </div>
     </div>
     <div class="rl-grid" id="rlGrid"></div>
@@ -1105,15 +1146,388 @@
 
 <div id="auditGate">
   <div class="gate-card">
-    <h1>Red-light audit</h1>
-    <p>Backdoor access. Enter the audit password.</p>
+    <h1 data-i18n="audit_gate_title">Red-light audit</h1>
+    <p data-i18n="audit_gate_lead">Backdoor access. Enter the audit password.</p>
     <div class="gate-err" id="auditGateErr"></div>
     <input id="auditGatePw" type="password" placeholder="Password" autocomplete="current-password"/>
-    <button type="button" id="auditGateBtn">Open audit</button>
+    <button type="button" id="auditGateBtn" data-i18n="open_audit">Open audit</button>
   </div>
 </div>
 
 <script>
+/* ===== EN / RU i18n ===== */
+const LANG_KEY = 'eo_netback_lang_v1';
+const APP_UPDATED_AT = '2026-11-13T18:32:00+05:00'; // set on deploy
+let uiLang = 'en';
+
+const I18N = {
+  en: {
+    brand_sub: 'Analysis, transport, taxes, EOT Netback, month profiles, and reports',
+    tools: 'Tools',
+    nav_analysis: 'Analysis',
+    nav_transport: 'Transport & map',
+    nav_taxes: 'Taxes / fiscal',
+    nav_eot: 'EOT Netback',
+    nav_profiles: 'Month profiles',
+    nav_reports: 'Reports',
+    last_updated: 'Last updated',
+    lang_en: 'EN',
+    lang_ru: 'RU',
+    gate_title: 'Netback analysis',
+    gate_lead: 'Enter the shared password to open the tool.',
+    gate_unlock: 'Unlock',
+    gate_wrong: 'Wrong password',
+    analysis_lead: 'Primary netback view. Use the tools bar above for transport costs, tax tables, month profiles, and reports.',
+    export_nb: 'Export netback',
+    domestic_nb: 'Domestic netback',
+    delta_exp_dom: 'Δ Export − Domestic',
+    fx_kzt_usd: 'FX (KZT / 1 USD)',
+    rub_kzt: 'RUB→KZT (KZT / 1 RUB)',
+    domestic_pkop: 'Domestic: Shymkent (PKOP)',
+    domestic_pnhz: 'Domestic: Pavlodar (PNHZ)',
+    results: 'Results',
+    brent: 'Brent',
+    fx: 'FX',
+    skebco: 'Skebco (D6)',
+    discount: 'Discount / skidka (D7)',
+    rub_novoros: 'RUB→KZT (Novoros)',
+    local_vat: 'Local domestic VAT-incl',
+    reset_to_month: 'Reset to month',
+    reset: 'Reset',
+    fx_note_default: '* FX: prior months use monthly average; current month uses daily rate on open.',
+    show_structural: 'Show structural parameters (VAT, bbl/t, MET%)',
+    hide_structural: 'Hide structural parameters',
+    structural_title: 'Structural — usually unchanged short term',
+    eot_income: 'EOT income',
+    on: 'On',
+    off: 'Off',
+    eot_compare_note: 'Comparing Export to <b>Domestic + EOT</b>. Crude-only domestic remains in the formula table.',
+    transport_title: 'Transport costs',
+    taxes_title: 'Taxes / fiscal',
+    taxes_lead: 'Structural fiscal layer — usually unchanged month to month. Edits apply immediately to netback. Separate from monthly price profiles.',
+    eot_title: 'EOT Netback',
+    eot_nb_100: 'EOT NB (100%)',
+    domestic_eot: 'Domestic + EOT',
+    delta_exp_dom_eot: 'Δ Export − (Domestic + EOT)',
+    forecast: 'Forecast',
+    historic: 'Historic',
+    our_eot_share: 'Our EOT share %',
+    eot_nb: 'EOT NB',
+    delta_exp_eot: 'Δ Export − EOT',
+    decision_report: 'Decision report — Export vs Domestic + EOT',
+    profiles_title: 'Month profiles',
+    profiles_lead: 'Load, create, and edit months here — crude parameters and optional EOT / refinery monthly slate. Current/future months auto-refresh FX from the daily market rate. Tax tables are shared under Taxes / fiscal.',
+    current_load: '1) Current month & load',
+    active_profile: 'Active profile:',
+    choose_profile: 'Choose profile to show',
+    load_selected: 'Load selected',
+    reset_analysis: 'Reset analysis to selected month',
+    refresh_online: 'Refresh from online',
+    create_edit: '2) Create / edit & save',
+    create_edit_lead: 'Edit any saved month (parameters + transport), then Save. Or write Analysis sliders into the selected profile in one click.',
+    edit_selected: 'Edit selected profile',
+    save_analysis_sel: 'Save Analysis → selected',
+    create_new_month: 'Create new month',
+    saved_profiles: 'Saved profiles',
+    saved_profiles_lead: 'Use Edit to change a month, then Save on the editor page. Save←Analysis overwrites that month with current Analysis values.',
+    month: 'Month',
+    label: 'Label',
+    author: 'Author',
+    actions: 'Actions',
+    export_json: 'Export JSON',
+    import_json: 'Import JSON',
+    new_edit_profile: 'New / edit profile',
+    parameters: 'Parameters',
+    transport_editable: 'Transport costs (editable)',
+    live_preview: 'Live preview',
+    save_device: 'Save on this device',
+    save_online: 'Save online',
+    close_editor: 'Close editor',
+    eot_refinery_data: 'EOT / refinery monthly data',
+    eot_refinery_lead: 'Optional sell-all slate for this month (yields + VAT-incl prices). Saved with the profile so future months can be created here and used by EOT Netback / reports. Leave Off to keep embedded history only.',
+    include_eot: 'Include EOT for this month',
+    eot_off: 'Off',
+    eot_on: 'On — edit & save',
+    fill_historic: 'Fill from last historic',
+    fill_eot_page: 'Fill from EOT Netback page',
+    clear_slate: 'Clear slate',
+    reports_title: 'Monthly reports',
+    reports_lead: '1-month and multi-month reports include Export vs Domestic and EOT Netback (EOT NB + Domestic + EOT vs Export), recalculated live for each month — not snapshots.',
+    report_type: 'Report type',
+    report_single: '1-month report (+ vs last month)',
+    report_trend: 'Multi-month compare (3 / 6 / 12)',
+    starting_month: 'Starting month (window end)',
+    compare_previous: 'Compare previous',
+    months_3: '3 months',
+    months_6: '6 months',
+    months_12: '12 months',
+    eot_share_pct: 'EOT share %',
+    build_report: 'Build report',
+    print_pdf: 'Print / Save PDF',
+    report_choose: 'Choose options and click Build report.',
+    audit_title: 'Red-light logic audit',
+    audit_lead: 'Backdoor check: green = consistent; amber = review; red = contradicts model logic. Suggested auditor parameters — expand freely.',
+    rerun_audit: 'Re-run audit',
+    exit_audit: 'Exit audit',
+    audit_gate_title: 'Red-light audit',
+    audit_gate_lead: 'Backdoor access. Enter the audit password.',
+    open_audit: 'Open audit',
+    fetch_fx: 'Fetch FX',
+    analysis_domestic_price: 'Analysis domestic price',
+    wins_export: 'EXPORT wins',
+    wins_domestic: 'DOMESTIC wins',
+    wins_dom_eot: 'DOMESTIC + EOT wins',
+    breakeven: 'BREAKEVEN',
+    load: 'Load',
+    edit: 'Edit',
+    delete: 'Delete',
+    current: 'current',
+    eot_saved: 'saved',
+    eot_hist: 'hist',
+  },
+  ru: {
+    brand_sub: 'Анализ, транспорт, налоги, EOT Нетбэк, месячные профили и отчёты',
+    tools: 'Разделы',
+    nav_analysis: 'Анализ',
+    nav_transport: 'Транспорт и карта',
+    nav_taxes: 'Налоги / фискал',
+    nav_eot: 'EOT Нетбэк',
+    nav_profiles: 'Месячные профили',
+    nav_reports: 'Отчёты',
+    last_updated: 'Обновлено',
+    lang_en: 'EN',
+    lang_ru: 'RU',
+    gate_title: 'Анализ нетбэка',
+    gate_lead: 'Введите общий пароль, чтобы открыть инструмент.',
+    gate_unlock: 'Войти',
+    gate_wrong: 'Неверный пароль',
+    analysis_lead: 'Основной расчёт нетбэка. В панели выше — транспорт, налоги, месячные профили и отчёты.',
+    export_nb: 'Нетбэк экспорта',
+    domestic_nb: 'Внутренний нетбэк',
+    delta_exp_dom: 'Δ Экспорт − Внутр.',
+    fx_kzt_usd: 'Курс (тенге / 1 USD)',
+    rub_kzt: 'RUB→KZT (тенге / 1 RUB)',
+    domestic_pkop: 'Внутр.: Шымкент (PKOP)',
+    domestic_pnhz: 'Внутр.: Павлодар (PNHZ)',
+    results: 'Результаты',
+    brent: 'Brent',
+    fx: 'Курс FX',
+    skebco: 'Skebco (D6)',
+    discount: 'Дисконт / скидка (D7)',
+    rub_novoros: 'RUB→KZT (Новорос)',
+    local_vat: 'Внутр. цена с НДС',
+    reset_to_month: 'Сброс к месяцу',
+    reset: 'Сброс',
+    fx_note_default: '* FX: прошлые месяцы — среднемесячный курс; текущий месяц — дневной курс при открытии.',
+    show_structural: 'Показать структурные параметры (НДС, барр/т, MET%)',
+    hide_structural: 'Скрыть структурные параметры',
+    structural_title: 'Структурные — обычно стабильны в краткосрочке',
+    eot_income: 'Доход EOT',
+    on: 'Вкл',
+    off: 'Выкл',
+    eot_compare_note: 'Сравнение Экспорта с <b>Внутр. + EOT</b>. Только сырьё остаётся в таблице формул.',
+    transport_title: 'Транспортные затраты',
+    taxes_title: 'Налоги / фискал',
+    taxes_lead: 'Структурный фискальный слой — обычно без помесячных изменений. Правки сразу влияют на нетбэк. Отдельно от ценовых профилей.',
+    eot_title: 'EOT Нетбэк',
+    eot_nb_100: 'EOT НБ (100%)',
+    domestic_eot: 'Внутр. + EOT',
+    delta_exp_dom_eot: 'Δ Экспорт − (Внутр. + EOT)',
+    forecast: 'Прогноз',
+    historic: 'Факт',
+    our_eot_share: 'Наша доля EOT %',
+    eot_nb: 'EOT НБ',
+    delta_exp_eot: 'Δ Экспорт − EOT',
+    decision_report: 'Отчёт решения — Экспорт vs Внутр. + EOT',
+    profiles_title: 'Месячные профили',
+    profiles_lead: 'Загрузка, создание и правка месяцев — параметры сырья и опциональный месячный сланец EOT / НПЗ. Для текущего и будущих месяцев FX обновляется с дневного рынка. Налоги — в разделе «Налоги / фискал».',
+    current_load: '1) Текущий месяц и загрузка',
+    active_profile: 'Активный профиль:',
+    choose_profile: 'Выберите профиль',
+    load_selected: 'Загрузить выбранный',
+    reset_analysis: 'Сбросить анализ к выбранному месяцу',
+    refresh_online: 'Обновить из облака',
+    create_edit: '2) Создать / править и сохранить',
+    create_edit_lead: 'Правите сохранённый месяц (параметры + транспорт), затем Сохранить. Или запишите слайдеры Анализа в выбранный профиль одним кликом.',
+    edit_selected: 'Править выбранный',
+    save_analysis_sel: 'Анализ → выбранный',
+    create_new_month: 'Создать новый месяц',
+    saved_profiles: 'Сохранённые профили',
+    saved_profiles_lead: 'Edit — изменить месяц, затем Save в редакторе. Save←Analysis перезапишет месяц текущими значениями Анализа.',
+    month: 'Месяц',
+    label: 'Метка',
+    author: 'Автор',
+    actions: 'Действия',
+    export_json: 'Экспорт JSON',
+    import_json: 'Импорт JSON',
+    new_edit_profile: 'Новый / правка профиля',
+    parameters: 'Параметры',
+    transport_editable: 'Транспорт (редактируемый)',
+    live_preview: 'Живой предпросмотр',
+    save_device: 'Сохранить на этом устройстве',
+    save_online: 'Сохранить онлайн',
+    close_editor: 'Закрыть редактор',
+    eot_refinery_data: 'EOT / данные НПЗ за месяц',
+    eot_refinery_lead: 'Опциональный sell-all сланец (выходы + цены с НДС). Сохраняется в профиле — можно создавать будущие месяцы здесь для EOT Нетбэк / отчётов. Off = только встроенная история.',
+    include_eot: 'Включить EOT для месяца',
+    eot_off: 'Выкл',
+    eot_on: 'Вкл — править и сохранить',
+    fill_historic: 'Из последнего факта',
+    fill_eot_page: 'Со страницы EOT Нетбэк',
+    clear_slate: 'Очистить сланец',
+    reports_title: 'Месячные отчёты',
+    reports_lead: 'Отчёты за 1 и несколько месяцев включают Экспорт vs Внутр. и EOT Нетбэк (EOT НБ + Внутр. + EOT vs Экспорт), пересчёт live по каждому месяцу — не снимки.',
+    report_type: 'Тип отчёта',
+    report_single: 'Отчёт за 1 месяц (+ к прошлому)',
+    report_trend: 'Сравнение за 3 / 6 / 12 мес.',
+    starting_month: 'Начальный месяц (конец окна)',
+    compare_previous: 'Сравнить предыдущие',
+    months_3: '3 месяца',
+    months_6: '6 месяцев',
+    months_12: '12 месяцев',
+    eot_share_pct: 'Доля EOT %',
+    build_report: 'Собрать отчёт',
+    print_pdf: 'Печать / PDF',
+    report_choose: 'Выберите параметры и нажмите «Собрать отчёт».',
+    audit_title: 'Аудит логики (красный свет)',
+    audit_lead: 'Скрытая проверка: зелёный = ок; жёлтый = проверить; красный = противоречие логике. Параметры аудита можно расширять.',
+    rerun_audit: 'Перезапустить',
+    exit_audit: 'Выйти',
+    audit_gate_title: 'Аудит (красный свет)',
+    audit_gate_lead: 'Скрытый доступ. Введите пароль аудита.',
+    open_audit: 'Открыть аудит',
+    fetch_fx: 'Обновить FX',
+    analysis_domestic_price: 'Внутр. цена из Анализа',
+    wins_export: 'Побеждает ЭКСПОРТ',
+    wins_domestic: 'Побеждает ВНУТР.',
+    wins_dom_eot: 'Побеждает ВНУТР. + EOT',
+    breakeven: 'РАВЕНСТВО',
+    load: 'Загрузить',
+    edit: 'Править',
+    delete: 'Удалить',
+    current: 'текущий',
+    eot_saved: 'сохр.',
+    eot_hist: 'факт',
+  }
+};
+
+function t(key, fallback){
+  const pack = I18N[uiLang] || I18N.en;
+  if (pack[key] != null) return pack[key];
+  if (I18N.en[key] != null) return I18N.en[key];
+  return fallback != null ? fallback : key;
+}
+
+function formatUpdatedAt(iso){
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleString(uiLang === 'ru' ? 'ru-RU' : 'en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch { return iso; }
+}
+
+function refreshUpdatedLabel(){
+  const el = document.getElementById('appUpdatedAt');
+  if (!el) return;
+  let iso = APP_UPDATED_AT;
+  try {
+    if (typeof profileDb !== 'undefined' && profileDb && profileDb.updatedAt) {
+      const a = new Date(APP_UPDATED_AT).getTime();
+      const b = new Date(profileDb.updatedAt).getTime();
+      if (Number.isFinite(b) && b > a) iso = profileDb.updatedAt;
+    }
+  } catch {}
+  el.textContent = formatUpdatedAt(iso);
+}
+
+function applyI18n(){
+  document.documentElement.lang = uiLang === 'ru' ? 'ru' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (!key) return;
+    const val = t(key);
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      // leave value; use placeholder path separately
+    } else {
+      el.textContent = val;
+    }
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (key) el.innerHTML = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (key) el.setAttribute('placeholder', t(key));
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria');
+    if (key) el.setAttribute('aria-label', t(key));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (key) el.setAttribute('title', t(key));
+  });
+  // Lang toggle active state (app + gate)
+  document.querySelectorAll('#langToggle button[data-lang], #langToggleGate button[data-lang]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === uiLang);
+  });
+  refreshUpdatedLabel();
+  // Gate strings
+  const gTitle = document.querySelector('#gate .gate-card h1');
+  if (gTitle) gTitle.textContent = t('gate_title');
+  const gLead = document.querySelector('#gate .gate-card p');
+  if (gLead) gLead.textContent = t('gate_lead');
+  const gBtn = document.getElementById('gateBtn');
+  if (gBtn) gBtn.textContent = t('gate_unlock');
+}
+
+function setUiLang(lang){
+  uiLang = (lang === 'ru') ? 'ru' : 'en';
+  try { localStorage.setItem(LANG_KEY, uiLang); } catch {}
+  applyI18n();
+  // Re-render live pages so dynamic labels flip
+  try {
+    const active = document.querySelector('.page.active');
+    const id = active && active.id ? active.id.replace(/^page-/, '') : 'netback';
+    if (id === 'netback' && typeof renderNetback === 'function') renderNetback();
+    if (id === 'transport' && typeof refreshTransportUI === 'function') refreshTransportUI();
+    if (id === 'taxes' && typeof renderTaxPage === 'function') renderTaxPage();
+    if (id === 'products' && typeof renderProductsPage === 'function') renderProductsPage();
+    if (id === 'profiles' && typeof renderProfileUI === 'function') {
+      renderProfileUI();
+      try { refreshProfileEditorPreview(); } catch {}
+      try { refreshPeEotPreview(); } catch {}
+    }
+    if (id === 'reports' && typeof renderProfileUI === 'function') renderProfileUI();
+    if (id === 'audit' && typeof runRedLightAudit === 'function') runRedLightAudit();
+  } catch (e) { console.warn(e); }
+}
+
+function hydrateLang(){
+  try {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (saved === 'ru' || saved === 'en') uiLang = saved;
+  } catch {}
+}
+
+function wireLangToggle(){
+  ['langToggle', 'langToggleGate'].forEach(id => {
+    const root = document.getElementById(id);
+    if (!root || root._wired) return;
+    root._wired = true;
+    root.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-lang]');
+      if (!btn) return;
+      setUiLang(btn.dataset.lang);
+    });
+  });
+}
+
+
 const STORE = 'eo_netback_v2';
 const TAX_STORE = 'eo_tax_v1';
 const BASE = { brent:105, fx:448.64, sk:20.104, disc:6.18, localKzt:130000, ru:5.5606, kb:7.2223, metRate:0.05, vat:1.16 };
@@ -1519,10 +1933,10 @@ function renderNetback() {
     (resultUnitIsBbl() ? ` · ÷ ${fmt(c.KB,4)} bbl/t` : '');
   document.getElementById('verdictExpNb').textContent = fmtUnit(nbExpView, c.KB, 2);
   const verdictDomLabel = document.querySelector('#verdictExpNb')?.parentElement?.nextElementSibling?.querySelector('.nb-label');
-  if (verdictDomLabel) verdictDomLabel.textContent = oilOn ? labelDomesticEot(pct) : 'Domestic netback';
+  if (verdictDomLabel) verdictDomLabel.textContent = oilOn ? labelDomesticEot(pct) : t('domestic_nb');
   const verdictSpreadLabel = document.querySelector('#verdictSpread')?.previousElementSibling;
   if (verdictSpreadLabel && verdictSpreadLabel.classList.contains('nb-label')) {
-    verdictSpreadLabel.textContent = oilOn ? labelExportMinusDomEot(pct) : 'Δ Export − Domestic';
+    verdictSpreadLabel.textContent = oilOn ? labelExportMinusDomEot(pct) : t('delta_exp_dom');
   }
   document.getElementById('verdictDomNb').textContent = fmtUnit(nbDomView, c.KB, 2);
   document.getElementById('verdictSpread').textContent = (spreadView>=0?'+':'')+fmtUnit(spreadView, c.KB, 2);
@@ -1866,10 +2280,11 @@ function prodUnitLabel(){ return prodUnitIsBbl() ? '$/bbl' : '$/t'; }
 /** User-facing: Domestic + EOT (optional share %). */
 function labelDomesticEot(pct){
   const p = pct != null ? Math.round(num(pct, 60)) : null;
-  return p != null ? (`Domestic + EOT (${p}%)`) : 'Domestic + EOT';
+  const base = t('domestic_eot');
+  return p != null ? (`${base} (${p}%)`) : base;
 }
 function labelExportMinusDomEot(pct){
-  return 'Δ Export − (' + labelDomesticEot(pct) + ')';
+  return (uiLang === 'ru' ? 'Δ Экспорт − (' : 'Δ Export − (') + labelDomesticEot(pct) + ')';
 }
 function prodPerUnit(usdPerT){
   const kb = Math.max(1e-9, num(calcNetback().KB, 7.2223));
@@ -3826,6 +4241,7 @@ function ensureOctBaseline() {
 function saveProfilesLocal() {
   profileDb.updatedAt = new Date().toISOString();
   try { localStorage.setItem(PROFILES_LOCAL, JSON.stringify(profileDb)); } catch {}
+  try { refreshUpdatedLabel(); } catch {}
 }
 
 function loadProfilesLocal() {
@@ -3974,18 +4390,18 @@ function renderProfileUI() {
     const hasEot = !!(p.eot && Array.isArray(p.eot.products) && p.eot.products.length);
     const embedded = !hasEot && typeof profileEotMonth === 'function' && !!mergedHistory().find(m => m.id === (p.month||p.id));
     return `<tr>
-      <td>${monthLabel(p.month)}${isCurrentProfile(p)?' <span class="chip cur">current</span>':''}</td>
+      <td>${monthLabel(p.month)}${isCurrentProfile(p)?' <span class="chip cur">'+t('current')+'</span>':''}</td>
       <td>${extra || '—'}${note ? `<div class="sub">${note.slice(0,90)}</div>` : ''}</td>
       <td>${p.author || ''}</td>
       <td class="num">${s.nbExp!=null?fmt(s.nbExp,1):'—'}</td>
       <td class="num">${s.nbDom!=null?fmt(s.nbDom,1):'—'}</td>
       <td class="num">${s.spread!=null?((s.spread>=0?'+':'')+fmt(s.spread,1)):'—'}</td>
-      <td>${hasEot?'<span class="chip eot">saved</span>':(embedded?'<span class="chip eot">hist</span>':'—')}</td>
+      <td>${hasEot?'<span class="chip eot">'+t('eot_saved')+'</span>':(embedded?'<span class="chip eot">'+t('eot_hist')+'</span>':'—')}</td>
       <td class="no-print" style="white-space:nowrap">
-        <button type="button" class="ghost" data-load="${p.id}">Load</button>
-        <button type="button" class="ok" data-edit="${p.id}">Edit</button>
-        <button type="button" class="ghost" data-save-analysis="${p.id}" title="Overwrite this profile with current Analysis values">Save←Analysis</button>
-        ${isCurrentProfile(p)?'':`<button type="button" class="danger" data-del="${p.id}">Delete</button>`}
+        <button type="button" class="ghost" data-load="${p.id}">${t('load')}</button>
+        <button type="button" class="ok" data-edit="${p.id}">${t('edit')}</button>
+        <button type="button" class="ghost" data-save-analysis="${p.id}" title="Overwrite this profile with current Analysis values">${t('save_analysis_sel')}</button>
+        ${isCurrentProfile(p)?'':`<button type="button" class="danger" data-del="${p.id}">${t('delete')}</button>`}
       </td>
     </tr>`;
   }).join('');
@@ -5764,6 +6180,9 @@ async function sha256(text) {
 async function startApp() {
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('app').classList.add('ready');
+  hydrateLang();
+  wireLangToggle();
+  applyI18n();
   hydrate();
   hydrateTax();
   syncRouteToggle();
@@ -5781,7 +6200,7 @@ async function startApp() {
 async function tryUnlock(pw) {
   const hash = await sha256(String(pw||'').trim());
   if (hash !== PASS_HASH) {
-    document.getElementById('gateErr').textContent = 'Wrong password';
+    document.getElementById('gateErr').textContent = t('gate_wrong');
     return false;
   }
   try { sessionStorage.setItem(AUTH_KEY, '1'); } catch {}
@@ -5795,6 +6214,9 @@ document.getElementById('gatePw').addEventListener('keydown', (e) => {
 });
 
 (async function boot() {
+  hydrateLang();
+  wireLangToggle();
+  applyI18n();
   wireAuditPage();
   if (isAuditHash()) {
     try {
