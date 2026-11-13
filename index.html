@@ -744,9 +744,7 @@
           <button type="button" data-prod-price-disp="usd">$/t</button>
         </div>
       </div>
-      <h3 style="font-size:.85rem;margin:6px 0 4px" id="prodGasHead">Gasoline</h3>
-      <div class="prod-tile-grid" id="prodGasGrid"></div>
-      <h3 style="font-size:.85rem;margin:14px 0 4px" id="prodPriceHead">Products</h3>
+      <h3 style="font-size:.85rem;margin:6px 0 4px" id="prodPriceHead">Products</h3>
       <div class="prod-tile-grid" id="prodPriceGrid"></div>
       <h3 style="font-size:.85rem;margin:14px 0 4px">Products netback</h3>
       <div id="prodNbChart" style="height:280px"></div>
@@ -1829,24 +1827,16 @@ function renderProdTrends(){
   document.querySelectorAll('#prodPriceDispToggle button[data-prod-price-disp]').forEach(b => {
     b.classList.toggle('active', b.dataset.prodPriceDisp === (asKzt ? 'kzt' : 'usd'));
   });
-  const gh = document.getElementById('prodGasHead');
   const ph = document.getElementById('prodPriceHead');
-  if (gh) gh.textContent = `Gasoline · ${axis}`;
   if (ph) ph.textContent = `Products · ${axis}`;
-  const note = document.getElementById('prodTrendNote');
-  if (note) note.textContent = '';
-  const gasGrid = document.getElementById('prodGasGrid');
   const priceGrid = document.getElementById('prodPriceGrid');
   if (!labels.length) {
-    if (gasGrid) gasGrid.innerHTML = '';
     if (priceGrid) priceGrid.innerHTML = '';
     if (document.getElementById('prodNbChart') && window.Plotly) Plotly.purge('prodNbChart');
     return;
   }
   const prices = prodPricesDisplaySeries(labels, months);
   const colors = ['#0f766e','#b45309','#1e3a5f','#7c3aed','#e11d48','#0891b2','#ca8a04','#0d9488'];
-  const gasNames = ['AI92','AI95','AI98'].filter(n => prices[n]);
-  fillProdTileGrid('prodGasGrid', gasNames.length ? gasNames : ['AI92','AI95'], labels, prices, colors, axis);
   const prefer = ['AI92','AI95','AI98','Diesel fuel','Kerosene (Aviation fuel)','Fuel oil','Vacuum gas oil','Sulphur','Liquefied gas'];
   const allNames = [...prefer.filter(n => prices[n]), ...Object.keys(prices).filter(n => !prefer.includes(n)).sort()];
   fillProdTileGrid('prodPriceGrid', allNames, labels, prices, colors, axis);
