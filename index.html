@@ -737,22 +737,15 @@
     </div>
 
     <div class="section" id="prodTrendsSection">
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h2 style="margin:0">Historic trends</h2>
-        <div class="route-toggle unit-toggle" id="prodPriceDispToggle" role="group" aria-label="Price display">
-          <button type="button" data-prod-price-disp="kzt" class="active">KZT/t</button>
-          <button type="button" data-prod-price-disp="usd">$/t</button>
-        </div>
-      </div>
-      <h3 style="font-size:.85rem;margin:6px 0 4px" id="prodPriceHead">Products</h3>
+      <h2 style="margin:0 0 8px">Historic trends</h2>
+      <h3 style="font-size:.85rem;margin:6px 0 4px" id="prodPriceHead">Products · KZT/t</h3>
       <div class="prod-tile-grid" id="prodPriceGrid"></div>
       <h3 style="font-size:.85rem;margin:14px 0 4px">Products netback</h3>
       <div id="prodNbChart" style="height:280px"></div>
     </div>
 
     <p class="prod-footnote" id="prodFootnote">
-      Sell-all month (no inventory). Trends from Jan 2026 (≤12 months); empty cells = no data.
-      <b>KZT/t</b> = posted unit price; <b>$/t</b> = that price ÷ Month-profile FX (same FX as Analysis).
+      Sell-all month (no inventory). Product price trends = posted <b>KZT/t</b> from Jan 2026 (≤12 months); empty = no data.
       Hover a tile to enlarge. Formula-costs toggle switches KPI/netback between $/t and $/bbl.
       Forecast yields = recency-weighted average within the selected refinery. Feedstock defaults from Analysis domestic.
     </p>
@@ -1515,7 +1508,6 @@ let prodState = {
   monthId: null,
   useAnalysisFx: true,
   unit: 't',
-  priceDisp: 'kzt', // default local KZT; $/t uses Month-profile FX
   fx: null,
   feedKzt: null,
   vat: null,
@@ -1739,22 +1731,10 @@ function prodPricesKztSeries(labels, months){
   return prices;
 }
 function prodPricesDisplaySeries(labels, months){
-  const kzt = prodPricesKztSeries(labels, months);
-  const asKzt = (prodState.priceDisp === 'kzt');
-  const out = {};
-  for (const [name, arr] of Object.entries(kzt)) {
-    out[name] = arr.map((v, i) => {
-      if (v == null) return null;
-      if (asKzt) return v;
-      const fx = historicFxForMonth(labels[i], months[i] && months[i].fx);
-      if (fx == null) return null;
-      return v / fx;
-    });
-  }
-  return out;
+  return prodPricesKztSeries(labels, months);
 }
 function prodPriceAxisLabel(){
-  return prodState.priceDisp === 'kzt' ? 'KZT/t' : '$/t';
+  return 'KZT/t';
 }
 function shortMonthLabel(id){
   const parts = String(id||'').split('-');
@@ -1777,7 +1757,6 @@ function fillProdTileGrid(gridId, names, labels, prices, colors, yTitle){
     return `<div class="prod-tile" tabindex="0" data-tile-chart="${id}"><div class="prod-tile-title">${name}</div><div class="prod-tile-chart" id="${id}"></div></div>`;
   }).join('');
   if (!window.Plotly) return;
-  const isKzt = prodState.priceDisp === 'kzt';
   usable.forEach((name, i) => {
     const el = document.getElementById(gridId + '_tile_' + i);
     if (!el) return;
@@ -1793,7 +1772,7 @@ function fillProdTileGrid(gridId, names, labels, prices, colors, yTitle){
       yaxis:{
         title:{text:'', font:{size:8}},
         tickfont:{size:8}, automargin:true, separatethousands:true,
-        tickformat: isKzt ? ',.0s' : ',.0f', showgrid:true, gridcolor:'rgba(0,0,0,.06)'
+        tickformat: ',.0s', showgrid:true, gridcolor:'rgba(0,0,0,.06)'
       },
       showlegend:false,
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
@@ -1822,20 +1801,16 @@ function renderProdTrends(){
   const uNb = prodUnitLabel();
   const kb = Math.max(1e-9, num(calcNetback().KB, 7.2223));
   const toNb = (v) => (v == null ? null : (prodUnitIsBbl() ? v / kb : v));
-  const axis = prodPriceAxisLabel();
-  const asKzt = prodState.priceDisp === 'kzt';
-  document.querySelectorAll('#prodPriceDispToggle button[data-prod-price-disp]').forEach(b => {
-    b.classList.toggle('active', b.dataset.prodPriceDisp === (asKzt ? 'kzt' : 'usd'));
-  });
+  const axis = 'KZT/t';
   const ph = document.getElementById('prodPriceHead');
-  if (ph) ph.textContent = `Products · ${axis}`;
+  if (ph) ph.textContent = 'Products · KZT/t';
   const priceGrid = document.getElementById('prodPriceGrid');
   if (!labels.length) {
     if (priceGrid) priceGrid.innerHTML = '';
     if (document.getElementById('prodNbChart') && window.Plotly) Plotly.purge('prodNbChart');
     return;
   }
-  const prices = prodPricesDisplaySeries(labels, months);
+  const prices = prodPricesKztSeries(labels, months);
   const colors = ['#0f766e','#b45309','#1e3a5f','#7c3aed','#e11d48','#0891b2','#ca8a04','#0d9488'];
   const prefer = ['AI92','AI95','AI98','Diesel fuel','Kerosene (Aviation fuel)','Fuel oil','Vacuum gas oil','Sulphur','Liquefied gas'];
   const allNames = [...prefer.filter(n => prices[n]), ...Object.keys(prices).filter(n => !prefer.includes(n)).sort()];
@@ -2037,13 +2012,6 @@ function wireProductsPage(){
     if (!btn) return;
     prodState.unit = btn.dataset.prodUnit === 'bbl' ? 'bbl' : 't';
     renderProductsPage();
-  });
-  const pdt = document.getElementById('prodPriceDispToggle');
-  if (pdt) pdt.addEventListener('click', e => {
-    const btn = e.target.closest('button[data-prod-price-disp]');
-    if (!btn) return;
-    prodState.priceDisp = btn.dataset.prodPriceDisp === 'kzt' ? 'kzt' : 'usd';
-    renderProdTrends();
   });
   document.getElementById('prodMonthSelect').addEventListener('change', e => {
     prodState.monthId = e.target.value;
