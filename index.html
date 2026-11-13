@@ -1599,17 +1599,41 @@ function renderRouteMap(mode) {
   }
   setTimeout(() => {
     routeMap.invalidateSize();
-    if (!routeMap._eoFramed) {
-      const layers = Object.values(routeLayers).filter(Boolean);
-      if (layers.length) {
-        const fg = L.featureGroup(layers);
-        try {
-          routeMap.fitBounds(fg.getBounds().pad(0.06), { maxZoom: 5.75, animate: false });
-          routeMap._eoFramed = true;
-        } catch {}
-      }
-    }
+    if (!routeMap._eoFramed) fitRouteMapView({ animate: false, markFramed: true });
   }, 80);
+}
+
+/** Build bounds from leg latlngs — LayerGroup has no getBounds(), so FeatureGroup(routeLayers) was a no-op. */
+function routeMapBounds() {
+  const pts = [];
+  Object.values(routeLegLayers).forEach(info => {
+    if (!info || !info.latlngs) return;
+    info.latlngs.forEach(ll => {
+      if (Array.isArray(ll) && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) pts.push(ll);
+    });
+  });
+  routeMarkers.forEach(m => {
+    if (m && m.getLatLng) {
+      const ll = m.getLatLng();
+      if (ll) pts.push([ll.lat, ll.lng]);
+    }
+  });
+  if (!pts.length) return null;
+  return L.latLngBounds(pts);
+}
+
+function fitRouteMapView({ animate = true, markFramed = true } = {}) {
+  if (!routeMap) return false;
+  routeMap.invalidateSize();
+  const bounds = routeMapBounds();
+  if (!bounds || !bounds.isValid()) return false;
+  try {
+    routeMap.fitBounds(bounds.pad(0.08), { maxZoom: 6, animate: !!animate, duration: 0.35 });
+    if (markFramed) routeMap._eoFramed = true;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function wireRouteMap() {
@@ -1625,13 +1649,8 @@ function wireRouteMap() {
   if (exp) exp.onclick = () => reframe('export');
   if (dom) dom.onclick = () => reframe('dom');
   if (fit) fit.onclick = () => {
-    if (!routeMap) return;
-    const layers = Object.values(routeLayers).filter(Boolean);
-    if (!layers.length) return;
-    try {
-      routeMap.fitBounds(L.featureGroup(layers).getBounds().pad(0.06), { maxZoom: 5.75, animate:true });
-      routeMap._eoFramed = true;
-    } catch {}
+    clearRouteHighlight();
+    fitRouteMapView({ animate: true, markFramed: true });
   };
 }
 
