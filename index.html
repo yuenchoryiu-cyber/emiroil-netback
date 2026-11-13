@@ -595,19 +595,21 @@
         <div class="status" id="profileStatus"></div>
       </div>
       <div class="section">
-        <h2>2) Create / update month profile</h2>
-        <p class="lead">Open the editor to type parameters directly (Brent, FX, Skebco D6, Discount D7, local price, route, etc.), preview netbacks, then save.</p>
+        <h2>2) Create / edit &amp; save</h2>
+        <p class="lead">Edit any saved month (parameters + transport), then <b>Save</b>. Or write Analysis sliders into the selected profile in one click.</p>
         <div class="btn-row">
-          <button type="button" class="ok" id="btnOpenNewProfile">Create new month profile</button>
-          <button type="button" class="ghost" id="btnEditSelectedProfile">Edit selected profile</button>
+          <button type="button" class="ok" id="btnEditSelectedProfile">Edit selected profile</button>
+          <button type="button" class="ghost" id="btnSaveAnalysisToSelected">Save Analysis → selected</button>
+          <button type="button" class="ghost" id="btnOpenNewProfile">Create new month</button>
         </div>
         <div class="status" id="saveStatus"></div>
       </div>
     </div>
     <div class="section">
       <h2>Saved profiles</h2>
+      <p class="lead" style="margin-bottom:8px">Use <b>Edit</b> to change a month, then Save on the editor page. <b>Save←Analysis</b> overwrites that month with current Analysis values.</p>
       <table class="profile-list">
-        <thead><tr><th>Month</th><th>Label</th><th>Author</th><th>Export NB</th><th>Domestic NB</th><th>Δ Exp−Dom</th><th></th></tr></thead>
+        <thead><tr><th>Month</th><th>Label</th><th>Author</th><th>Export NB</th><th>Domestic NB</th><th>Δ Exp−Dom</th><th>Actions</th></tr></thead>
         <tbody id="profileTable"></tbody>
       </table>
       <div class="btn-row no-print" style="margin-top:10px">
@@ -632,11 +634,17 @@
 
   <!-- PROFILE EDIT PAGE -->
   <div id="page-profile-edit" class="page">
-    <h1>New / edit month profile</h1>
-    <p class="lead">Type parameters directly. Live preview updates as you change values. Then save online or on this device.</p>
+    <h1 id="pePageTitle">Edit month profile</h1>
+    <p class="lead" id="pePageLead">Change parameters and transport, check the live preview, then save.</p>
+    <div class="btn-row no-print" style="margin-bottom:10px">
+      <button type="button" class="ok" id="btnPeSaveLocalTop">Save on this device</button>
+      <button type="button" class="ghost" id="btnPeSaveOnlineTop">Save online</button>
+      <button type="button" class="ghost" id="btnPeCancelTop">Back to profiles</button>
+    </div>
+    <div class="status" id="peSaveStatusTop"></div>
     <div class="section">
       <div class="param-grid">
-        <div class="field"><label>Month</label><input id="peMonth" type="month" value="2026-11"/></div>
+        <div class="field"><label>Month</label><input id="peMonth" type="month" value="2026-11"/><div class="sub" id="peMonthHint"></div></div>
         <div class="field"><label>Label (optional note)</label><input id="peLabel" type="text" placeholder="Leave blank or add a short note, e.g. actuals"/></div>
         <div class="field"><label>Author</label><input id="peAuthor" type="text" placeholder="Your name"/></div>
       </div>
@@ -703,8 +711,8 @@
       <div class="status" id="peCalcHint" style="margin-top:8px"></div>
     </div>
     <div class="btn-row" style="margin-top:12px">
-      <button type="button" class="ok" id="btnPeSaveOnline">Save profile online</button>
-      <button type="button" class="ghost" id="btnPeSaveLocal">Save on this device only</button>
+      <button type="button" class="ok" id="btnPeSaveLocal">Save on this device</button>
+      <button type="button" class="ghost" id="btnPeSaveOnline">Save online</button>
       <button type="button" class="ghost" id="btnPeCancel">Back to profiles</button>
     </div>
     <div class="status" id="peSaveStatus"></div>
@@ -2437,9 +2445,10 @@ function renderProfileUI() {
       <td class="num">${s.nbExp!=null?fmt(s.nbExp,1):'—'}</td>
       <td class="num">${s.nbDom!=null?fmt(s.nbDom,1):'—'}</td>
       <td class="num">${s.spread!=null?((s.spread>=0?'+':'')+fmt(s.spread,1)):'—'}</td>
-      <td class="no-print">
+      <td class="no-print" style="white-space:nowrap">
         <button type="button" class="ghost" data-load="${p.id}">Load</button>
-        <button type="button" class="ghost" data-edit="${p.id}">Edit</button>
+        <button type="button" class="ok" data-edit="${p.id}">Edit</button>
+        <button type="button" class="ghost" data-save-analysis="${p.id}" title="Overwrite this profile with current Analysis values">Save←Analysis</button>
         ${isCurrentProfile(p)?'':`<button type="button" class="danger" data-del="${p.id}">Delete</button>`}
       </td>
     </tr>`;
@@ -2500,7 +2509,7 @@ function upsertProfile({ month, label, author, notes, online, params, statusId }
     try {
       const check = JSON.parse(localStorage.getItem(PROFILES_LOCAL) || '{}');
       const saved = (check.profiles || []).find(p => p.id === id);
-      if (!saved || saved.author !== row.author) {
+      if (!saved || !saved.params || num(saved.params.brent) !== num(row.params.brent)) {
         setStatus(sid, 'Save verification failed (browser storage). Try again.', 'err');
         return Promise.resolve(false);
       }
@@ -2510,13 +2519,14 @@ function upsertProfile({ month, label, author, notes, online, params, statusId }
     const sel = document.getElementById('profileSelect');
     if (sel) sel.value = id;
     updateMonthHeadlines();
+    const verb = existing ? 'Updated' : 'Saved';
     if (online) {
       return publishOnline(sid).then(ok => {
-        if (ok) setStatus(sid, `Saved online · ${profileTitle(row, { current: false })} · author: ${row.author || '(none)'}`, 'ok');
+        if (ok) setStatus(sid, `${verb} online · ${profileTitle(row, { current: false })}`, 'ok');
         return ok;
       });
     }
-    setStatus(sid, `Saved on this device · ${profileTitle(row, { current: false })} · author: ${row.author || '(none)'}`, 'ok');
+    setStatus(sid, `${verb} on this device · ${profileTitle(row, { current: false })}`, 'ok');
     return Promise.resolve(true);
   } catch (err) {
     console.error(err);
@@ -3226,60 +3236,151 @@ function refreshProfileEditorPreview() {
   if (peTrRuUsed) peTrRuUsed.textContent = fmt(params.ru,2);
 }
 
-function openNewProfileEditor() {
-  const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  fillEditor(OCT2026_PROFILE.params, {
-    month: ym,
-    label: '',
-    author: '',
-    notes: ''
+let peEditingId = null; // null = create new; otherwise editing this profile id
+
+function setPeSaveStatus(msg, kind) {
+  setStatus('peSaveStatus', msg, kind);
+  setStatus('peSaveStatusTop', msg, kind);
+}
+
+function syncProfileEditorMode() {
+  const title = document.getElementById('pePageTitle');
+  const lead = document.getElementById('pePageLead');
+  const monthEl = document.getElementById('peMonth');
+  const hint = document.getElementById('peMonthHint');
+  const editing = !!peEditingId;
+  if (monthEl) {
+    monthEl.readOnly = editing;
+    monthEl.disabled = editing;
+    monthEl.style.opacity = editing ? '0.75' : '';
+  }
+  if (hint) {
+    hint.textContent = editing
+      ? 'Month is locked while editing this saved profile.'
+      : 'Pick the month id for the new profile (YYYY-MM).';
+  }
+  if (title) {
+    title.textContent = editing
+      ? `Edit saved profile — ${monthLabel(peEditingId)}`
+      : 'Create new month profile';
+  }
+  if (lead) {
+    lead.textContent = editing
+      ? 'Update parameters and transport, then Save. Changes overwrite this saved month.'
+      : 'Enter a month and parameters, preview, then Save to add a new profile.';
+  }
+  ['btnPeSaveLocal', 'btnPeSaveLocalTop', 'btnPeSaveOnline', 'btnPeSaveOnlineTop'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    if (id.includes('Online')) btn.textContent = editing ? 'Save changes online' : 'Save new online';
+    else btn.textContent = editing ? 'Save changes (this device)' : 'Save new (this device)';
   });
+}
+
+function openProfileEditor(p) {
+  if (p) {
+    peEditingId = p.id || p.month;
+    fillEditor(p.params || {}, {
+      month: p.month || p.id,
+      label: cleanProfileLabel(p) || '',
+      author: p.author || '',
+      notes: p.notes || ''
+    });
+  } else {
+    peEditingId = null;
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    fillEditor(OCT2026_PROFILE.params, { month: ym, label: '', author: '', notes: '' });
+  }
+  syncProfileEditorMode();
+  setPeSaveStatus('', '');
   showPage('profile-edit');
+}
+
+function openNewProfileEditor() {
+  openProfileEditor(null);
 }
 
 function openEditSelectedProfile() {
   const id = document.getElementById('profileSelect').value;
   const p = profileDb.profiles.find(x => x.id === id);
   if (!p) { setStatus('saveStatus', 'Select a profile first.', 'err'); return; }
-  fillEditor(p.params, { month: p.month, label: p.label || '', author: p.author || '', notes: p.notes || '' });
-  showPage('profile-edit');
+  openProfileEditor(p);
+}
+
+function openEditProfileById(id) {
+  const p = profileDb.profiles.find(x => x.id === id);
+  if (!p) { setStatus('profileStatus', 'Profile not found.', 'err'); return; }
+  openProfileEditor(p);
+}
+
+async function saveAnalysisIntoProfile(id, online) {
+  const p = profileDb.profiles.find(x => x.id === id);
+  if (!p) {
+    setStatus('saveStatus', 'Select a profile first.', 'err');
+    setStatus('profileStatus', 'Profile not found.', 'err');
+    return false;
+  }
+  const sid = 'saveStatus';
+  setStatus(sid, 'Saving Analysis into profile…');
+  const ok = await upsertProfile({
+    month: p.month || p.id,
+    label: p.label || monthLabel(p.month || p.id),
+    author: p.author || '',
+    notes: (p.notes || '') + (p.notes ? ' · ' : '') + `Updated from Analysis ${new Date().toLocaleString()}`,
+    params: captureParams(),
+    online: !!online,
+    statusId: sid
+  });
+  if (ok) {
+    setStatus('profileStatus', document.getElementById('saveStatus')?.textContent || 'Saved.', 'ok');
+    try { localStorage.setItem(ACTIVE_KEY, p.id); } catch {}
+    updateMonthHeadlines();
+  }
+  return ok;
 }
 
 async function saveFromEditor(online) {
-  const month = document.getElementById('peMonth').value;
-  if (!month) { setStatus('peSaveStatus', 'Month is required.', 'err'); return; }
-  setStatus('peSaveStatus', 'Saving…');
+  const monthEl = document.getElementById('peMonth');
+  const month = peEditingId || (monthEl && monthEl.value);
+  if (!month) { setPeSaveStatus('Month is required.', 'err'); return; }
+  setPeSaveStatus('Saving…', '');
   let params;
   try {
-    // Ensure transport tables exist before reading
     if (!document.querySelector('input[data-pe-kzt]')) {
       buildPeTransportTables({});
     }
+    // If month input disabled, temporarily enable so value is readable in some browsers
+    const wasDisabled = monthEl && monthEl.disabled;
+    if (wasDisabled) monthEl.disabled = false;
+    if (peEditingId && monthEl) monthEl.value = peEditingId;
     params = readEditorParams();
+    if (wasDisabled) monthEl.disabled = true;
   } catch (err) {
     console.error(err);
-    setStatus('peSaveStatus', 'Could not read form values: ' + (err.message || err), 'err');
+    setPeSaveStatus('Could not read form values: ' + (err.message || err), 'err');
     return;
   }
   const ok = await upsertProfile({
-    month,
-    label: document.getElementById('peLabel').value || monthLabel(month),
+    month: peEditingId || month,
+    label: document.getElementById('peLabel').value || monthLabel(peEditingId || month),
     author: document.getElementById('peAuthor').value,
     notes: document.getElementById('peNotes').value,
     params,
     online: !!online,
     statusId: 'peSaveStatus'
   });
-  if (!ok && online) {
-    // local may still have succeeded when online publish failed — re-check message already set
-  }
+  // mirror status to top
+  const pe = document.getElementById('peSaveStatus');
+  if (pe) setStatus('peSaveStatusTop', pe.textContent, pe.classList.contains('err') ? 'err' : (pe.classList.contains('ok') ? 'ok' : ''));
+  if (!ok) return;
   try { applyParams(params); } catch (e) { console.warn(e); }
-  // Show list so author/label change is visible
+  peEditingId = peEditingId || month;
+  syncProfileEditorMode();
   renderProfileUI();
   showPage('profiles');
-  const msg = document.getElementById('peSaveStatus')?.textContent || '';
-  if (msg) setStatus('profileStatus', msg, document.getElementById('peSaveStatus')?.classList.contains('err') ? 'err' : 'ok');
+  const msg = pe?.textContent || '';
+  if (msg) setStatus('profileStatus', msg, pe.classList.contains('err') ? 'err' : 'ok');
 }
 
 function wireProfilesReports() {
@@ -3288,16 +3389,23 @@ function wireProfilesReports() {
   document.getElementById('btnRefreshCloud').onclick = () => refreshFromCloud();
   document.getElementById('btnOpenNewProfile').onclick = openNewProfileEditor;
   document.getElementById('btnEditSelectedProfile').onclick = openEditSelectedProfile;
+  const btnSaveAn = document.getElementById('btnSaveAnalysisToSelected');
+  if (btnSaveAn) btnSaveAn.onclick = () => {
+    const id = document.getElementById('profileSelect').value;
+    if (!id) { setStatus('saveStatus', 'Select a profile first.', 'err'); return; }
+    if (!confirm('Overwrite saved profile ' + monthLabel(id) + ' with current Analysis values?')) return;
+    saveAnalysisIntoProfile(id, false);
+  };
   document.getElementById('profileTable').addEventListener('click', (e) => {
     const load = e.target.closest('[data-load]');
     const ed = e.target.closest('[data-edit]');
+    const sav = e.target.closest('[data-save-analysis]');
     const del = e.target.closest('[data-del]');
     if (load) loadProfileById(load.dataset.load);
-    if (ed) {
-      const p = profileDb.profiles.find(x => x.id === ed.dataset.edit);
-      if (p) {
-        fillEditor(p.params, { month: p.month, label: p.label || '', author: p.author || '', notes: p.notes || '' });
-        showPage('profile-edit');
+    if (ed) openEditProfileById(ed.dataset.edit);
+    if (sav) {
+      if (confirm('Overwrite ' + monthLabel(sav.dataset.saveAnalysis) + ' with current Analysis values?')) {
+        saveAnalysisIntoProfile(sav.dataset.saveAnalysis, false);
       }
     }
     if (del && confirm('Delete profile ' + del.dataset.del + '?')) deleteProfile(del.dataset.del);
@@ -3381,9 +3489,20 @@ function wireProfilesReports() {
   });
   const btnBulk = document.getElementById('btnPeApplyBulk');
   if (btnBulk) btnBulk.onclick = applyPeBulkToLegs;
-  document.getElementById('btnPeSaveOnline').onclick = () => saveFromEditor(true);
-  document.getElementById('btnPeSaveLocal').onclick = () => saveFromEditor(false);
-  document.getElementById('btnPeCancel').onclick = () => showPage('profiles');
+  const bindSave = (id, online) => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = () => saveFromEditor(online);
+  };
+  bindSave('btnPeSaveOnline', true);
+  bindSave('btnPeSaveOnlineTop', true);
+  bindSave('btnPeSaveLocal', false);
+  bindSave('btnPeSaveLocalTop', false);
+  const bindCancel = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = () => { peEditingId = null; showPage('profiles'); };
+  };
+  bindCancel('btnPeCancel');
+  bindCancel('btnPeCancelTop');
 }
 
 async function initProfilesReports() {
