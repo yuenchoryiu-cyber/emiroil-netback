@@ -504,34 +504,35 @@
 
     <div class="section">
       <h2>How taxes enter netback</h2>
-      <p class="lead" style="margin-bottom:8px">Fiscal items are priced off <b>Kebco</b>. Netbacks subtract those $/t charges (and transport) from realized price.</p>
+      <p class="lead" style="margin-bottom:8px">Aligned with RK Tax Code practice: world price for export rental &amp; MET is the relevant grade (here <b>Kebco</b>). Netback subtracts those $/t charges plus transport.</p>
       <div class="tax-formula" id="taxFormulaStrip">
         <div class="tf-step">
-          <div class="tf-h">1 · Fiscal marker</div>
+          <div class="tf-h">1 · Fiscal marker (model)</div>
           <div class="tf-eq"><b>Kebco</b> = Brent − Skebco</div>
-          <div class="tf-note">Skebco may be negative (then Kebco &gt; Brent). GCA ladders and MET use Kebco, not raw Brent.</div>
+          <div class="tf-note">Proxy for Argus “Kebco – CIF Augusta”. Skebco may be negative. Official MET/rental world price may be Kebco, Urals or Brent Dtd by contract (Tax Code art. 776).</div>
         </div>
         <div class="tf-step">
-          <div class="tf-h">2 · Export fiscal charges ($/t)</div>
-          <div class="tf-eq"><b>Rental</b> = GCA rate(Kebco) × Brent × rental bbl factor</div>
-          <div class="tf-eq"><b>Duty</b> = GCA duty ladder(Kebco)</div>
-          <div class="tf-eq"><b>MET</b> = Kebco × MET% × MET bbl factor</div>
-          <div class="tf-note">Rate/duty bands are looked up on Kebco; rental still multiplies the looked-up rate by Brent.</div>
+          <div class="tf-h">2 · Export rental tax (art. 749)</div>
+          <div class="tf-eq"><b>Rental</b> = rate(Kebco) × Kebco × rental bbl factor</div>
+          <div class="tf-note">Progressive % of world price by $/bbl band (0–32%). Ladder thresholds match the Code’s “up to $X/bbl” schedule.</div>
         </div>
         <div class="tf-step">
-          <div class="tf-h">3 · Export netback</div>
-          <div class="tf-eq"><b>Export NB</b> = (Brent − Skebco − Discount) × bbl/t − transport − duty − rental − MET</div>
-        </div>
-        <div class="tf-step">
-          <div class="tf-h">4 · Domestic side</div>
-          <div class="tf-eq"><b>Price ex-VAT</b> = local KZT ÷ FX ÷ VAT factor</div>
+          <div class="tf-h">3 · Mineral extraction tax (arts. 776–778)</div>
+          <div class="tf-eq"><b>Export MET</b> = Kebco × MET% × MET bbl factor</div>
           <div class="tf-eq"><b>Domestic MET</b> = domestic MET share × export MET</div>
-          <div class="tf-eq"><b>Domestic NB</b> = price ex-VAT − domestic transport − domestic MET</div>
+          <div class="tf-note">Tax base = volume × world price. Domestic share here is a workbook shortcut (Code often applies a 0.5 factor on domestic MET in specified cases).</div>
         </div>
         <div class="tf-step">
-          <div class="tf-h">5 · Result</div>
+          <div class="tf-h">4 · Export customs duty</div>
+          <div class="tf-eq"><b>Duty</b> = duty ladder(Kebco) $/t</div>
+          <div class="tf-note">Official MoF rate uses prior-period average of <b>Kebco and Brent</b> (not Kebco alone); $25–105 → duty ≈ that average $/t; above $105 → fixed schedule. This model looks up the schedule on Kebco as a single-marker proxy.</div>
+        </div>
+        <div class="tf-step">
+          <div class="tf-h">5 · Netbacks</div>
+          <div class="tf-eq"><b>Export NB</b> = (Brent − Skebco − Discount) × bbl/t − transport − duty − rental − MET</div>
+          <div class="tf-eq"><b>Domestic NB</b> = (local KZT ÷ FX ÷ VAT) − domestic transport − domestic MET</div>
           <div class="tf-eq"><b>Δ</b> = Export NB − Domestic NB</div>
-          <div class="tf-note">Transport is not a tax: Σ(KZT + RUB×RUB→KZT) ÷ FX. Edits on this page apply live to Analysis.</div>
+          <div class="tf-note">Discount is commercial (realized price), separate from fiscal Kebco. Transport = Σ(KZT + RUB×RUB→KZT) ÷ FX.</div>
         </div>
       </div>
       <div class="kpi-grid" style="margin-top:10px" id="taxLiveKpis">
@@ -978,7 +979,8 @@ function calcNetback() {
   const priceBbl = B - S - DISC, priceTexp = priceBbl * KB;
   const kbRent = num(taxState.kbRent, 7.5), kbMet = num(taxState.kbMet, 7.5);
   const domMetShare = num(taxState.domMetShare, 0.1);
-  const rental = rentRate * B * kbRent, metExp = kebco * MET * kbMet;
+  // Rental & MET tax base = world price (Kebco proxy) × bbl factor — RK Tax Code arts 749 / 776–778
+  const rental = rentRate * kebco * kbRent, metExp = kebco * MET * kbMet;
   const nbExp = priceTexp - trExp - duty - rental - metExp;
   const priceTdom = LOC/FX/VAT, metDom = domMetShare * metExp;
   const nbDom = priceTdom - trDom - metDom;
@@ -1027,7 +1029,7 @@ function renderNetback() {
     Math.abs(c.B-105)<1e-9 && Math.abs(c.FX-448.64)<1e-9 && Math.abs(c.S-20.104)<1e-9 && Math.abs(c.DISC-6.18)<1e-9 &&
     Math.abs(c.LOC-130000)<1e-9 && Math.abs(c.RU-5.5606)<1e-9 && Math.abs(c.KB-7.2223)<1e-9 &&
     Math.abs(c.MET-0.05)<1e-9 && Math.abs(c.VAT-1.16)<1e-9;
-  const baselinePass = atBase && Math.abs(c.nbExp-262.66128392483773)<1e-6 && Math.abs(c.nbDom-214.22742937152591)<1e-6;
+  const baselinePass = atBase && Math.abs(c.nbExp-288.2938839248377)<1e-6 && Math.abs(c.nbDom-214.22742937152591)<1e-6;
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
@@ -1060,9 +1062,9 @@ function renderNetback() {
     row('Realized $/t',`D12=D11×D8`, fmt(c.priceTexp,2)),
     row('Export RUB legs',`Σ RUB tariffs × RUB→KZT ${fmt(c.RU,2)}`, fmt(c.expRubKzt,0)+' KZT'),
     row('Transport $/t',`Σ(KZT + RUB×${fmt(c.RU,2)}) / FX${c.trAdj?' · % adj':''}`, fmt(c.trExp,2)),
-    row('Rental $/t',`GCA rate(Kebco ${fmt(c.kebco,1)}) ${(c.rentRate*100).toFixed(0)}% × Brent × ${fmt(c.kbRent,1)}`, fmt(c.rental,2)),
+    row('Rental $/t',`rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Kebco ${fmt(c.kebco,1)} × ${fmt(c.kbRent,1)}`, fmt(c.rental,2)),
     row('MET $/t',`Kebco ${fmt(c.kebco,1)} × MET% × ${fmt(c.kbMet,1)}`, fmt(c.metExp,2)),
-    row('Duty $/t',`GCA duty(Kebco ${fmt(c.kebco,1)})`, fmt(c.duty,0)),
+    row('Duty $/t',`duty ladder(Kebco ${fmt(c.kebco,1)}) · MoF uses avg Kebco+Brent`, fmt(c.duty,0)),
     row('Export netback','D18', fmt(c.nbExp,2)+' $/t','total'),
     row('DOMESTIC '+domesticLabel(),'','','secDom'),
     row('Price ex-VAT','local KZT / FX / VAT', fmt(c.priceTdom,2)),
@@ -1996,7 +1998,7 @@ const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
 const CURRENT_MONTH_ID = '2026-11';
 
-const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current month — FX refreshed daily on page open. GCA/duty/MET use Kebco (Brent−Skebco). Skebco may be negative.", "savedAt": "2026-11-13T08:50:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 262.66128392483773, "nbDom": 214.22742937152591, "spread": 48.43385455331182, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 80, "rental": 133.875, "metExp": 31.836, "domesticRoute": "pkop"}};
+const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current month — FX daily on open. Rental/MET/duty use Kebco (Brent−Skebco); rental base = Kebco per Tax Code.", "savedAt": "2026-11-13T09:00:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 288.2938839248377, "nbDom": 214.22742937152591, "spread": 74.06645455331179, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 80, "rental": 108.2424, "metExp": 31.836, "domesticRoute": "pkop"}};
 
 /** Live daily FX for the current month only (prior months keep monthly averages). */
 let liveFxMeta = { fx: null, ru: null, asOf: null, source: '', status: 'idle' };
@@ -2226,8 +2228,8 @@ function calcTableHtml(c, params) {
       <tr><td>Realized $/bbl</td><td>Brent − Skebco − Discount</td><td class="num">${fmt(c.priceBbl,3)}</td></tr>
       <tr><td>Realized $/t</td><td>× bbl/t ${fmt(c.KB,4)}</td><td class="num">${fmt(c.priceTexp,2)}</td></tr>
       <tr><td>Export transport</td><td>Σ(KZT + RUB×${fmt(c.RU,2)}) / FX</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
-      <tr><td>Duty</td><td>GCA ladder(Kebco)</td><td class="num">${fmt(c.duty,0)} $/t</td></tr>
-      <tr><td>Rental</td><td>GCA rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Brent × ${fmt(c.kbRent,1)}</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
+      <tr><td>Duty</td><td>ladder(Kebco); official MoF = avg Kebco+Brent</td><td class="num">${fmt(c.duty,0)} $/t</td></tr>
+      <tr><td>Rental</td><td>rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Kebco × ${fmt(c.kbRent,1)}</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
       <tr><td>Export MET</td><td>Kebco × MET% × ${fmt(c.kbMet,1)}</td><td class="num">${fmt(c.metExp,2)} $/t</td></tr>
       <tr><td><b>Export netback</b></td><td>D18</td><td class="num"><b>${fmt(c.nbExp,2)} $/t</b></td></tr>
       <tr><td>Local price ex-VAT</td><td>KZT / FX / VAT</td><td class="num">${fmt(c.priceTdom,2)} $/t</td></tr>
