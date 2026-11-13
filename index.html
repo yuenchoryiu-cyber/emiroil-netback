@@ -79,6 +79,11 @@
     letter-spacing:.01em;
   }
   .month-head .muted{font-weight:500; color:var(--muted); font-size:.9rem}
+  .fx-note{
+    font-size:.68rem; color:var(--muted); margin-top:4px; line-height:1.35; max-width:220px;
+  }
+  .fx-note.live{color:#0f766e}
+  .fx-note b{font-weight:700; color:inherit}
   .reset-pick{display:flex; gap:6px; align-items:end; flex-wrap:wrap}
   .reset-pick select{
     min-width:160px; max-width:220px; padding:8px 10px; border:1px solid var(--line);
@@ -332,6 +337,7 @@
         <div>
           <span class="nb-label">FX (KZT / 1 USD)</span>
           <div class="nb-val" id="verdictFx">—</div>
+          <div class="fx-note" id="verdictFxNote"></div>
         </div>
         <div>
           <span class="nb-label">RUB→KZT (KZT / 1 RUB)</span>
@@ -353,6 +359,7 @@
         <div>
           <label>FX <span class="val" id="fxLbl">448.64</span> KZT per 1 USD</label>
           <input id="fx" type="range" min="360" max="560" step="0.01" value="448.64"/>
+          <div class="fx-note" id="fxRateNote">Prior months: monthly average · Current month: daily rate on open</div>
         </div>
         <div>
           <label>Skebco (D6) <span class="val" id="skLbl">20.1</span> $/bbl</label>
@@ -434,6 +441,7 @@
       <div>
         <label>FX (KZT/USD) <span class="val" id="trFxLbl">448.64</span></label>
         <input id="trFx" type="range" min="360" max="560" step="0.01" value="448.64"/>
+        <div class="fx-note" id="trFxRateNote">Prior months: monthly average · Current month: daily rate on open</div>
       </div>
       <div>
         <label>RUB→KZT (KZT/RUB) <span class="val" id="trRuLbl">5.56</span></label>
@@ -1204,6 +1212,7 @@ function updateMonthHeadlines() {
   const al = document.getElementById('activeProfileLbl');
   if (al) al.textContent = profileTitle(p, { current: true, html: false });
   document.title = p ? `Emir Oil Netback — ${monthLabel(p.month)}` : 'Emir Oil Netback';
+  try { updateFxRateNoteForActive(); } catch {}
 }
 function resetToMonthId(id) {
   const p = (profileDb.profiles || []).find(x => x.id === id);
@@ -1235,6 +1244,11 @@ function resetToMonthId(id) {
     if (el && [...el.options].some(o => o.value === p.id)) el.value = p.id;
   });
   setStatus('profileStatus', `Reset to ${profileTitle(p, { current: false })}.`, 'ok');
+  if (isCurrentProfile(p)) refreshCurrentMonthLiveFx();
+  else {
+    liveFxMeta = { fx: null, ru: null, asOf: null, source: '', status: 'idle' };
+    updateFxRateNoteForActive();
+  }
 }
 function resetFromNetback() {
   const id = (document.getElementById('resetMonthSelect') || {}).value || getActiveProfileId();
@@ -1935,7 +1949,168 @@ const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
 const CURRENT_MONTH_ID = '2026-11';
 
-const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current baseline. Nov MTD local bank USD/KZT mid 448.64 (themoney.kz bank buy/sell avg), RUB→KZT 5.5606 (X-Rates).", "savedAt": "2026-11-13T04:25:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 188.62228392483775, "nbDom": 213.47352937152593, "spread": -24.851245446688182, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 115, "rental": 165.375, "metExp": 39.375, "domesticRoute": "pkop"}};
+const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current month — FX refreshed daily on page open. Other months keep monthly-average FX.", "savedAt": "2026-11-13T04:25:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 188.62228392483775, "nbDom": 213.47352937152593, "spread": -24.851245446688182, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 115, "rental": 165.375, "metExp": 39.375, "domesticRoute": "pkop"}};
+
+/** Live daily FX for the current month only (prior months keep monthly averages). */
+let liveFxMeta = { fx: null, ru: null, asOf: null, source: '', status: 'idle' };
+
+function setFxRateNote(html, live) {
+  ['fxRateNote', 'trFxRateNote', 'verdictFxNote'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = html || '';
+    el.classList.toggle('live', !!live);
+  });
+}
+
+function formatRateDate(isoDay) {
+  try {
+    const [y, m, d] = String(isoDay).split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return isoDay;
+  }
+}
+
+function updateFxRateNoteForActive() {
+  const p = getActiveProfile();
+  if (!p) {
+    setFxRateNote('', false);
+    return;
+  }
+  if (isCurrentProfile(p)) {
+    if (liveFxMeta.status === 'loading') {
+      setFxRateNote('Fetching today’s FX…', true);
+      return;
+    }
+    if (liveFxMeta.asOf && liveFxMeta.fx != null) {
+      setFxRateNote(
+        `Daily rate as of <b>${formatRateDate(liveFxMeta.asOf)}</b>` +
+          (liveFxMeta.source ? ` · ${liveFxMeta.source}` : '') +
+          ` · refreshed when you open this page`,
+        true
+      );
+      return;
+    }
+    if (liveFxMeta.status === 'error') {
+      setFxRateNote('Could not refresh daily FX — using last saved current-month rate', false);
+      return;
+    }
+    setFxRateNote('Current month uses daily FX (updates when you open this page)', true);
+    return;
+  }
+  setFxRateNote(`Monthly average FX for <b>${monthLabel(p.month)}</b> (fixed for that month)`, false);
+}
+
+async function fetchDailyFxRates() {
+  const tryUrls = [
+    {
+      url: 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json',
+      parse: (j) => {
+        const usd = j.usd || {};
+        const fx = num(usd.kzt, NaN);
+        const usdRub = num(usd.rub, NaN);
+        const ru = (Number.isFinite(fx) && Number.isFinite(usdRub) && usdRub > 0) ? (fx / usdRub) : NaN;
+        return { fx, ru, asOf: j.date || null, source: 'daily market mid' };
+      }
+    },
+    {
+      url: 'https://latest.currency-api.pages.dev/v1/currencies/usd.min.json',
+      parse: (j) => {
+        const usd = j.usd || {};
+        const fx = num(usd.kzt, NaN);
+        const usdRub = num(usd.rub, NaN);
+        const ru = (Number.isFinite(fx) && Number.isFinite(usdRub) && usdRub > 0) ? (fx / usdRub) : NaN;
+        return { fx, ru, asOf: j.date || null, source: 'daily market mid' };
+      }
+    },
+    {
+      url: 'https://open.er-api.com/v6/latest/USD',
+      parse: (j) => {
+        const fx = num(j.rates && j.rates.KZT, NaN);
+        const usdRub = num(j.rates && j.rates.RUB, NaN);
+        const ru = (Number.isFinite(fx) && Number.isFinite(usdRub) && usdRub > 0) ? (fx / usdRub) : NaN;
+        const asOf = (j.time_last_update_utc || '').slice(0, 10) || null;
+        return { fx, ru, asOf, source: 'open.er-api daily' };
+      }
+    }
+  ];
+  for (const item of tryUrls) {
+    try {
+      const r = await fetch(item.url, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const j = await r.json();
+      const out = item.parse(j);
+      if (Number.isFinite(out.fx) && out.fx > 50 && out.fx < 1000) {
+        if (!out.asOf) {
+          const n = new Date();
+          out.asOf = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+        }
+        return out;
+      }
+    } catch (e) {
+      console.warn('FX fetch failed', item.url, e);
+    }
+  }
+  return null;
+}
+
+function applyLiveFxToCurrentMonth(fx, ru, asOf, source) {
+  const rate = num(fx, NaN);
+  if (!Number.isFinite(rate)) return false;
+  state.fx = Math.round(rate * 100) / 100;
+  if (Number.isFinite(ru) && ru > 0.5 && ru < 20) {
+    state.ru = Math.round(ru * 10000) / 10000;
+  }
+  persist();
+  liveFxMeta = {
+    fx: state.fx,
+    ru: state.ru,
+    asOf: asOf || liveFxMeta.asOf,
+    source: source || liveFxMeta.source || 'daily rate',
+    status: 'ok'
+  };
+  const p = (profileDb.profiles || []).find(x => x.id === CURRENT_MONTH_ID || x.month === CURRENT_MONTH_ID);
+  if (p) {
+    p.params = { ...(p.params || {}), fx: state.fx, ru: state.ru };
+    p.fxAsOf = liveFxMeta.asOf;
+    p.fxSource = liveFxMeta.source;
+    p.notes = `Current month — daily FX ${fmt(state.fx, 2)} as of ${formatRateDate(liveFxMeta.asOf)} (${liveFxMeta.source}). Prior months keep monthly-average FX.`;
+    p.isCurrent = true;
+    try {
+      const c = calcNetback();
+      p.snapshot = {
+        nbExp: c.nbExp, nbDom: c.nbDom, spread: c.spread,
+        trExp: c.trExp, trDom: c.trDom, duty: c.duty, rental: c.rental, metExp: c.metExp,
+        domesticRoute: activeDomesticRoute()
+      };
+    } catch {}
+    p.savedAt = new Date().toISOString();
+    try { saveProfilesLocal(); } catch {}
+  }
+  refreshTransportUI();
+  renderNetback();
+  updateMonthHeadlines();
+  updateFxRateNoteForActive();
+  return true;
+}
+
+async function refreshCurrentMonthLiveFx() {
+  const active = getActiveProfile();
+  if (!active || !isCurrentProfile(active)) {
+    updateFxRateNoteForActive();
+    return false;
+  }
+  liveFxMeta.status = 'loading';
+  updateFxRateNoteForActive();
+  const got = await fetchDailyFxRates();
+  if (!got) {
+    liveFxMeta.status = 'error';
+    updateFxRateNoteForActive();
+    return false;
+  }
+  return applyLiveFxToCurrentMonth(got.fx, got.ru, got.asOf, got.source);
+}
 
 let profileDb = {
   version: 1,
@@ -2346,6 +2521,11 @@ function loadProfileById(id) {
   });
   setStatus('profileStatus', `Loaded ${profileTitle(p, { current: false })}.`, 'ok');
   showPage('netback');
+  if (isCurrentProfile(p)) refreshCurrentMonthLiveFx();
+  else {
+    liveFxMeta = { fx: null, ru: null, asOf: null, source: '', status: 'idle' };
+    updateFxRateNoteForActive();
+  }
 }
 
 function resetToSelectedMonth() {
@@ -3208,6 +3388,9 @@ async function initProfilesReports() {
     try { localStorage.setItem(ACTIVE_KEY, p.id); } catch {}
     updateMonthHeadlines();
   }
+  // Current month: pull today's FX on every page open; prior months keep monthly averages
+  if (p && isCurrentProfile(p)) await refreshCurrentMonthLiveFx();
+  else updateFxRateNoteForActive();
 }
 
 
@@ -3220,7 +3403,7 @@ async function sha256(text) {
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-function startApp() {
+async function startApp() {
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('app').classList.add('ready');
   hydrate();
@@ -3230,10 +3413,10 @@ function startApp() {
   refreshTransportUI();
   wireTaxPage();
   renderNetback();
-  initProfilesReports();
   const hash=(location.hash||'#netback').replace('#','');
   wireRouteMap();
   showPage(['netback','transport','route-map','taxes','profiles','profile-edit','reports'].includes(hash)?hash:'netback');
+  await initProfilesReports();
 }
 
 async function tryUnlock(pw) {
