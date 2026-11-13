@@ -226,7 +226,24 @@
   .route-toggle button.active{background:var(--domestic); color:#fff; border-color:var(--domestic)}
   .unit-toggle{margin-left:auto}
   .unit-toggle button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
-  .unit-toggle .unit-lbl{font-size:.78rem; color:var(--muted); margin-right:4px; font-weight:600}
+  .unit-toggle .unit-lbl,
+  .onoff-toggle .unit-lbl{font-size:.78rem; color:var(--muted); margin-right:4px; font-weight:600}
+  .live-head{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
+    margin-bottom:8px; min-height:2rem;
+  }
+  .live-head h2{margin:0; flex:1 1 8rem}
+  .onoff-toggle{margin:0; flex:0 1 auto}
+  .onoff-toggle button{min-width:3.2rem; padding:7px 12px}
+  .onoff-toggle button.active[data-on="1"],
+  .onoff-toggle button.active[data-feed-link="on"],
+  .onoff-toggle button.active[data-oil="on"]{
+    background:var(--export); color:#fff; border-color:var(--export);
+  }
+  .feed-link-row{
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+    margin-top:6px; padding-top:8px; border-top:1px dashed var(--line);
+  }
 
   .btn-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px}
   button.danger{background:#9a3412; color:#fff; border:0; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:.82rem}
@@ -350,14 +367,14 @@
 <div id="app" class="wrap">
   <header class="app-brand">
     <h1 class="brand">Emir Oil Netback</h1>
-    <p class="brand-sub">Analysis, transport, taxes, products refining, month profiles, and reports</p>
+    <p class="brand-sub">Analysis, transport, taxes, oil products, month profiles, and reports</p>
   </header>
   <nav class="subnav" aria-label="Netback tools">
     <span class="subnav-label">Tools</span>
     <button type="button" class="active" data-page="netback">Analysis</button>
     <button type="button" data-page="transport">Transport &amp; map</button>
     <button type="button" data-page="taxes">Taxes / fiscal</button>
-    <button type="button" data-page="products">Products / refining</button>
+    <button type="button" data-page="products">Oil Products</button>
     <button type="button" data-page="profiles">Month profiles</button>
     <button type="button" data-page="reports">Reports</button>
   </nav>
@@ -471,15 +488,16 @@
         </table>
       </aside>
       <section class="panel">
-        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
-          <h2 style="margin:0">Live scenario</h2>
-          <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;cursor:pointer;margin:0">
-            <input id="includeOilProducts" type="checkbox"/>
-            Include oil product income (<span id="oilShareLbl">60</span>% refine + Dom)
-          </label>
+        <div class="live-head">
+          <h2>Live scenario</h2>
+          <div class="route-toggle onoff-toggle" id="oilIncomeToggle" role="group" aria-label="Oil product income">
+            <span class="unit-lbl">Oil product income</span>
+            <button type="button" data-oil="off" class="active">Off</button>
+            <button type="button" data-oil="on">On · <span id="oilShareLbl">60</span>%</button>
+          </div>
         </div>
-        <p class="lead" id="oilProductsNote" style="display:none;margin:0 0 8px;font-size:.8rem">
-          Gauge &amp; bars compare Export to <b>Domestic crude + our share of Products sell-all NB</b> (same decision case as Products). Crude-only domestic stays in the formula table.
+        <p class="lead" id="oilProductsNote" style="display:none;margin:0 0 8px;font-size:.78rem">
+          Comparing Export to Domestic + share of Oil Products NB. Crude-only domestic remains in the formula table.
         </p>
         <div id="chart"></div>
       </section>
@@ -667,9 +685,9 @@
 
 
 
-  <!-- PRODUCTS / REFINING PAGE -->
+  <!-- OIL PRODUCTS PAGE -->
   <div id="page-products" class="page">
-    <h1>Products</h1>
+    <h1>Oil Products</h1>
 
     <div class="route-toggle" id="prodModeToggle" role="group" aria-label="Mode" style="margin-bottom:8px">
       <button type="button" data-prod-mode="forecast" class="active">Forecast</button>
@@ -683,13 +701,13 @@
     <div class="sticky-top">
       <div id="prodVerdict" class="verdict export" style="grid-template-columns:1.4fr repeat(5,1fr)">
         <div>
-          <div class="big" id="prodVerdictTxt">Products</div>
+          <div class="big" id="prodVerdictTxt">Oil Products</div>
           <div class="sub" id="prodVerdictSub"></div>
         </div>
         <div><span class="nb-label">Export NB</span><div class="nb-val" id="prodExpNb">—</div></div>
         <div><span class="nb-label">Domestic NB</span><div class="nb-val" id="prodDomNb">—</div></div>
         <div><span class="nb-label">Refinery NB (100%)</span><div class="nb-val" id="prodNb">—</div></div>
-        <div><span class="nb-label">60% refine + Dom</span><div class="nb-val" id="prodShareCombo">—</div></div>
+        <div><span class="nb-label" id="prodShareComboLbl">60% refine + Dom</span><div class="nb-val" id="prodShareCombo">—</div></div>
         <div><span class="nb-label">Best vs Export</span><div class="nb-val" id="prodVsExp">—</div></div>
       </div>
     </div>
@@ -701,16 +719,20 @@
       </div>
       <div class="row2">
         <div class="field"><label>Price escalation %</label><input id="prodEsc" type="number" step="0.1" value="0"/></div>
-      </div>
-      <div class="row2" style="margin-top:8px">
         <div class="field"><label>Feedstock domestic (KZT/t VAT-incl)</label><input id="prodFeedKzt" type="number" step="500"/></div>
         <div class="field"><label>VAT factor</label><input id="prodVat" type="number" step="0.01" min="1" max="1.3"/></div>
-        <div class="field"><label>Feedstock ex-VAT</label><input id="prodFeedUsd" type="text" readonly style="background:#f5f2ea"/></div>
-        <div class="field" style="display:flex;align-items:end;padding-bottom:4px">
-          <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;cursor:pointer"><input id="prodUseAnalysisFeed" type="checkbox" checked/> Use Analysis domestic price</label>
+      </div>
+      <div class="feed-link-row">
+        <div class="route-toggle onoff-toggle" id="prodFeedLinkToggle" role="group" aria-label="Link Analysis domestic price">
+          <span class="unit-lbl">Analysis domestic price</span>
+          <button type="button" data-feed-link="on" class="active">On</button>
+          <button type="button" data-feed-link="off">Off</button>
+        </div>
+        <div class="field" style="margin:0;min-width:12rem;flex:1 1 12rem">
+          <label>Feedstock ex-VAT</label>
+          <input id="prodFeedUsd" type="text" readonly style="background:#f5f2ea"/>
         </div>
       </div>
-      <p class="lead" style="margin-top:4px;font-size:.8rem">Feedstock VAT-incl tracks Analysis <b>Local domestic</b> (same KZT/t as Export vs Domestic). Uncheck to override.</p>
       <p class="lead" id="prodWeightNote" style="margin-top:8px;font-size:.82rem"></p>
     </div>
 
@@ -1269,8 +1291,9 @@ function renderNetback() {
   const spreadView = c.nbExp - nbDomView;
   const oilShareNb = (oilOn && oil) ? oil.shareNb : 0;
   const oilRefineNb = (oilOn && oil) ? oil.nb : 0;
-  const oilChk = document.getElementById('includeOilProducts');
-  if (oilChk && document.activeElement !== oilChk) oilChk.checked = oilOn;
+  document.querySelectorAll('#oilIncomeToggle button[data-oil]').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.oil === 'on') === oilOn);
+  });
   const oilLbl = document.getElementById('oilShareLbl');
   if (oilLbl) oilLbl.textContent = String(pct);
   const oilNote = document.getElementById('oilProductsNote');
@@ -2088,8 +2111,10 @@ function renderProductsPage(){
   setVal('prodEsc', num(prodState.priceEscPct, 0));
   const feedOut = document.getElementById('prodFeedUsd');
   if (feedOut) feedOut.value = fmtInt(r.feedKzt) + ' KZT · ' + fmt(r.feedUsd, 2) + ' $/t';
-  const useFeed = document.getElementById('prodUseAnalysisFeed');
-  if (useFeed && document.activeElement !== useFeed) useFeed.checked = !!prodState.useAnalysisFeed;
+  document.querySelectorAll('#prodFeedLinkToggle button[data-feed-link]').forEach(btn => {
+    const on = btn.dataset.feedLink === 'on';
+    btn.classList.toggle('active', on === !!prodState.useAnalysisFeed);
+  });
   const feedEl = document.getElementById('prodFeedKzt');
   const vatEl = document.getElementById('prodVat');
   if (feedEl) feedEl.disabled = !!prodState.useAnalysisFeed;
@@ -2145,6 +2170,8 @@ function renderProductsPage(){
     document.getElementById('prodDomNb').textContent = fmtProdUnit(r.domNb, 2);
     document.getElementById('prodNb').textContent = fmtProdUnit(r.nb, 2);
     document.getElementById('prodShareCombo').textContent = fmtProdUnit(r.sharePlusDom, 2);
+    const scl = document.getElementById('prodShareComboLbl');
+    if (scl) scl.textContent = `${(r.share*100).toFixed(0)}% refine + Dom`;
     const vs = document.getElementById('prodVsExp');
     if (vs) {
       const d = bestAlt - r.expNb;
@@ -2328,8 +2355,10 @@ function wireProductsPage(){
     renderProductsPage();
     if (state.includeOilProducts) renderNetback();
   });
-  document.getElementById('prodUseAnalysisFeed').addEventListener('change', e => {
-    prodState.useAnalysisFeed = !!e.target.checked;
+  document.getElementById('prodFeedLinkToggle').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-feed-link]');
+    if (!btn) return;
+    prodState.useAnalysisFeed = btn.dataset.feedLink === 'on';
     renderProductsPage();
   });
   ['prodProc','prodAdd1','prodAdd2','prodAdd0','prodAdmin','prodExcGasRate','prodExcDtRate','prodMazDuty'].forEach(id => {
@@ -3020,8 +3049,10 @@ function bind(id, key, transform=(x)=>num(x)) {
 }
 bind('brent','brent'); bind('fx','fx'); bind('sk','sk'); bind('disc','disc');
 bind('ru','ru'); bind('localKzt','localKzt'); bind('kb','kb'); bind('metRate','metRate'); bind('vat','vat');
-document.getElementById('includeOilProducts').addEventListener('change', (e) => {
-  state.includeOilProducts = !!e.target.checked;
+document.getElementById('oilIncomeToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-oil]');
+  if (!btn) return;
+  state.includeOilProducts = btn.dataset.oil === 'on';
   persist();
   renderNetback();
 });
