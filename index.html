@@ -1232,9 +1232,71 @@ function row(name, formula, value, cls='') {
   return `<tr class="${cls}"><td class="name">${name}</td><td class="formula">${formula}</td><td class="value">${value}</td></tr>`;
 }
 
-/** Live Analysis: Products forecast NB for current domestic route (does not mutate Products UI). */
+/** Shared compare month: Oil Products historic selection, else active Analysis profile month. */
+function getCompareMonthId(){
+  if (typeof prodState !== 'undefined' && prodState.mode === 'historic' && prodState.monthId)
+    return prodState.monthId;
+  try {
+    const ap = typeof getActiveProfile === 'function' ? getActiveProfile() : null;
+    if (ap) return ap.month || ap.id;
+    if (typeof getActiveProfileId === 'function') return getActiveProfileId();
+  } catch (e) {}
+  return null;
+}
+function compareMonthLabel(mid){
+  const id = mid || getCompareMonthId();
+  if (!id) return 'Live Analysis';
+  return (typeof monthLabel === 'function') ? monthLabel(id) : id;
+}
+/**
+ * Live Export/Domestic for a month — always recalculated from profile params (or live state
+ * when that month is the active Analysis scenario). Never uses cached snapshot NBs.
+ */
+function liveBenchForMonth(monthId){
+  const live = calcNetback();
+  const mid = monthId || getCompareMonthId();
+  const label = mid ? compareMonthLabel(mid) : 'Live Analysis';
+  if (!mid) {
+    return {
+      nbExp: live.nbExp, nbDom: live.nbDom, KB: live.KB, FX: live.FX, VAT: live.VAT, LOC: live.LOC,
+      fromProfile: false, sourceMonth: null, sourceLabel: 'Live Analysis', usedLiveState: true, calc: live
+    };
+  }
+  let activeId = null;
+  try {
+    const ap = typeof getActiveProfile === 'function' ? getActiveProfile() : null;
+    activeId = ap ? (ap.month || ap.id) : null;
+  } catch (e) {}
+  // Active Analysis month: use live slider state (edits apply; not a stale snapshot)
+  if (activeId && String(activeId) === String(mid)) {
+    return {
+      nbExp: live.nbExp, nbDom: live.nbDom, KB: live.KB, FX: live.FX, VAT: live.VAT, LOC: live.LOC,
+      fromProfile: true, sourceMonth: mid, sourceLabel: label, usedLiveState: true, calc: live
+    };
+  }
+  const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(mid) : null;
+  if (pf && pf.params && typeof computeFromParams === 'function') {
+    try {
+      const { calc } = computeFromParams(pf.params);
+      return {
+        nbExp: calc.nbExp, nbDom: calc.nbDom, KB: calc.KB, FX: calc.FX, VAT: calc.VAT, LOC: calc.LOC,
+        fromProfile: true, sourceMonth: mid, sourceLabel: label, usedLiveState: false, calc
+      };
+    } catch (e) {}
+  }
+  return {
+    nbExp: live.nbExp, nbDom: live.nbDom, KB: live.KB, FX: live.FX, VAT: live.VAT, LOC: live.LOC,
+    fromProfile: false, sourceMonth: mid, sourceLabel: label + ' (no profile — live Analysis)',
+    usedLiveState: true, calc: live
+  };
+}
+/**
+ * Oil-product income for the shared compare month (historic slate if available, else forecast).
+ * Does not permanently mutate Oil Products UI state.
+ */
 function oilProductIncomeForAnalysis(){
   if (typeof calcProducts !== 'function' || typeof prodState === 'undefined') return null;
+  const mid = getCompareMonthId();
   const snap = {
     mode: prodState.mode,
     refinery: prodState.refinery,
@@ -1245,7 +1307,9 @@ function oilProductIncomeForAnalysis(){
     refineShare: prodState.refineShare
   };
   try {
-    prodState.mode = 'forecast';
+    const hasHist = mid && typeof histMonth === 'function' && histMonth(mid);
+    prodState.mode = hasHist ? 'historic' : 'forecast';
+    if (hasHist) prodState.monthId = mid;
     prodState.refinery = state.domesticRoute === 'pavlodar' ? 'pnhz' : 'pkop';
     prodState.useAnalysisFeed = true;
     prodState.products = null;
@@ -1294,19 +1358,28 @@ function renderNetback() {
   syncUnitToggle();
   const u = unitLabel();
   const oilOn = !!state.includeOilProducts;
+  const compareMid = getCompareMonthId();
   const oil = oilOn ? oilProductIncomeForAnalysis() : null;
-  const pct = oil ? Math.round(num(oil.share, 0.6) * 100) : Math.round(num(typeof prodState !== 'undefined' ? prodState.refineShare : 0.6, 0.6) * 100);
+  // When oil income ON, Export/Dom/share must match Oil Products + decision report for compare month
+  const nbExpView = (oilOn && oil) ? oil.expNb : c.nbExp;
   const nbDomView = (oilOn && oil) ? oil.sharePlusDom : c.nbDom;
-  const spreadView = c.nbExp - nbDomView;
+  const spreadView = nbExpView - nbDomView;
+  const pct = oil ? Math.round(num(oil.share, 0.6) * 100) : Math.round(num(typeof prodState !== 'undefined' ? prodState.refineShare : 0.6, 0.6) * 100);
   const oilShareNb = (oilOn && oil) ? oil.shareNb : 0;
   const oilRefineNb = (oilOn && oil) ? oil.nb : 0;
+  const oilDomCrude = (oilOn && oil) ? oil.domNb : c.nbDom;
   document.querySelectorAll('#oilIncomeToggle button[data-oil]').forEach(btn => {
     btn.classList.toggle('active', (btn.dataset.oil === 'on') === oilOn);
   });
   const oilLbl = document.getElementById('oilShareLbl');
   if (oilLbl) oilLbl.textContent = String(pct);
   const oilNote = document.getElementById('oilProductsNote');
-  if (oilNote) oilNote.style.display = oilOn ? '' : 'none';
+  if (oilNote) {
+    oilNote.style.display = oilOn ? '' : 'none';
+    if (oilOn) {
+      oilNote.innerHTML = `Same month as Oil Products / decision report: <b>${compareMonthLabel(compareMid)}</b> · Export &amp; Dom recalculated live (not snapshot) · ${pct}% refine + Dom.`;
+    }
+  }
 
   const taxAtBase =
     Math.abs(c.kbRent-7.5)<1e-9 && Math.abs(c.kbMet-7.5)<1e-9 && Math.abs(c.domMetShare-0.5)<1e-9;
@@ -1323,10 +1396,10 @@ function renderNetback() {
   document.getElementById('verdictSub').textContent =
     (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
     (c.trAdj?'Transport % ON · ':'') +
-    (oilOn ? `Oil products ON · ${pct}% refine + Dom · ` : '') +
+    (oilOn ? `Oil products ON · ${compareMonthLabel(compareMid)} · ${pct}% refine + Dom · ` : '') +
     `Unit ${u} · Domestic ${domesticLabel()} · RUB×${fmt(c.RU,2)} · BE Sk ${fmt(c.skStar,2)} · BE Disc ${fmt(c.discStar,2)} · BE Sk+Disc ${fmt(c.skDiscStar,2)}` +
     (resultUnitIsBbl() ? ` · ÷ ${fmt(c.KB,4)} bbl/t` : '');
-  document.getElementById('verdictExpNb').textContent = fmtUnit(c.nbExp, c.KB, 2);
+  document.getElementById('verdictExpNb').textContent = fmtUnit(nbExpView, c.KB, 2);
   const verdictDomLabel = document.querySelector('#verdictExpNb')?.parentElement?.nextElementSibling?.querySelector('.nb-label');
   if (verdictDomLabel) verdictDomLabel.textContent = oilOn ? (`Dom + ${pct}% products`) : 'Domestic netback';
   const verdictSpreadLabel = document.querySelector('#verdictSpread')?.previousElementSibling;
@@ -1343,11 +1416,14 @@ function renderNetback() {
   const pu = (v, d=2) => fmtUnit(v, c.KB, d);
   const puBare = (v, d=2) => fmt(perUnit(v, c.KB), d);
   const oilRows = (oilOn && oil) ? [
-    row('OIL PRODUCTS (live)','','','secIn'),
-    row('Refinery NB (100%)','Products sell-all · forecast slate', pu(oilRefineNb)),
-    row(`Our share (${pct}%)`,`${pct}% × refinery NB`, pu(oilShareNb)),
-    row(`Dom + ${pct}% products`,`Domestic crude + share`, pu(nbDomView),'total'),
-    row(`Δ Export − (Dom+${pct}% prod)`,'decision vs export', (spreadView>=0?'+':'')+pu(spreadView),'total'),
+    row('OIL PRODUCTS COMPARE','','','secIn'),
+    row('Compare month', 'Same as Oil Products / decision report', compareMonthLabel(compareMid)),
+    row('Export (compare month)', 'Live recalc from profile params', pu(nbExpView),'total'),
+    row('Domestic crude (compare month)', 'Live recalc', pu(oilDomCrude)),
+    row('Refinery NB (100%)', 'Sell-all for compare month', pu(oilRefineNb)),
+    row(`Our share (${pct}%)`, `${pct}% × refinery NB`, pu(oilShareNb)),
+    row(`Dom + ${pct}% products`, 'Domestic crude + share', pu(nbDomView),'total'),
+    row(`Δ Export − (Dom+${pct}% prod)`, 'decision vs export', (spreadView>=0?'+':'')+pu(spreadView),'total'),
   ] : [];
   document.getElementById('calcBody').innerHTML = [
     row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
@@ -1389,9 +1465,9 @@ function renderNetback() {
   ].join('');
 
   const spreadU = perUnit(spreadView, c.KB);
-  const nbExpU = perUnit(c.nbExp, c.KB);
+  const nbExpU = perUnit(nbExpView, c.KB);
   const nbDomU = perUnit(nbDomView, c.KB);
-  const nbDomCrudeU = perUnit(c.nbDom, c.KB);
+  const nbDomCrudeU = perUnit(oilOn ? oilDomCrude : c.nbDom, c.KB);
   const gaugeMax = resultUnitIsBbl() ? 25 : 150;
   const barY = oilOn
     ? ['Export netback', `Dom+${pct}% products`, 'Domestic crude only']
@@ -1399,10 +1475,10 @@ function renderNetback() {
   const barX = oilOn ? [nbExpU, nbDomU, nbDomCrudeU] : [nbExpU, nbDomU];
   const barColors = oilOn ? ['#0f766e', '#7c3aed', '#b45309'] : ['#0f766e', '#b45309'];
   const barText = oilOn
-    ? [puBare(c.nbExp,2)+' '+u, puBare(nbDomView,2)+' '+u, puBare(c.nbDom,2)+' '+u]
+    ? [puBare(nbExpView,2)+' '+u, puBare(nbDomView,2)+' '+u, puBare(oilDomCrude,2)+' '+u]
     : [puBare(c.nbExp,2)+' '+u, puBare(c.nbDom,2)+' '+u];
   const gaugeTitle = oilOn
-    ? `Export − (Dom + ${pct}% products)<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · products ON · ${u}</span>`
+    ? `Export − (Dom + ${pct}% products)<br><span style="font-size:12px;color:#78716c">${compareMonthLabel(compareMid)} · live recalc · ${u}</span>`
     : `Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · ${u}</span>`;
   Plotly.newPlot('chart', [
     {
@@ -1773,51 +1849,9 @@ function effectivePriceKzt(p, fx, escPct){
   if (p.sellable) base *= esc;
   return Math.max(0, base);
 }
-/** Export/Domestic benchmark for Oil Products compare: historic month → that profile; forecast → live Analysis. */
+/** Export/Domestic for Oil Products + decision report — same month as Analysis oil toggle; live recalc only. */
 function analysisBenchForProducts(){
-  const live = calcNetback();
-  if (prodState.mode === 'historic' && prodState.monthId) {
-    const mid = prodState.monthId;
-    const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(mid) : null;
-    const label = (typeof monthLabel === 'function') ? monthLabel(mid) : mid;
-    if (pf && pf.params && typeof computeFromParams === 'function') {
-      try {
-        const { calc } = computeFromParams(pf.params);
-        return {
-          nbExp: calc.nbExp,
-          nbDom: calc.nbDom,
-          KB: calc.KB,
-          FX: calc.FX,
-          VAT: calc.VAT,
-          LOC: calc.LOC,
-          fromProfile: true,
-          sourceMonth: mid,
-          sourceLabel: label
-        };
-      } catch (e) {}
-    }
-    if (pf && pf.snapshot && pf.snapshot.nbExp != null && pf.snapshot.nbDom != null) {
-      return {
-        nbExp: num(pf.snapshot.nbExp),
-        nbDom: num(pf.snapshot.nbDom),
-        KB: num(pf.params && pf.params.kb, live.KB),
-        FX: num(pf.params && pf.params.fx, live.FX),
-        VAT: num(pf.params && pf.params.vat, live.VAT),
-        LOC: num(pf.params && pf.params.localKzt, live.LOC),
-        fromProfile: true,
-        sourceMonth: mid,
-        sourceLabel: label
-      };
-    }
-    return {
-      nbExp: live.nbExp, nbDom: live.nbDom, KB: live.KB, FX: live.FX, VAT: live.VAT, LOC: live.LOC,
-      fromProfile: false, sourceMonth: mid, sourceLabel: label + ' (no profile — live Analysis)'
-    };
-  }
-  return {
-    nbExp: live.nbExp, nbDom: live.nbDom, KB: live.KB, FX: live.FX, VAT: live.VAT, LOC: live.LOC,
-    fromProfile: false, sourceMonth: null, sourceLabel: 'Live Analysis'
-  };
+  return liveBenchForMonth(getCompareMonthId());
 }
 function calcProducts(){
   ensureProdModel(false);
@@ -2209,20 +2243,9 @@ function renderProdTrends(){
     const domY = [];
     for (let i = 0; i < labels.length; i++) {
       const id = labels[i];
-      const pf = (typeof findProfileByMonth === 'function') ? findProfileByMonth(id) : null;
-      let exp = null, dom = null;
-      if (pf && pf.params && typeof computeFromParams === 'function') {
-        try {
-          const { calc } = computeFromParams(pf.params);
-          exp = calc.nbExp; dom = calc.nbDom;
-        } catch (e) {}
-      }
-      if (exp == null && pf && pf.snapshot) {
-        exp = pf.snapshot.nbExp != null ? num(pf.snapshot.nbExp) : null;
-        dom = pf.snapshot.nbDom != null ? num(pf.snapshot.nbDom) : null;
-      }
-      if (exp == null) exp = cNow.nbExp;
-      if (dom == null) dom = cNow.nbDom;
+      const benchM = (typeof liveBenchForMonth === 'function') ? liveBenchForMonth(id) : null;
+      const exp = benchM ? benchM.nbExp : cNow.nbExp;
+      const dom = benchM ? benchM.nbDom : cNow.nbDom;
       expY.push(toNb(exp));
       domY.push(toNb(dom));
     }
@@ -2365,10 +2388,10 @@ function renderProductsPage(){
       ? ('Historic · ' + (histMonth(prodState.monthId)?.label || prodState.monthId || ''))
       : ('Forecast · ' + String(prodState.refinery).toUpperCase());
     const benchNote = r.benchFromProfile
-      ? (`Month profile · ${r.benchLabel}`)
+      ? (`Live recalc · ${r.benchLabel}`)
       : (r.benchMonth ? `No profile for ${r.benchLabel}` : 'Live Analysis');
     reportHost.innerHTML = `
-      <p class="meta" style="margin:0 0 10px">${modeLbl} · FX ${fmt(r.fx,2)} · share ${pct}% · feed ${fmtInt(r.feedKztVat)} KZT/t VAT-incl · compare vs <b>${r.benchLabel || 'Analysis'}</b></p>
+      <p class="meta" style="margin:0 0 10px">${modeLbl} · FX ${fmt(r.fx,2)} · share ${pct}% · feed ${fmtInt(r.feedKztVat)} KZT/t VAT-incl · compare month <b>${r.benchLabel || 'Analysis'}</b> (same as Analysis oil toggle · not snapshot)</p>
       <p style="margin:0 0 12px;font-size:.92rem;line-height:1.45"><b>Verdict:</b> ${winner}
         ${beatFull ? ` (full refinery also ahead of Export by ${fmtProdUnit(r.deltaVsExp, 2)})`
           : ` (full refinery still ${fmtProdUnit(-r.deltaVsExp, 2)} behind Export)`}.</p>
@@ -2469,6 +2492,7 @@ function wireProductsPage(){
     prodState.products = null;
     ensureProdModel(true);
     renderProductsPage();
+    if (state.includeOilProducts) renderNetback();
   });
   document.getElementById('prodUnitToggle').addEventListener('click', e => {
     const btn = e.target.closest('button[data-prod-unit]');
@@ -2483,6 +2507,8 @@ function wireProductsPage(){
       ensureProdModel(true);
     }
     renderProductsPage();
+    // Keep Analysis oil-products compare on the same month
+    if (state.includeOilProducts) renderNetback();
   });
   document.getElementById('btnProdLoadHistoricToForecast').addEventListener('click', () => {
     const m = histMonth(document.getElementById('prodMonthSelect').value || prodState.monthId);
