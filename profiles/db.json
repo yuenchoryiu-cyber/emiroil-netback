@@ -358,8 +358,8 @@
       "label": "Nov 2026",
       "month": "2026-11",
       "author": "excel import",
-      "notes": "Current month — FX daily on open. Rental/MET/duty use Kebco (Brent-Skebco); rental base = Kebco per Tax Code.",
-      "savedAt": "2026-11-13T09:00:00.000Z",
+      "notes": "Current month — FX daily. Export taxes on Kebco; domestic MET = ex-VAT local x MET% x 0.5 (art. 778); no rental/duty on domestic.",
+      "savedAt": "2026-11-13T09:15:00.000Z",
       "isCurrent": true,
       "params": {
         "brent": 105.0,
@@ -378,8 +378,8 @@
       },
       "snapshot": {
         "nbExp": 288.2938839248377,
-        "nbDom": 214.22742937152591,
-        "spread": 74.06645455331179,
+        "nbDom": 211.16610217392645,
+        "spread": 77.12778175091125,
         "trExp": 60.13828287516227,
         "trDom": 32.38605853245364,
         "duty": 80,

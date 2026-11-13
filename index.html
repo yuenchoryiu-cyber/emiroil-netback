@@ -517,20 +517,26 @@
           <div class="tf-note">Progressive % of world price by $/bbl band (0–32%). Ladder thresholds match the Code’s “up to $X/bbl” schedule.</div>
         </div>
         <div class="tf-step">
-          <div class="tf-h">3 · Mineral extraction tax (arts. 776–778)</div>
+          <div class="tf-h">3 · Mineral extraction tax — export (arts. 776–778)</div>
           <div class="tf-eq"><b>Export MET</b> = Kebco × MET% × MET bbl factor</div>
-          <div class="tf-eq"><b>Domestic MET</b> = domestic MET share × export MET</div>
-          <div class="tf-note">Tax base = volume × world price. Domestic share here is a workbook shortcut (Code often applies a 0.5 factor on domestic MET in specified cases).</div>
+          <div class="tf-note">Export / marketable oil: tax base = volume × world price (Urals / Kebco / Brent Dtd by contract). 2026 rates 5–18% by annual production (model default 5%).</div>
         </div>
         <div class="tf-step">
-          <div class="tf-h">4 · Export customs duty</div>
-          <div class="tf-eq"><b>Duty</b> = duty ladder(Kebco) $/t</div>
+          <div class="tf-h">4 · Domestic fiscal (art. 778 + VAT)</div>
+          <div class="tf-eq"><b>Ex-VAT local</b> = local KZT ÷ FX ÷ VAT&nbsp;factor</div>
+          <div class="tf-eq"><b>Domestic MET</b> = ex-VAT local × MET% × domestic factor</div>
+          <div class="tf-eq"><b>Rental = 0</b> · <b>Export duty = 0</b> (export-only)</div>
+          <div class="tf-note">2026 Code: domestic sales/transfers to RK refineries get a <b>0.5</b> reduction on the MET rate (art. 778). Tax base for refinery sales is the actual purchase price (art. 776) — model uses ex-VAT local $/t as that proxy. VAT standard rate 16% (factor 1.16) is stripped from the posted local price; it is not an extra netback deduction. From 2027 the 0.5 factor is replaced by a published equalizing coefficient.</div>
+        </div>
+        <div class="tf-step">
+          <div class="tf-h">5 · Export customs duty</div>
+          <div class="tf-eq"><b>Duty</b> = duty ladder(Kebco) $/t · <b>domestic = n/a</b></div>
           <div class="tf-note">Official MoF rate uses prior-period average of <b>Kebco and Brent</b> (not Kebco alone); $25–105 → duty ≈ that average $/t; above $105 → fixed schedule. This model looks up the schedule on Kebco as a single-marker proxy.</div>
         </div>
         <div class="tf-step">
-          <div class="tf-h">5 · Netbacks</div>
-          <div class="tf-eq"><b>Export NB</b> = (Brent − Skebco − Discount) × bbl/t − transport − duty − rental − MET</div>
-          <div class="tf-eq"><b>Domestic NB</b> = (local KZT ÷ FX ÷ VAT) − domestic transport − domestic MET</div>
+          <div class="tf-h">6 · Netbacks</div>
+          <div class="tf-eq"><b>Export NB</b> = (Brent − Skebco − Discount) × bbl/t − transport − duty − rental − export MET</div>
+          <div class="tf-eq"><b>Domestic NB</b> = ex-VAT local − domestic transport − domestic MET</div>
           <div class="tf-eq"><b>Δ</b> = Export NB − Domestic NB</div>
           <div class="tf-note">Discount is commercial (realized price), separate from fiscal Kebco. Transport = Σ(KZT + RUB×RUB→KZT) ÷ FX.</div>
         </div>
@@ -540,8 +546,10 @@
         <div class="k"><span>Rental rate @ Kebco</span><b id="taxKpiRentRate">—</b></div>
         <div class="k"><span>Duty @ Kebco</span><b id="taxKpiDuty">—</b></div>
         <div class="k"><span>Export MET</span><b id="taxKpiMetExp">—</b></div>
+        <div class="k"><span>Ex-VAT local</span><b id="taxKpiPriceDom">—</b></div>
         <div class="k"><span>Domestic MET</span><b id="taxKpiMetDom">—</b></div>
       </div>
+      <p class="lead" id="taxDomWorked" style="margin-top:10px;font-size:.88rem"></p>
     </div>
 
     <div class="section">
@@ -552,8 +560,8 @@
           <input id="taxMetRate" type="number" step="0.005" min="0" max="0.5" value="0.05"/>
         </div>
         <div class="field">
-          <label>Domestic MET share (× export MET)</label>
-          <input id="taxDomMetShare" type="number" step="0.01" min="0" max="1" value="0.1"/>
+          <label>Domestic MET factor (× MET rate; Code 2026 = 0.5)</label>
+          <input id="taxDomMetShare" type="number" step="0.01" min="0" max="1" value="0.5"/>
         </div>
         <div class="field">
           <label>VAT factor</label>
@@ -792,7 +800,7 @@ const DUTY_BASELINE = [[0,0],[25,10],[30,20],[35,35],[40,40],[45,45],[50,50],[55
 const TAX_BASELINE = {
   kbRent: 7.5,
   kbMet: 7.5,
-  domMetShare: 0.1,
+  domMetShare: 0.5,
   rent: RENT_BASELINE.map(r => [r[0], r[1]]),
   duty: DUTY_BASELINE.map(r => [r[0], r[1]])
 };
@@ -826,7 +834,11 @@ function hydrateTax() {
     if (!raw || typeof raw !== 'object') return;
     if (raw.kbRent != null) taxState.kbRent = num(raw.kbRent, TAX_BASELINE.kbRent);
     if (raw.kbMet != null) taxState.kbMet = num(raw.kbMet, TAX_BASELINE.kbMet);
-    if (raw.domMetShare != null) taxState.domMetShare = num(raw.domMetShare, TAX_BASELINE.domMetShare);
+    // Migrate old workbook shortcut (0.1 × export MET) → Code 2026 factor 0.5 on MET rate × ex-VAT local.
+    if (raw.domMetShare != null) {
+      const s = num(raw.domMetShare, TAX_BASELINE.domMetShare);
+      taxState.domMetShare = Math.abs(s - 0.1) < 1e-12 ? 0.5 : s;
+    }
     if (Array.isArray(raw.rent) && raw.rent.length) taxState.rent = sortLadder(raw.rent);
     if (Array.isArray(raw.duty) && raw.duty.length) taxState.duty = sortLadder(raw.duty);
   } catch {}
@@ -978,11 +990,11 @@ function calcNetback() {
   const rentRate = vlookup(kebco, taxState.rent), duty = vlookup(kebco, taxState.duty);
   const priceBbl = B - S - DISC, priceTexp = priceBbl * KB;
   const kbRent = num(taxState.kbRent, 7.5), kbMet = num(taxState.kbMet, 7.5);
-  const domMetShare = num(taxState.domMetShare, 0.1);
-  // Rental & MET tax base = world price (Kebco proxy) × bbl factor — RK Tax Code arts 749 / 776–778
+  const domMetShare = num(taxState.domMetShare, 0.5);
+  // Export: rental & MET on world price (Kebco). Domestic: no rental/duty; MET on ex-VAT local × rate × 0.5 (art. 778).
   const rental = rentRate * kebco * kbRent, metExp = kebco * MET * kbMet;
   const nbExp = priceTexp - trExp - duty - rental - metExp;
-  const priceTdom = LOC/FX/VAT, metDom = domMetShare * metExp;
+  const priceTdom = LOC/FX/VAT, metDom = priceTdom * MET * domMetShare;
   const nbDom = priceTdom - trDom - metDom;
   const spread = nbExp - nbDom;
   // Export NB = (B − S − DISC)×KB − trExp − duty − rental − metExp  equals  nbDom
@@ -1024,12 +1036,12 @@ function renderNetback() {
 
   const c = calcNetback();
   const taxAtBase =
-    Math.abs(c.kbRent-7.5)<1e-9 && Math.abs(c.kbMet-7.5)<1e-9 && Math.abs(c.domMetShare-0.1)<1e-9;
+    Math.abs(c.kbRent-7.5)<1e-9 && Math.abs(c.kbMet-7.5)<1e-9 && Math.abs(c.domMetShare-0.5)<1e-9;
   const atBase = !c.trAdj && taxAtBase &&
     Math.abs(c.B-105)<1e-9 && Math.abs(c.FX-448.64)<1e-9 && Math.abs(c.S-20.104)<1e-9 && Math.abs(c.DISC-6.18)<1e-9 &&
     Math.abs(c.LOC-130000)<1e-9 && Math.abs(c.RU-5.5606)<1e-9 && Math.abs(c.KB-7.2223)<1e-9 &&
     Math.abs(c.MET-0.05)<1e-9 && Math.abs(c.VAT-1.16)<1e-9;
-  const baselinePass = atBase && Math.abs(c.nbExp-288.2938839248377)<1e-6 && Math.abs(c.nbDom-214.22742937152591)<1e-6;
+  const baselinePass = atBase && Math.abs(c.nbExp-288.2938839248377)<1e-6 && Math.abs(c.nbDom-211.16610217392645)<1e-6;
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
@@ -1069,7 +1081,7 @@ function renderNetback() {
     row('DOMESTIC '+domesticLabel(),'','','secDom'),
     row('Price ex-VAT','local KZT / FX / VAT', fmt(c.priceTdom,2)),
     row('Transport $/t',`domestic KZT / FX${c.trAdj?' · % adj':''}`, fmt(c.trDom,2)),
-    row('Dom MET',`G17=${(c.domMetShare*100).toFixed(0)}%×export MET`, fmt(c.metDom,2)),
+    row('Dom MET',`ex-VAT local × MET% × ${(c.domMetShare).toFixed(2)} (art. 778)`, fmt(c.metDom,2)),
     row('Domestic netback','G18', fmt(c.nbDom,2)+' $/t','total'),
     row('RESULT','','','secIn'),
     row('Δ Netback (Export−Domestic)','export NB − domestic NB', (c.spread>=0?'+':'')+fmt(c.spread,2)+' $/t','total'),
@@ -1816,7 +1828,7 @@ function renderTaxPage() {
   const kbRent = document.getElementById('taxKbRent');
   const kbMet = document.getElementById('taxKbMet');
   if (met && document.activeElement !== met) met.value = num(state.metRate, BASE.metRate);
-  if (share && document.activeElement !== share) share.value = num(taxState.domMetShare, 0.1);
+  if (share && document.activeElement !== share) share.value = num(taxState.domMetShare, 0.5);
   if (vat && document.activeElement !== vat) vat.value = num(state.vat, BASE.vat);
   if (kb && document.activeElement !== kb) kb.value = num(state.kb, BASE.kb);
   if (kbRent && document.activeElement !== kbRent) kbRent.value = num(taxState.kbRent, 7.5);
@@ -1832,18 +1844,28 @@ function renderTaxPage() {
   const kDuty = document.getElementById('taxKpiDuty');
   const kMet = document.getElementById('taxKpiMetExp');
   const kDom = document.getElementById('taxKpiMetDom');
+  const kPriceDom = document.getElementById('taxKpiPriceDom');
   const kKebco = document.getElementById('taxKpiKebco');
   if (kKebco) kKebco.textContent = fmt(c.kebco, 2) + ' $/bbl';
   if (kRent) kRent.textContent = (c.rentRate*100).toFixed(0) + '%';
   if (kDuty) kDuty.textContent = fmt(c.duty, 0) + ' $/t';
   if (kMet) kMet.textContent = fmt(c.metExp, 2) + ' $/t';
+  if (kPriceDom) kPriceDom.textContent = fmt(c.priceTdom, 2) + ' $/t';
   if (kDom) kDom.textContent = fmt(c.metDom, 2) + ' $/t';
+  const worked = document.getElementById('taxDomWorked');
+  if (worked) {
+    worked.innerHTML =
+      `<b>Domestic worked:</b> ${fmt(c.LOC,0)} KZT ÷ ${fmt(c.FX,2)} ÷ ${fmt(c.VAT,2)} = <b>${fmt(c.priceTdom,2)}</b> $/t` +
+      ` − transport <b>${fmt(c.trDom,2)}</b>` +
+      ` − MET (${fmt(c.priceTdom,2)} × ${(c.MET*100).toFixed(1)}% × ${fmt(c.domMetShare,2)}) = <b>${fmt(c.metDom,2)}</b>` +
+      ` → NB <b>${fmt(c.nbDom,2)}</b> $/t. Rental &amp; export duty do not apply.`;
+  }
 }
 function applyTaxFactorInputs() {
   state.metRate = num(document.getElementById('taxMetRate').value, BASE.metRate);
   state.vat = num(document.getElementById('taxVat').value, BASE.vat);
   state.kb = num(document.getElementById('taxKb').value, BASE.kb);
-  taxState.domMetShare = num(document.getElementById('taxDomMetShare').value, 0.1);
+  taxState.domMetShare = num(document.getElementById('taxDomMetShare').value, 0.5);
   taxState.kbRent = num(document.getElementById('taxKbRent').value, 7.5);
   taxState.kbMet = num(document.getElementById('taxKbMet').value, 7.5);
   persist();
@@ -1998,7 +2020,7 @@ const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
 const CURRENT_MONTH_ID = '2026-11';
 
-const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current month — FX daily on open. Rental/MET/duty use Kebco (Brent−Skebco); rental base = Kebco per Tax Code.", "savedAt": "2026-11-13T09:00:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 288.2938839248377, "nbDom": 214.22742937152591, "spread": 74.06645455331179, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 80, "rental": 108.2424, "metExp": 31.836, "domesticRoute": "pkop"}};
+const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current month — FX daily. Export taxes on Kebco; domestic MET = ex-VAT local × MET% × 0.5 (art. 778); no rental/duty on domestic.", "savedAt": "2026-11-13T09:15:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 288.2938839248377, "nbDom": 211.16610217392645, "spread": 77.12778175091125, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 80, "rental": 108.2424, "metExp": 31.836, "domesticRoute": "pkop"}};
 
 /** Live daily FX for the current month only (prior months keep monthly averages). */
 let liveFxMeta = { fx: null, ru: null, asOf: null, source: '', status: 'idle' };
@@ -2234,7 +2256,7 @@ function calcTableHtml(c, params) {
       <tr><td><b>Export netback</b></td><td>D18</td><td class="num"><b>${fmt(c.nbExp,2)} $/t</b></td></tr>
       <tr><td>Local price ex-VAT</td><td>KZT / FX / VAT</td><td class="num">${fmt(c.priceTdom,2)} $/t</td></tr>
       <tr><td>Domestic transport (${route})</td><td>Tr.cost path</td><td class="num">${fmt(c.trDom,2)} $/t</td></tr>
-      <tr><td>Domestic MET</td><td>${(c.domMetShare*100).toFixed(0)}% × export MET</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
+      <tr><td>Domestic MET</td><td>ex-VAT local × MET% × ${fmt(c.domMetShare,2)} (no rental/duty)</td><td class="num">${fmt(c.metDom,2)} $/t</td></tr>
       <tr><td><b>Domestic netback</b></td><td>G18 / F18</td><td class="num"><b>${fmt(c.nbDom,2)} $/t</b></td></tr>
       <tr><td><b>Δ Export − Domestic</b></td><td>export NB − domestic NB</td><td class="num"><b>${(c.spread>=0?'+':'')+fmt(c.spread,2)} $/t</b></td></tr>
       <tr><td>Breakeven Skebco</td><td>Hold Discount fixed</td><td class="num">${fmt(c.skStar,2)} $/bbl</td></tr>
