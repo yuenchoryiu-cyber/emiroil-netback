@@ -1,0 +1,771 @@
+{
+  "source": "eot oil products.xlsx",
+  "note": "Sell-all immediate: no inventory/balance. Historic=actual yields. Forecast=recency-weighted yields within PKOP or PNHZ.",
+  "defaultRefinery": "pkop",
+  "refineries": {
+    "pkop": {
+      "label": "Shymkent (PKOP)",
+      "historyMonths": [
+        {
+          "id": "2026-06",
+          "label": "June'26 PKOP",
+          "refinery": "pkop",
+          "volumeT": 3600.0,
+          "fx": 485.82,
+          "products": [
+            {
+              "name": "AI92",
+              "kind": "gasoline",
+              "yield": 0.3183,
+              "priceKzt": 252058.82,
+              "sellable": true
+            },
+            {
+              "name": "AI95",
+              "kind": "gasoline",
+              "yield": 0.0679,
+              "priceKzt": 295000.0,
+              "sellable": true
+            },
+            {
+              "name": "AI98",
+              "kind": "gasoline",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Diesel fuel",
+              "kind": "diesel",
+              "yield": 0.3678,
+              "priceKzt": 333000.0,
+              "sellable": true
+            },
+            {
+              "name": "Kerosene (Aviation fuel)",
+              "kind": "other",
+              "yield": 0.0727,
+              "priceKzt": 553000.0,
+              "sellable": true
+            },
+            {
+              "name": "Fuel oil",
+              "kind": "other",
+              "yield": 0.0652,
+              "priceKzt": 130000.0,
+              "sellable": true
+            },
+            {
+              "name": "Vacuum gas oil",
+              "kind": "other",
+              "yield": 0.0,
+              "priceKzt": 265257.72,
+              "sellable": false
+            },
+            {
+              "name": "Sulphur",
+              "kind": "other",
+              "yield": 0.003,
+              "priceKzt": 1000.0,
+              "sellable": true
+            },
+            {
+              "name": "Liquefied gas",
+              "kind": "other",
+              "yield": 0.0549,
+              "priceKzt": 69277.52,
+              "sellable": true
+            },
+            {
+              "name": "Technical fuel",
+              "kind": "ownuse",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Losses",
+              "kind": "loss",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            }
+          ]
+        },
+        {
+          "id": "2026-07",
+          "label": "July'26 PKOP",
+          "refinery": "pkop",
+          "volumeT": 3500.0,
+          "fx": 485.82,
+          "products": [
+            {
+              "name": "AI92",
+              "kind": "gasoline",
+              "yield": 0.2989,
+              "priceKzt": 277000.0,
+              "sellable": true
+            },
+            {
+              "name": "AI95",
+              "kind": "gasoline",
+              "yield": 0.0679,
+              "priceKzt": 338120.57,
+              "sellable": true
+            },
+            {
+              "name": "AI98",
+              "kind": "gasoline",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Diesel fuel",
+              "kind": "diesel",
+              "yield": 0.3538,
+              "priceKzt": 337714.23,
+              "sellable": true
+            },
+            {
+              "name": "Kerosene (Aviation fuel)",
+              "kind": "other",
+              "yield": 0.0812,
+              "priceKzt": 968000.0,
+              "sellable": true
+            },
+            {
+              "name": "Fuel oil",
+              "kind": "other",
+              "yield": 0.0842,
+              "priceKzt": 130000.0,
+              "sellable": true
+            },
+            {
+              "name": "Vacuum gas oil",
+              "kind": "other",
+              "yield": 0.0,
+              "priceKzt": 265257.72,
+              "sellable": false
+            },
+            {
+              "name": "Sulphur",
+              "kind": "other",
+              "yield": 0.0029,
+              "priceKzt": 60000.0,
+              "sellable": true
+            },
+            {
+              "name": "Liquefied gas",
+              "kind": "other",
+              "yield": 0.0523,
+              "priceKzt": 69277.52,
+              "sellable": true
+            },
+            {
+              "name": "Technical fuel",
+              "kind": "ownuse",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Losses",
+              "kind": "loss",
+              "yield": 0.005,
+              "priceKzt": 0.0,
+              "sellable": false
+            }
+          ]
+        },
+        {
+          "id": "2026-08",
+          "label": "Aug'26 PKOP",
+          "refinery": "pkop",
+          "volumeT": 4000.0,
+          "fx": 485.82,
+          "products": [
+            {
+              "name": "AI92",
+              "kind": "gasoline",
+              "yield": 0.2956,
+              "priceKzt": 283000.0,
+              "sellable": true
+            },
+            {
+              "name": "AI95",
+              "kind": "gasoline",
+              "yield": 0.068,
+              "priceKzt": 345000.0,
+              "sellable": true
+            },
+            {
+              "name": "AI98",
+              "kind": "gasoline",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Diesel fuel",
+              "kind": "diesel",
+              "yield": 0.3707,
+              "priceKzt": 358398.42,
+              "sellable": true
+            },
+            {
+              "name": "Kerosene (Aviation fuel)",
+              "kind": "other",
+              "yield": 0.0621,
+              "priceKzt": 968000.0,
+              "sellable": true
+            },
+            {
+              "name": "Fuel oil",
+              "kind": "other",
+              "yield": 0.064,
+              "priceKzt": 130000.0,
+              "sellable": true
+            },
+            {
+              "name": "Vacuum gas oil",
+              "kind": "other",
+              "yield": 0.0,
+              "priceKzt": 265257.72,
+              "sellable": false
+            },
+            {
+              "name": "Sulphur",
+              "kind": "other",
+              "yield": 0.0028,
+              "priceKzt": 70000.0,
+              "sellable": true
+            },
+            {
+              "name": "Liquefied gas",
+              "kind": "other",
+              "yield": 0.0533,
+              "priceKzt": 69277.52,
+              "sellable": true
+            },
+            {
+              "name": "Technical fuel",
+              "kind": "ownuse",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Losses",
+              "kind": "loss",
+              "yield": 0.005,
+              "priceKzt": 0.0,
+              "sellable": false
+            }
+          ]
+        },
+        {
+          "id": "2026-09",
+          "label": "Sep'26 PKOP",
+          "refinery": "pkop",
+          "volumeT": 5200.0,
+          "fx": 485.82,
+          "products": [
+            {
+              "name": "AI92",
+              "kind": "gasoline",
+              "yield": 0.3144,
+              "priceKzt": 280582.09,
+              "sellable": true
+            },
+            {
+              "name": "AI95",
+              "kind": "gasoline",
+              "yield": 0.0681,
+              "priceKzt": 342666.67,
+              "sellable": true
+            },
+            {
+              "name": "AI98",
+              "kind": "gasoline",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Diesel fuel",
+              "kind": "diesel",
+              "yield": 0.3839,
+              "priceKzt": 364656.05,
+              "sellable": true
+            },
+            {
+              "name": "Kerosene (Aviation fuel)",
+              "kind": "other",
+              "yield": 0.063,
+              "priceKzt": 550000.0,
+              "sellable": true
+            },
+            {
+              "name": "Fuel oil",
+              "kind": "other",
+              "yield": 0.0377,
+              "priceKzt": 130000.0,
+              "sellable": true
+            },
+            {
+              "name": "Vacuum gas oil",
+              "kind": "other",
+              "yield": 0.0,
+              "priceKzt": 265257.72,
+              "sellable": false
+            },
+            {
+              "name": "Sulphur",
+              "kind": "other",
+              "yield": 0.0028,
+              "priceKzt": 70000.0,
+              "sellable": true
+            },
+            {
+              "name": "Liquefied gas",
+              "kind": "other",
+              "yield": 0.0549,
+              "priceKzt": 69277.52,
+              "sellable": true
+            },
+            {
+              "name": "Technical fuel",
+              "kind": "ownuse",
+              "yield": 0.065166,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Losses",
+              "kind": "loss",
+              "yield": 0.009651,
+              "priceKzt": 0.0,
+              "sellable": false
+            }
+          ]
+        },
+        {
+          "id": "2026-10",
+          "label": "Oct'26 PKOP",
+          "refinery": "pkop",
+          "volumeT": 4500.0,
+          "fx": 450.0,
+          "products": [
+            {
+              "name": "AI92",
+              "kind": "gasoline",
+              "yield": 0.3139,
+              "priceKzt": 283591.13,
+              "sellable": true
+            },
+            {
+              "name": "AI95",
+              "kind": "gasoline",
+              "yield": 0.0681,
+              "priceKzt": 330000.0,
+              "sellable": true
+            },
+            {
+              "name": "AI98",
+              "kind": "gasoline",
+              "yield": 0.0,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Diesel fuel",
+              "kind": "diesel",
+              "yield": 0.3643,
+              "priceKzt": 363230.53,
+              "sellable": true
+            },
+            {
+              "name": "Kerosene (Aviation fuel)",
+              "kind": "other",
+              "yield": 0.0609,
+              "priceKzt": 530000.0,
+              "sellable": true
+            },
+            {
+              "name": "Fuel oil",
+              "kind": "other",
+              "yield": 0.065,
+              "priceKzt": 125833.33,
+              "sellable": true
+            },
+            {
+              "name": "Vacuum gas oil",
+              "kind": "other",
+              "yield": 0.0,
+              "priceKzt": 245700.0,
+              "sellable": false
+            },
+            {
+              "name": "Sulphur",
+              "kind": "other",
+              "yield": 0.0028,
+              "priceKzt": 70000.0,
+              "sellable": true
+            },
+            {
+              "name": "Liquefied gas",
+              "kind": "other",
+              "yield": 0.0556,
+              "priceKzt": 69277.52,
+              "sellable": true
+            },
+            {
+              "name": "Technical fuel",
+              "kind": "ownuse",
+              "yield": 0.065166,
+              "priceKzt": 0.0,
+              "sellable": false
+            },
+            {
+              "name": "Losses",
+              "kind": "loss",
+              "yield": 0.009651,
+              "priceKzt": 0.0,
+              "sellable": false
+            }
+          ]
+        }
+      ],
+      "forecastProducts": [
+        {
+          "name": "AI92",
+          "kind": "gasoline",
+          "yield": 0.308667,
+          "priceKzt": 283591.13,
+          "priceUsd": 630.2,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "AI95",
+          "kind": "gasoline",
+          "yield": 0.06804,
+          "priceKzt": 330000.0,
+          "priceUsd": 733.33,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "AI98",
+          "kind": "gasoline",
+          "yield": 0.0,
+          "priceKzt": 0.0,
+          "priceUsd": 0.0,
+          "priceMode": "kzt",
+          "sellable": false
+        },
+        {
+          "name": "Diesel fuel",
+          "kind": "diesel",
+          "yield": 0.36964,
+          "priceKzt": 363230.53,
+          "priceUsd": 807.18,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Kerosene (Aviation fuel)",
+          "kind": "other",
+          "yield": 0.065193,
+          "priceKzt": 530000.0,
+          "priceUsd": 1177.78,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Fuel oil",
+          "kind": "other",
+          "yield": 0.060093,
+          "priceKzt": 125833.33,
+          "priceUsd": 279.63,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Vacuum gas oil",
+          "kind": "other",
+          "yield": 0.0,
+          "priceKzt": 245700.0,
+          "priceUsd": 546.0,
+          "priceMode": "kzt",
+          "sellable": false
+        },
+        {
+          "name": "Sulphur",
+          "kind": "other",
+          "yield": 0.002827,
+          "priceKzt": 70000.0,
+          "priceUsd": 155.56,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Liquefied gas",
+          "kind": "other",
+          "yield": 0.054467,
+          "priceKzt": 69277.52,
+          "priceUsd": 153.95,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Technical fuel",
+          "kind": "ownuse",
+          "yield": 0.0391,
+          "priceKzt": 0.0,
+          "priceUsd": 0.0,
+          "priceMode": "kzt",
+          "sellable": false
+        },
+        {
+          "name": "Losses",
+          "kind": "loss",
+          "yield": 0.007457,
+          "priceKzt": 0.0,
+          "priceUsd": 0.0,
+          "priceMode": "kzt",
+          "sellable": false
+        }
+      ],
+      "yieldWeights": {
+        "2026-06": 1,
+        "2026-07": 2,
+        "2026-08": 3,
+        "2026-09": 4,
+        "2026-10": 5
+      },
+      "yieldWeightNote": "2026-06x1, 2026-07x2, 2026-08x3, 2026-09x4, 2026-10x5",
+      "defaults": {
+        "volumeT": 4500.0,
+        "processingKzt": 26029,
+        "additive1Kzt": 600,
+        "additive2Kzt": 240,
+        "additivesKzt": 0,
+        "adminKzt": 300,
+        "exciseGasRateKzt": 38134.0,
+        "exciseDieselRateKzt": 35726.0,
+        "fuelOilDutyUsd": 0,
+        "priceEscPct": 0
+      }
+    },
+    "pnhz": {
+      "label": "Pavlodar (PNHZ)",
+      "historyMonths": [
+        {
+          "id": "2026-06",
+          "label": "June'26 PNHZ",
+          "refinery": "pnhz",
+          "volumeT": 257.226,
+          "fx": 460.0,
+          "products": [
+            {
+              "name": "AI92",
+              "kind": "gasoline",
+              "yield": 0.180947,
+              "priceKzt": 257571.43,
+              "sellable": true
+            },
+            {
+              "name": "AI95",
+              "kind": "gasoline",
+              "yield": 0.095238,
+              "priceKzt": 296142.86,
+              "sellable": true
+            },
+            {
+              "name": "AI98",
+              "kind": "gasoline",
+              "yield": 0.00381,
+              "priceKzt": 325000.0,
+              "sellable": true
+            },
+            {
+              "name": "Diesel fuel",
+              "kind": "diesel",
+              "yield": 0.383333,
+              "priceKzt": 329787.88,
+              "sellable": true
+            },
+            {
+              "name": "Kerosene (Aviation fuel)",
+              "kind": "other",
+              "yield": 0.04381,
+              "priceKzt": 605000.0,
+              "sellable": true
+            },
+            {
+              "name": "Fuel oil",
+              "kind": "other",
+              "yield": 0.027248,
+              "priceKzt": 160000.0,
+              "sellable": true
+            },
+            {
+              "name": "Vacuum gas oil",
+              "kind": "other",
+              "yield": 0.0,
+              "priceKzt": 251160.0,
+              "sellable": false
+            },
+            {
+              "name": "Sulphur",
+              "kind": "other",
+              "yield": 0.009876,
+              "priceKzt": 271707.32,
+              "sellable": true
+            },
+            {
+              "name": "Liquefied gas",
+              "kind": "other",
+              "yield": 0.04963,
+              "priceKzt": 69277.52,
+              "sellable": true
+            },
+            {
+              "name": "Technical fuel",
+              "kind": "ownuse",
+              "yield": 0.054211,
+              "priceKzt": 6128.07,
+              "sellable": false
+            },
+            {
+              "name": "Losses",
+              "kind": "loss",
+              "yield": 0.005468,
+              "priceKzt": 0.0,
+              "sellable": false
+            }
+          ]
+        }
+      ],
+      "forecastProducts": [
+        {
+          "name": "AI92",
+          "kind": "gasoline",
+          "yield": 0.180947,
+          "priceKzt": 257571.43,
+          "priceUsd": 559.94,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "AI95",
+          "kind": "gasoline",
+          "yield": 0.095238,
+          "priceKzt": 296142.86,
+          "priceUsd": 643.79,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "AI98",
+          "kind": "gasoline",
+          "yield": 0.00381,
+          "priceKzt": 325000.0,
+          "priceUsd": 706.52,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Diesel fuel",
+          "kind": "diesel",
+          "yield": 0.383333,
+          "priceKzt": 329787.88,
+          "priceUsd": 716.93,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Kerosene (Aviation fuel)",
+          "kind": "other",
+          "yield": 0.04381,
+          "priceKzt": 605000.0,
+          "priceUsd": 1315.22,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Fuel oil",
+          "kind": "other",
+          "yield": 0.027248,
+          "priceKzt": 160000.0,
+          "priceUsd": 347.83,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Vacuum gas oil",
+          "kind": "other",
+          "yield": 0.0,
+          "priceKzt": 251160.0,
+          "priceUsd": 546.0,
+          "priceMode": "kzt",
+          "sellable": false
+        },
+        {
+          "name": "Sulphur",
+          "kind": "other",
+          "yield": 0.009876,
+          "priceKzt": 271707.32,
+          "priceUsd": 590.67,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Liquefied gas",
+          "kind": "other",
+          "yield": 0.04963,
+          "priceKzt": 69277.52,
+          "priceUsd": 150.6,
+          "priceMode": "kzt",
+          "sellable": true
+        },
+        {
+          "name": "Technical fuel",
+          "kind": "ownuse",
+          "yield": 0.054211,
+          "priceKzt": 6128.07,
+          "priceUsd": 13.32,
+          "priceMode": "kzt",
+          "sellable": false
+        },
+        {
+          "name": "Losses",
+          "kind": "loss",
+          "yield": 0.005468,
+          "priceKzt": 0.0,
+          "priceUsd": 0.0,
+          "priceMode": "kzt",
+          "sellable": false
+        }
+      ],
+      "yieldWeights": {
+        "2026-06": 1
+      },
+      "yieldWeightNote": "2026-06x1",
+      "defaults": {
+        "volumeT": 257.226,
+        "processingKzt": 26029,
+        "additive1Kzt": 600,
+        "additive2Kzt": 240,
+        "additivesKzt": 0,
+        "adminKzt": 300,
+        "exciseGasRateKzt": 38134.0,
+        "exciseDieselRateKzt": 35726.0,
+        "fuelOilDutyUsd": 0,
+        "priceEscPct": 0
+      }
+    }
+  }
+}
