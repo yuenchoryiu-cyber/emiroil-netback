@@ -447,14 +447,14 @@
     </div>
     <p>Enter the shared password to open the tool.</p>
     <div class="gate-err" id="gateErr"></div>
-    <input id="gatePw" type="password" placeholder="Password" autocomplete="current-password"/>
+    <input id="gatePw" type="password" placeholder="Password" data-i18n-placeholder="password_ph" autocomplete="current-password"/>
     <button type="button" id="gateBtn">Unlock</button>
   </div>
 </div>
 <div id="app" class="wrap">
   <header class="app-brand">
     <div class="brand-left">
-      <h1 class="brand">Emir Oil Netback</h1>
+      <h1 class="brand" data-i18n="brand_name">Emir Oil Netback</h1>
       <p class="brand-sub" data-i18n="brand_sub">Analysis, transport, taxes, EOT Netback, month profiles, and reports</p>
     </div>
     <div class="brand-meta">
@@ -500,11 +500,11 @@
           <div class="nb-val" id="verdictSpread">—</div>
         </div>
         <div>
-          <span class="nb-label">FX (KZT / 1 USD)<span class="fx-star" aria-hidden="true">*</span></span>
+          <span class="nb-label"><span data-i18n="fx_kzt_usd">FX (KZT / 1 USD)</span><span class="fx-star" aria-hidden="true">*</span></span>
           <div class="nb-val" id="verdictFx">—</div>
         </div>
         <div>
-          <span class="nb-label">RUB→KZT (KZT / 1 RUB)</span>
+          <span class="nb-label" data-i18n="rub_kzt">RUB→KZT (KZT / 1 RUB)</span>
           <div class="nb-val" id="verdictRu">—</div>
         </div>
       </div>
@@ -523,27 +523,27 @@
       </div>
       <div class="row">
         <div>
-          <label>Brent <span class="val" id="brentLbl">105</span> $/bbl</label>
+          <label><span data-i18n="brent">Brent</span> <span class="val" id="brentLbl">105</span> $/bbl</label>
           <input id="brent" type="range" min="20" max="200" step="0.5" value="105"/>
         </div>
         <div>
-          <label>FX<span class="fx-star" aria-hidden="true">*</span> <span class="val" id="fxLbl">448.64</span> KZT per 1 USD</label>
+          <label><span data-i18n="fx">FX</span><span class="fx-star" aria-hidden="true">*</span> <span class="val" id="fxLbl">448.64</span> KZT per 1 USD</label>
           <input id="fx" type="range" min="360" max="560" step="0.01" value="448.64"/>
         </div>
         <div>
-          <label>Skebco (D6) <span class="val" id="skLbl">20.1</span> $/bbl</label>
+          <label><span data-i18n="skebco">Skebco (D6)</span> <span class="val" id="skLbl">20.1</span> $/bbl</label>
           <input id="sk" type="range" min="-30" max="40" step="0.1" value="20.104"/>
         </div>
         <div>
-          <label>Discount / skidka (D7) <span class="val" id="discLbl">6.18</span> $/bbl</label>
+          <label><span data-i18n="discount">Discount / skidka (D7)</span> <span class="val" id="discLbl">6.18</span> $/bbl</label>
           <input id="disc" type="range" min="-20" max="20" step="0.01" value="6.18"/>
         </div>
         <div>
-          <label>RUB→KZT (Novoros) <span class="val" id="ruLbl">5.56</span> KZT per 1 RUB</label>
+          <label><span data-i18n="rub_novoros">RUB→KZT (Novoros)</span> <span class="val" id="ruLbl">5.56</span> KZT per 1 RUB</label>
           <input id="ru" type="range" min="4" max="10" step="0.01" value="5.5606"/>
         </div>
         <div>
-          <label>Local domestic VAT-incl <span class="val" id="locLbl">130,000</span> KZT/t</label>
+          <label><span data-i18n="local_vat">Local domestic VAT-incl</span> <span class="val" id="locLbl">130,000</span> KZT/t</label>
           <input id="localKzt" type="range" min="80000" max="180000" step="500" value="130000"/>
         </div>
         <div class="reset-pick">
@@ -560,15 +560,15 @@
         <div class="adv-title" data-i18n="structural_title">Structural — usually unchanged short term</div>
         <div class="row2">
           <div>
-            <label>Export bbl/t <span class="val" id="kbLbl">7.2223</span></label>
+            <label><span data-i18n="export_bbl_t">Export bbl/t</span> <span class="val" id="kbLbl">7.2223</span></label>
             <input id="kb" type="range" min="6.5" max="8" step="0.0001" value="7.2223"/>
           </div>
           <div>
-            <label>MET rate <span class="val" id="metLbl">5.0%</span></label>
+            <label><span data-i18n="met_rate">MET rate</span> <span class="val" id="metLbl">5.0%</span></label>
             <input id="metRate" type="range" min="0.01" max="0.18" step="0.005" value="0.05"/>
           </div>
           <div>
-            <label>VAT factor <span class="val" id="vatLbl">1.16</span></label>
+            <label><span data-i18n="vat_factor">VAT factor</span> <span class="val" id="vatLbl">1.16</span></label>
             <input id="vat" type="range" min="1" max="1.2" step="0.01" value="1.16"/>
           </div>
         </div>
@@ -577,15 +577,15 @@
 
     <div class="grid">
       <aside class="panel left">
-        <h2>Formulas & values</h2>
+        <h2 data-i18n="formulas_values">Formulas & values</h2>
         <table class="calc">
-          <thead><tr><th class="name">Item</th><th class="formula">Formula</th><th class="value">Value</th></tr></thead>
+          <thead><tr><th class="name" data-i18n="th_item">Item</th><th class="formula" data-i18n="th_formula">Formula</th><th class="value" data-i18n="th_value">Value</th></tr></thead>
           <tbody id="calcBody"></tbody>
         </table>
       </aside>
       <section class="panel">
         <div class="live-head">
-          <h2>Live scenario</h2>
+          <h2 data-i18n="live_scenario">Live scenario</h2>
           <div class="route-toggle onoff-toggle" id="oilIncomeToggle" role="group" aria-label="EOT income">
             <span class="unit-lbl" data-i18n="eot_income">EOT income</span>
             <button type="button" data-oil="off" class="active" data-i18n="off">Off</button>
@@ -602,9 +602,9 @@
 
   <!-- TRANSPORT PAGE -->
   <div id="page-transport" class="page">
-    <h1>Transport costs &amp; route map</h1>
+    <h1 data-i18n="transport_h1">Transport costs &amp; route map</h1>
     <div class="month-head" id="transportMonthHead">—</div>
-    <p class="lead">Tr.cost 2026 legs for Novoros export vs selected domestic path (Shymkent / PKOP or Pavlodar). Drag % bars — netback updates from the same state.</p>
+    <p class="lead" data-i18n="transport_lead">Tr.cost 2026 legs for Novoros export vs selected domestic path (Shymkent / PKOP or Pavlodar). Drag % bars — netback updates live.</p>
     <div class="reset-pick" style="margin-bottom:10px">
       <div>
         <label>Reset to month</label>
@@ -627,11 +627,11 @@
         <input id="trRu" type="range" min="4" max="10" step="0.01" value="5.5606"/>
       </div>
       <div>
-        <label>Bulk % EXPORT <span class="val" id="bulkExpLbl">0%</span></label>
+        <label><span data-i18n="bulk_export">Bulk % EXPORT</span> <span class="val" id="bulkExpLbl">0%</span></label>
         <input id="bulkExp" type="range" min="-50" max="100" step="0.5" value="0"/>
       </div>
       <div>
-        <label>Bulk % DOMESTIC <span class="val" id="bulkDomLbl">0%</span></label>
+        <label><span data-i18n="bulk_domestic">Bulk % DOMESTIC</span> <span class="val" id="bulkDomLbl">0%</span></label>
         <input id="bulkDom" type="range" min="-50" max="100" step="0.5" value="0"/>
       </div>
       <p class="fx-footnote" id="trFxRateNote" style="grid-column:1/-1">* FX: prior months use monthly average; current month uses daily rate on open.</p>
@@ -640,18 +640,18 @@
     <div class="section domestic" id="secDom"></div>
 
     <div class="section" id="transportMapSection" style="margin-top:16px">
-      <h2>Route map</h2>
-      <p class="lead" style="margin-bottom:8px">Approximate pipeline/rail path. Hover a leg to highlight. Prices in original tariff currency.</p>
+      <h2 data-i18n="route_map">Route map</h2>
+      <p class="lead" style="margin-bottom:8px" data-i18n="route_map_lead">Approximate pipeline/rail path. Hover a leg to highlight. Prices in original tariff currency.</p>
       <div class="route-legend">
       <span><i style="background:#0f766e"></i> Export → Novorossiysk</span>
       <span><i style="background:#b45309"></i> Domestic → Shymkent (PKOP)</span>
       <span><i style="background:#7c3aed"></i> Domestic → Pavlodar (PNHZ)</span>
     </div>
     <div class="btn-row" style="margin-bottom:8px">
-      <button type="button" class="ok" id="btnMapShowAll" data-map-mode="all">Show all routes</button>
-      <button type="button" class="ghost" id="btnMapShowExp" data-map-mode="export">Export only</button>
-      <button type="button" class="ghost" id="btnMapShowDom" data-map-mode="dom">Domestic (both routes)</button>
-      <button type="button" class="ghost" id="btnMapFit">Fit map</button>
+      <button type="button" class="ok" id="btnMapShowAll" data-map-mode="all" data-i18n="show_all_routes">Show all routes</button>
+      <button type="button" class="ghost" id="btnMapShowExp" data-map-mode="export" data-i18n="export_only">Export only</button>
+      <button type="button" class="ghost" id="btnMapShowDom" data-map-mode="dom" data-i18n="domestic_both">Domestic (both routes)</button>
+      <button type="button" class="ghost" id="btnMapFit" data-i18n="fit_map">Fit map</button>
     </div>
     <div class="route-side">
       <div id="routeMap"></div>
@@ -663,17 +663,17 @@
 
   <!-- TAXES / FISCAL PAGE -->
   <div id="page-taxes" class="page">
-    <h1>Taxes / fiscal</h1>
+    <h1 data-i18n="taxes_title">Taxes / fiscal</h1>
     <p class="lead" data-i18n="taxes_lead">Structural fiscal layer — usually unchanged month to month. Edits apply immediately to netback. Separate from monthly price profiles.</p>
     <div class="btn-row no-print" style="margin-bottom:10px">
-      <button type="button" class="ok" id="btnTaxResetAll">Reset all taxes to baseline</button>
-      <button type="button" class="ghost" id="btnTaxResetLadders">Reset ladders only</button>
+      <button type="button" class="ok" id="btnTaxResetAll" data-i18n="reset_taxes">Reset all taxes to baseline</button>
+      <button type="button" class="ghost" id="btnTaxResetLadders" data-i18n="reset_ladders">Reset ladders only</button>
     </div>
     <div class="status" id="taxStatus"></div>
 
     <div class="section">
-      <h2>How taxes enter netback</h2>
-      <p class="lead" style="margin-bottom:8px">Aligned with RK Tax Code practice: world price for export rental &amp; MET is the relevant grade (here <b>Kebco</b>). Netback subtracts those $/t charges plus transport.</p>
+      <h2 data-i18n="how_taxes">How taxes enter netback</h2>
+      <p class="lead" style="margin-bottom:8px" data-i18n="taxes_howto_lead">Aligned with RK Tax Code practice: world price for export rental &amp; MET is the relevant grade (here Kebco = Brent − Skebco). Domestic has no rental/duty; MET uses a reduction factor.</p>
       <div class="tax-formula" id="taxFormulaStrip">
         <div class="tf-step">
           <div class="tf-h">1 · Fiscal marker (model)</div>
@@ -722,14 +722,14 @@
     </div>
 
     <div class="section">
-      <h2>Live factors</h2>
+      <h2 data-i18n="live_factors">Live factors</h2>
       <div class="tax-factors">
         <div class="field">
-          <label>Export MET rate</label>
+          <label data-i18n="export_met_rate">Export MET rate</label>
           <input id="taxMetRate" type="number" step="0.005" min="0" max="0.5" value="0.05"/>
         </div>
         <div class="field">
-          <label>Domestic MET factor (× MET rate; Code 2026 = 0.5)</label>
+          <label><span data-i18n="dom_met_factor">Domestic MET factor (× MET rate; Code 2026 = 0.5)</span></label>
           <input id="taxDomMetShare" type="number" step="0.01" min="0" max="1" value="0.5"/>
         </div>
         <div class="field">
@@ -741,38 +741,38 @@
           <input id="taxKb" type="number" step="0.0001" min="5" max="10" value="7.2223"/>
         </div>
         <div class="field">
-          <label>Rental bbl factor</label>
+          <label data-i18n="rental_bbl">Rental bbl factor</label>
           <input id="taxKbRent" type="number" step="0.1" min="0" max="20" value="7.5"/>
         </div>
         <div class="field">
-          <label>MET bbl factor</label>
+          <label data-i18n="met_bbl">MET bbl factor</label>
           <input id="taxKbMet" type="number" step="0.1" min="0" max="20" value="7.5"/>
         </div>
       </div>
     </div>
 
     <div class="section">
-      <h2>Kebco ladders (GCA)</h2>
-      <p class="lead" style="margin-bottom:8px">Lookup = last row where <b>Kebco</b> (Brent − Skebco) ≥ threshold. Skebco may be negative. Sorted automatically on save.</p>
+      <h2 data-i18n="kebco_ladders">Kebco ladders (GCA)</h2>
+      <p class="lead" style="margin-bottom:8px" data-i18n="ladder_lead">Lookup = last row where Kebco (Brent − Skebco) ≥ threshold. Skebco may be negative. Sorted automatically on save.</p>
       <div class="ladder-wrap">
         <div>
-          <h3 style="font-size:.9rem;margin:0 0 6px">Rental rate ladder</h3>
+          <h3 style="font-size:.9rem;margin:0 0 6px" data-i18n="rental_ladder">Rental rate ladder</h3>
           <table class="ladder-table">
-            <thead><tr><th>Kebco ≥ $/bbl</th><th>Rate (e.g. 0.21)</th><th class="act"></th></tr></thead>
+            <thead><tr><th data-i18n="th_kebco">Kebco ≥ $/bbl</th><th data-i18n="th_rate">Rate (e.g. 0.21)</th><th class="act"></th></tr></thead>
             <tbody id="rentLadderBody"></tbody>
           </table>
           <div class="btn-row" style="margin-top:8px">
-            <button type="button" class="ghost" id="btnAddRentRow">Add rental row</button>
+            <button type="button" class="ghost" id="btnAddRentRow" data-i18n="add_rental_row">Add rental row</button>
           </div>
         </div>
         <div>
-          <h3 style="font-size:.9rem;margin:0 0 6px">Export duty ladder ($/t)</h3>
+          <h3 style="font-size:.9rem;margin:0 0 6px" data-i18n="duty_ladder">Export duty ladder ($/t)</h3>
           <table class="ladder-table">
-            <thead><tr><th>Kebco ≥ $/bbl</th><th>Duty $/t</th><th class="act"></th></tr></thead>
+            <thead><tr><th data-i18n="th_kebco">Kebco ≥ $/bbl</th><th data-i18n="th_duty">Duty $/t</th><th class="act"></th></tr></thead>
             <tbody id="dutyLadderBody"></tbody>
           </table>
           <div class="btn-row" style="margin-top:8px">
-            <button type="button" class="ghost" id="btnAddDutyRow">Add duty row</button>
+            <button type="button" class="ghost" id="btnAddDutyRow" data-i18n="add_duty_row">Add duty row</button>
           </div>
         </div>
       </div>
@@ -790,8 +790,8 @@
       <button type="button" data-prod-mode="historic" data-i18n="historic">Historic</button>
     </div>
     <div class="route-toggle" id="prodRefToggle" role="group" aria-label="Refinery" style="margin-bottom:10px">
-      <button type="button" data-prod-ref="pkop" class="active">PKOP (Shymkent)</button>
-      <button type="button" data-prod-ref="pnhz">PNHZ (Pavlodar)</button>
+      <button type="button" data-prod-ref="pkop" class="active" data-i18n="pkop_btn">PKOP (Shymkent)</button>
+      <button type="button" data-prod-ref="pnhz" data-i18n="pnhz_btn">PNHZ (Pavlodar)</button>
     </div>
 
     <div class="sticky-top">
@@ -800,8 +800,8 @@
           <div class="big" id="prodVerdictTxt">EOT Netback</div>
           <div class="sub" id="prodVerdictSub"></div>
         </div>
-        <div><span class="nb-label">Export NB</span><div class="nb-val" id="prodExpNb">—</div></div>
-        <div><span class="nb-label">Domestic NB</span><div class="nb-val" id="prodDomNb">—</div></div>
+        <div><span class="nb-label" data-i18n="th_export_nb">Export NB</span><div class="nb-val" id="prodExpNb">—</div></div>
+        <div><span class="nb-label" data-i18n="th_dom_nb">Domestic NB</span><div class="nb-val" id="prodDomNb">—</div></div>
         <div><span class="nb-label" data-i18n="eot_nb_100">EOT NB (100%)</span><div class="nb-val" id="prodNb">—</div></div>
         <div><span class="nb-label" id="prodShareComboLbl" data-i18n="domestic_eot">Domestic + EOT</span><div class="nb-val" id="prodShareCombo">—</div></div>
         <div><span class="nb-label" data-i18n="delta_exp_dom_eot">Δ Export − (Domestic + EOT)</span><div class="nb-val" id="prodVsExp">—</div></div>
@@ -810,22 +810,22 @@
 
     <div class="controls">
       <div class="row2" id="prodHistoricRow" style="display:none">
-        <div class="field"><label>Historic month (actual yields, sell-all)</label><select id="prodMonthSelect"></select></div>
-        <div class="field" style="display:flex;align-items:end"><button type="button" class="ghost" id="btnProdLoadHistoricToForecast">Copy month → forecast prices</button></div>
+        <div class="field"><label data-i18n="historic_month">Historic month (actual yields, sell-all)</label><select id="prodMonthSelect"></select></div>
+        <div class="field" style="display:flex;align-items:end"><button type="button" class="ghost" id="btnProdLoadHistoricToForecast" data-i18n="copy_month_forecast">Copy month → forecast prices</button></div>
       </div>
       <div class="row2">
-        <div class="field"><label>Price escalation %</label><input id="prodEsc" type="number" step="0.1" value="0"/></div>
-        <div class="field"><label>Feedstock domestic (KZT/t VAT-incl)</label><input id="prodFeedKzt" type="number" step="500"/></div>
-        <div class="field"><label>VAT factor</label><input id="prodVat" type="number" step="0.01" min="1" max="1.3"/></div>
+        <div class="field"><label data-i18n="price_esc">Price escalation %</label><input id="prodEsc" type="number" step="0.1" value="0"/></div>
+        <div class="field"><label data-i18n="feedstock_vat">Feedstock domestic (KZT/t VAT-incl)</label><input id="prodFeedKzt" type="number" step="500"/></div>
+        <div class="field"><label data-i18n="vat_factor">VAT factor</label><input id="prodVat" type="number" step="0.01" min="1" max="1.3"/></div>
       </div>
       <div class="feed-link-row">
         <div class="route-toggle onoff-toggle" id="prodFeedLinkToggle" role="group" aria-label="Link Analysis domestic price">
-          <span class="unit-lbl">Analysis domestic price</span>
+          <span class="unit-lbl" data-i18n="analysis_domestic_price">Analysis domestic price</span>
           <button type="button" data-feed-link="on" class="active" data-i18n="on">On</button>
           <button type="button" data-feed-link="off" data-i18n="off">Off</button>
         </div>
         <div class="field" style="margin:0;min-width:12rem;flex:1 1 12rem">
-          <label>Feedstock ex-VAT</label>
+          <label data-i18n="feedstock_exvat">Feedstock ex-VAT</label>
           <input id="prodFeedUsd" type="text" readonly style="background:#f5f2ea"/>
         </div>
       </div>
@@ -835,16 +835,16 @@
 
     <div class="grid">
       <div class="section">
-        <h2 id="prodSlateTitle">Forecast slate — sell all</h2>
+        <h2 id="prodSlateTitle" data-i18n="forecast_slate">Forecast slate — sell all</h2>
                 <div style="overflow:auto">
           <table class="calc"><thead><tr>
-            <th>Product</th><th>Yield %</th><th>Price KZT/t (VAT-incl)</th><th>Ex-VAT KZT/t</th><th id="prodContribHead">KZT/t contrib</th>
+            <th data-i18n="th_product">Product</th><th data-i18n="th_yield">Yield %</th><th data-i18n="th_price_vat">Price KZT/t (VAT-incl)</th><th data-i18n="th_exvat">Ex-VAT KZT/t</th><th id="prodContribHead" data-i18n="th_contrib">KZT/t contrib</th>
           </tr></thead><tbody id="prodTableBody"></tbody></table>
         </div>
       </div>
       <div class="section">
         <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
-          <h2 style="margin:0">Formula costs (per t crude)</h2>
+          <h2 style="margin:0" data-i18n="formula_costs">Formula costs (per t crude)</h2>
           <div class="route-toggle unit-toggle" id="prodUnitToggle" role="group" aria-label="Unit" style="margin:0">
             <span class="unit-lbl">Results</span>
             <button type="button" data-prod-unit="t" class="active">$/t</button>
@@ -852,24 +852,24 @@
           </div>
         </div>
                 <div class="tax-factors">
-          <div class="field"><label>Processing KZT/t</label><input id="prodProc" type="number" step="1"/></div>
-          <div class="field"><label>Additives (1)</label><input id="prodAdd1" type="number" step="1"/></div>
-          <div class="field"><label>Additives (2)</label><input id="prodAdd2" type="number" step="1"/></div>
-          <div class="field"><label>Other additives</label><input id="prodAdd0" type="number" step="1"/></div>
-          <div class="field"><label>Admin KZT/t</label><input id="prodAdmin" type="number" step="1"/></div>
-          <div class="field"><label>Excise gas rate (KZT/t product)</label><input id="prodExcGasRate" type="number" step="1"/></div>
-          <div class="field"><label>Excise diesel rate (KZT/t product)</label><input id="prodExcDtRate" type="number" step="1"/></div>
-          <div class="field"><label>Fuel-oil duty KZT/t crude</label><input id="prodMazDuty" type="number" step="100"/></div>
+          <div class="field"><label data-i18n="processing">Processing KZT/t</label><input id="prodProc" type="number" step="1"/></div>
+          <div class="field"><label data-i18n="additives1">Additives (1)</label><input id="prodAdd1" type="number" step="1"/></div>
+          <div class="field"><label data-i18n="additives2">Additives (2)</label><input id="prodAdd2" type="number" step="1"/></div>
+          <div class="field"><label data-i18n="additives_other">Other additives</label><input id="prodAdd0" type="number" step="1"/></div>
+          <div class="field"><label data-i18n="admin_kzt">Admin KZT/t</label><input id="prodAdmin" type="number" step="1"/></div>
+          <div class="field"><label data-i18n="excise_gas">Excise gas rate (KZT/t product)</label><input id="prodExcGasRate" type="number" step="1"/></div>
+          <div class="field"><label data-i18n="excise_diesel">Excise diesel rate (KZT/t product)</label><input id="prodExcDtRate" type="number" step="1"/></div>
+          <div class="field"><label data-i18n="fuel_oil_duty">Fuel-oil duty KZT/t crude</label><input id="prodMazDuty" type="number" step="100"/></div>
         </div>
         <div class="field" style="margin-top:8px;max-width:12rem">
           <label data-i18n="our_eot_share">Our EOT share %</label>
           <input id="prodRefineShare" type="number" step="1" min="0" max="100" value="60"/>
         </div>
         <div class="kpi-grid" style="margin-top:12px">
-          <div class="k"><span>Revenue</span><b id="prodKpiRev">—</b></div>
-          <div class="k"><span>Feedstock</span><b id="prodKpiFeed">—</b></div>
-          <div class="k"><span>Fixed opex</span><b id="prodKpiFixed">—</b></div>
-          <div class="k"><span>Excise</span><b id="prodKpiExc">—</b></div>
+          <div class="k"><span data-i18n="revenue">Revenue</span><b id="prodKpiRev">—</b></div>
+          <div class="k"><span data-i18n="feedstock">Feedstock</span><b id="prodKpiFeed">—</b></div>
+          <div class="k"><span data-i18n="fixed_opex">Fixed opex</span><b id="prodKpiFixed">—</b></div>
+          <div class="k"><span data-i18n="excise">Excise</span><b id="prodKpiExc">—</b></div>
           <div class="k"><span data-i18n="eot_nb">EOT NB</span><b id="prodKpiNb">—</b></div>
           <div class="k"><span data-i18n="delta_exp_eot">Δ Export − EOT</span><b id="prodKpiDelta">—</b></div>
           <div class="k"><span data-i18n="delta_exp_dom_eot">Δ Export − (Domestic + EOT)</span><b id="prodKpiDeltaShare">—</b></div>
@@ -880,10 +880,10 @@
     </div>
 
     <div class="section" id="prodTrendsSection">
-      <h2 style="margin:0 0 8px">Historic trends</h2>
-      <h3 style="font-size:.85rem;margin:6px 0 4px" id="prodPriceHead">Products · KZT/t</h3>
+      <h2 style="margin:0 0 8px" data-i18n="historic_trends">Historic trends</h2>
+      <h3 style="font-size:.85rem;margin:6px 0 4px" id="prodPriceHead" data-i18n="products_kzt">Products · KZT/t</h3>
       <div class="prod-tile-grid" id="prodPriceGrid"></div>
-      <h3 style="font-size:.85rem;margin:14px 0 4px">EOT netback</h3>
+      <h3 style="font-size:.85rem;margin:14px 0 4px" data-i18n="eot_netback_chart">EOT netback</h3>
       <div id="prodNbChart" style="height:280px"></div>
     </div>
 
@@ -934,24 +934,24 @@
     </div>
     <div class="section">
       <h2 data-i18n="saved_profiles">Saved profiles</h2>
-      <p class="lead" style="margin-bottom:8px">Use <b>Edit</b> to change a month, then Save on the editor page. <b>Save←Analysis</b> overwrites that month with current Analysis values.</p>
+      <p class="lead" style="margin-bottom:8px" data-i18n="saved_profiles_lead2">Use Edit to change a month, then Save on the editor page. Save←Analysis overwrites that month with current Analysis values.</p>
       <table class="profile-list">
-        <thead><tr><th>Month</th><th>Label</th><th>Author</th><th>Export NB</th><th>Domestic NB</th><th>Δ Exp−Dom</th><th>EOT</th><th>Actions</th></tr></thead>
+        <thead><tr><th data-i18n="month">Month</th><th data-i18n="label">Label</th><th data-i18n="author">Author</th><th data-i18n="th_export_nb">Export NB</th><th data-i18n="th_dom_nb">Domestic NB</th><th data-i18n="th_delta">Δ Exp−Dom</th><th data-i18n="th_eot">EOT</th><th data-i18n="actions">Actions</th></tr></thead>
         <tbody id="profileTable"></tbody>
       </table>
       <div class="btn-row no-print" style="margin-top:10px">
         <button type="button" class="ghost" id="btnExportProfiles" data-i18n="export_json">Export JSON</button>
         <label class="ghost" style="display:inline-block;padding:9px 14px;border-radius:999px;border:1px solid var(--line);cursor:pointer">
-          Import JSON <input id="btnImportProfiles" type="file" accept="application/json,.json" style="display:none"/>
+          <span data-i18n="import_json">Import JSON</span> <input id="btnImportProfiles" type="file" accept="application/json,.json" style="display:none"/>
         </label>
       </div>
       <details style="margin-top:10px">
-        <summary style="cursor:pointer;color:#5b21b6;font-size:.82rem">Online publish settings (optional GitHub token)</summary>
-        <p class="lead">To let this browser publish to the shared cloud file, paste a GitHub token with <b>gist</b> scope. Colleagues who only load profiles do not need a token.</p>
-        <div class="field"><label>GitHub token (gist)</label><input id="publishToken" type="password" placeholder="ghp_... or github_pat_..."/></div>
+        <summary style="cursor:pointer;color:#5b21b6;font-size:.82rem" data-i18n="publish_settings">Online publish settings (optional GitHub token)</summary>
+        <p class="lead" data-i18n="publish_lead">To let this browser publish to the shared cloud file, paste a GitHub token with gist scope. Colleagues who only load profiles do not need a token.</p>
+        <div class="field"><label data-i18n="github_token">GitHub token (gist)</label><input id="publishToken" type="password" placeholder="ghp_... or github_pat_..."/></div>
         <div class="btn-row">
-          <button type="button" class="ghost" id="btnSaveToken">Remember token on this device</button>
-          <button type="button" class="danger" id="btnClearToken">Clear token</button>
+          <button type="button" class="ghost" id="btnSaveToken" data-i18n="remember_token">Remember token on this device</button>
+          <button type="button" class="danger" id="btnClearToken" data-i18n="clear_token">Clear token</button>
         </div>
         <div class="status" id="tokenStatus"></div>
       </details>
@@ -960,7 +960,7 @@
     <div class="section" id="profileEditorSection">
       <h2 style="margin-top:0" data-i18n="new_edit_profile">New / edit profile</h2>
       <h1 id="pePageTitle">Edit month profile</h1>
-    <p class="lead" id="pePageLead">Change parameters and transport, check the live preview, then save.</p>
+    <p class="lead" id="pePageLead" data-i18n="pe_page_lead">Change parameters and transport, check the live preview, then save.</p>
     <div class="btn-row no-print" style="margin-bottom:10px">
       <button type="button" class="ok" id="btnPeSaveLocalTop" data-i18n="save_device">Save on this device</button>
       <button type="button" class="ghost" id="btnPeSaveOnlineTop" data-i18n="save_online">Save online</button>
@@ -969,57 +969,57 @@
     <div class="status" id="peSaveStatusTop"></div>
     <div class="section">
       <div class="param-grid">
-        <div class="field"><label>Month</label><input id="peMonth" type="month" value="2026-11"/><div class="sub" id="peMonthHint"></div></div>
-        <div class="field"><label>Label (optional note)</label><input id="peLabel" type="text" placeholder="Leave blank or add a short note, e.g. actuals"/></div>
-        <div class="field"><label>Author</label><input id="peAuthor" type="text" placeholder="Your name"/></div>
+        <div class="field"><label data-i18n="pe_month">Month</label><input id="peMonth" type="month" value="2026-11"/><div class="sub" id="peMonthHint"></div></div>
+        <div class="field"><label data-i18n="pe_label">Label (optional note)</label><input id="peLabel" type="text" placeholder="Leave blank or add a short note, e.g. actuals"/></div>
+        <div class="field"><label data-i18n="pe_author">Author</label><input id="peAuthor" type="text" placeholder="Your name"/></div>
       </div>
-      <div class="field" style="margin-top:8px"><label>Notes</label><textarea id="peNotes" placeholder="What changed vs prior month"></textarea></div>
+      <div class="field" style="margin-top:8px"><label data-i18n="pe_notes">Notes</label><textarea id="peNotes" placeholder="What changed vs prior month"></textarea></div>
     </div>
     <div class="section">
       <h2 data-i18n="parameters">Parameters</h2>
       <div class="param-grid">
-        <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
-        <div class="field"><label>FX (KZT per 1 USD)</label>
+        <div class="field"><label data-i18n="pe_brent">Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
+        <div class="field"><label data-i18n="pe_fx">FX (KZT per 1 USD)</label>
           <div style="display:flex;gap:6px;align-items:center">
             <input id="peFx" type="number" step="0.01" value="448.64" style="flex:1"/>
             <button type="button" class="ghost" id="btnPeFetchFx" title="Pull live daily FX" data-i18n="fetch_fx">Fetch FX</button>
           </div>
           <div class="sub" id="peFxHint">Current/future months auto-refresh FX on open.</div>
         </div>
-        <div class="field"><label>Skebco D6 ($/bbl, can be negative)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
-        <div class="field"><label>Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="6.18"/></div>
-        <div class="field"><label>Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="130000"/></div>
-        <div class="field"><label>RUB→KZT (KZT per 1 RUB)</label><input id="peRu" type="number" step="0.0001" value="5.5606"/></div>
-        <div class="field"><label>Export bbl/t</label><input id="peKb" type="number" step="0.0001" value="7.2223"/></div>
-        <div class="field"><label>MET rate (e.g. 0.05)</label><input id="peMet" type="number" step="0.005" value="0.05"/></div>
-        <div class="field"><label>VAT factor</label><input id="peVat" type="number" step="0.01" value="1.16"/></div>
+        <div class="field"><label data-i18n="pe_sk">Skebco D6 ($/bbl, can be negative)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
+        <div class="field"><label data-i18n="pe_disc">Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="6.18"/></div>
+        <div class="field"><label data-i18n="pe_local">Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="130000"/></div>
+        <div class="field"><label data-i18n="pe_ru">RUB→KZT (KZT per 1 RUB)</label><input id="peRu" type="number" step="0.0001" value="5.5606"/></div>
+        <div class="field"><label data-i18n="pe_kb">Export bbl/t</label><input id="peKb" type="number" step="0.0001" value="7.2223"/></div>
+        <div class="field"><label data-i18n="pe_met">MET rate (e.g. 0.05)</label><input id="peMet" type="number" step="0.005" value="0.05"/></div>
+        <div class="field"><label data-i18n="pe_vat">VAT factor</label><input id="peVat" type="number" step="0.01" value="1.16"/></div>
         <div class="field">
-          <label>Domestic destination</label>
+          <label data-i18n="pe_route">Domestic destination</label>
           <select id="peRoute">
-            <option value="pkop">Shymkent (PKOP)</option>
-            <option value="pavlodar">Pavlodar (PNHZ)</option>
+            <option value="pkop" data-i18n="shymkent">Shymkent (PKOP)</option>
+            <option value="pavlodar" data-i18n="pavlodar">Pavlodar (PNHZ)</option>
           </select>
         </div>
-        <div class="field"><label>Bulk % EXPORT transport</label><input id="peBulkExp" type="number" step="0.5" value="0"/></div>
-        <div class="field"><label>Bulk % DOMESTIC transport</label><input id="peBulkDom" type="number" step="0.5" value="0"/></div>
+        <div class="field"><label data-i18n="pe_bulk_exp">Bulk % EXPORT transport</label><input id="peBulkExp" type="number" step="0.5" value="0"/></div>
+        <div class="field"><label data-i18n="pe_bulk_dom">Bulk % DOMESTIC transport</label><input id="peBulkDom" type="number" step="0.5" value="0"/></div>
       </div>
       <div class="btn-row" style="margin-top:8px">
-        <button type="button" class="ghost" id="btnPeFillOct">Fill from current month baseline</button>
-        <button type="button" class="ghost" id="btnPeFillActive">Fill from current Netback sliders</button>
-        <button type="button" class="ghost" id="btnPeApplyBulk">Apply bulk % to all legs</button>
+        <button type="button" class="ghost" id="btnPeFillOct" data-i18n="pe_fill_baseline">Fill from current month baseline</button>
+        <button type="button" class="ghost" id="btnPeFillActive" data-i18n="pe_fill_sliders">Fill from current Netback sliders</button>
+        <button type="button" class="ghost" id="btnPeApplyBulk" data-i18n="pe_apply_bulk">Apply bulk % to all legs</button>
       </div>
     </div>
     <div class="section">
       <h2 data-i18n="transport_editable">Transport costs (editable)</h2>
-      <p class="lead">Edit adjusted KZT/t per leg. Totals and netback preview update live. RUB legs use RUB→KZT above.</p>
+      <p class="lead" data-i18n="pe_tr_lead">Edit adjusted KZT/t per leg. Totals and netback preview update live. RUB legs use RUB→KZT above.</p>
       <div class="tr-kpis" style="margin-bottom:10px">
-        <div class="kpi export"><span>Export transport</span><b id="peTrExpTot">—</b></div>
-        <div class="kpi domestic"><span>Domestic transport</span><b id="peTrDomTot">—</b></div>
-        <div class="kpi"><span>RUB→KZT used</span><b id="peTrRuUsed">—</b></div>
+        <div class="kpi export"><span data-i18n="export_transport">Export transport</span><b id="peTrExpTot">—</b></div>
+        <div class="kpi domestic"><span data-i18n="domestic_transport">Domestic transport</span><b id="peTrDomTot">—</b></div>
+        <div class="kpi"><span data-i18n="rub_used">RUB→KZT used</span><b id="peTrRuUsed">—</b></div>
       </div>
       <div class="two-col">
         <div>
-          <h2 style="font-size:.85rem">EXPORT · Novoros</h2>
+          <h2 style="font-size:.85rem" data-i18n="export_novoros">EXPORT · Novoros</h2>
           <div id="peTrExp" style="overflow:auto; max-height:420px"></div>
         </div>
         <div>
@@ -1030,7 +1030,7 @@
     </div>
     <div class="section pe-eot-box" id="peEotSection">
       <h2 data-i18n="eot_refinery_data">EOT / refinery monthly data</h2>
-      <p class="lead">Optional sell-all slate for this month (yields + VAT-incl prices). Saved with the profile so future months can be created here and used by <b>EOT Netback</b> / reports. Leave Off to keep embedded history only.</p>
+      <p class="lead" data-i18n="eot_refinery_lead">Optional sell-all slate for this month (yields + VAT-incl prices). Saved with the profile so future months can be created here and used by EOT Netback / reports. Leave Off to keep embedded history only.</p>
       <div class="pe-eot-tools">
         <div class="field" style="margin:0;min-width:9rem">
           <label data-i18n="include_eot">Include EOT for this month</label>
@@ -1046,32 +1046,32 @@
       </div>
       <div id="peEotEditor" style="display:none">
         <div class="param-grid" style="margin-bottom:8px">
-          <div class="field"><label>EOT FX (defaults to profile FX)</label><input id="peEotFx" type="number" step="0.01"/></div>
-          <div class="field"><label>Yield / price source note</label><input id="peEotSrc" type="text" placeholder="e.g. PKOP actuals / forecast"/></div>
+          <div class="field"><label data-i18n="pe_eot_fx">EOT FX (defaults to profile FX)</label><input id="peEotFx" type="number" step="0.01"/></div>
+          <div class="field"><label data-i18n="pe_eot_src">Yield / price source note</label><input id="peEotSrc" type="text" placeholder="e.g. PKOP actuals / forecast"/></div>
         </div>
         <div style="overflow:auto;max-height:360px">
           <table class="calc"><thead><tr>
-            <th>Product</th><th>Kind</th><th>Yield</th><th>Price KZT/t (VAT-incl)</th><th>Sellable</th>
+            <th data-i18n="th_product">Product</th><th data-i18n="th_kind">Kind</th><th data-i18n="th_yield_frac">Yield</th><th data-i18n="th_price_vat">Price KZT/t (VAT-incl)</th><th data-i18n="th_sellable">Sellable</th>
           </tr></thead><tbody id="peEotBody"></tbody></table>
         </div>
         <div class="kpi-grid" style="margin-top:10px">
-          <div class="k"><span>Yield sold</span><b id="peEotYSold">—</b></div>
-          <div class="k"><span>EOT NB preview</span><b id="peEotNb">—</b></div>
-          <div class="k"><span>Domestic + EOT</span><b id="peEotShareDom">—</b></div>
-          <div class="k"><span>Δ Export − (Dom+EOT)</span><b id="peEotDelta">—</b></div>
+          <div class="k"><span data-i18n="yield_sold">Yield sold</span><b id="peEotYSold">—</b></div>
+          <div class="k"><span data-i18n="eot_nb_preview">EOT NB preview</span><b id="peEotNb">—</b></div>
+          <div class="k"><span data-i18n="domestic_eot_kpi">Domestic + EOT</span><b id="peEotShareDom">—</b></div>
+          <div class="k"><span data-i18n="delta_exp_dom_eot_kpi">Δ Export − (Dom+EOT)</span><b id="peEotDelta">—</b></div>
         </div>
       </div>
     </div>
     <div class="preview-box">
-      <h2 style="margin:0 0 8px;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:#0f766e">Live preview</h2>
+      <h2 style="margin:0 0 8px;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:#0f766e" data-i18n="live_preview_title">Live preview</h2>
       <div class="kpi-grid" id="pePreview">
-        <div class="k"><span>Export NB</span><b id="peNbExp">—</b></div>
-        <div class="k"><span>Domestic NB</span><b id="peNbDom">—</b></div>
-        <div class="k"><span>Δ Exp − Dom</span><b id="peSpread">—</b></div>
-        <div class="k"><span>Winner</span><b id="peWinner">—</b></div>
-        <div class="k"><span>BE Skebco</span><b id="peBeSk">—</b></div>
-        <div class="k"><span>BE Discount</span><b id="peBeDisc">—</b></div>
-        <div class="k"><span>BE Skebco+Disc</span><b id="peBeSkDisc">—</b></div>
+        <div class="k"><span data-i18n="th_export_nb">Export NB</span><b id="peNbExp">—</b></div>
+        <div class="k"><span data-i18n="th_dom_nb">Domestic NB</span><b id="peNbDom">—</b></div>
+        <div class="k"><span data-i18n="th_delta">Δ Exp − Dom</span><b id="peSpread">—</b></div>
+        <div class="k"><span data-i18n="winner">Winner</span><b id="peWinner">—</b></div>
+        <div class="k"><span data-i18n="be_skebco">BE Skebco</span><b id="peBeSk">—</b></div>
+        <div class="k"><span data-i18n="be_discount">BE Discount</span><b id="peBeDisc">—</b></div>
+        <div class="k"><span data-i18n="be_sk_disc">BE Skebco+Disc</span><b id="peBeSkDisc">—</b></div>
       </div>
       <div class="status" id="peCalcHint" style="margin-top:8px"></div>
     </div>
@@ -1098,19 +1098,19 @@
         </select>
       </div>
       <div class="field" id="singlePickWrap">
-        <label>Month</label>
+        <label data-i18n="month">Month</label>
         <select id="reportSingle"></select>
       </div>
       <div class="field" id="trendStartWrap" style="display:none">
-        <label>Starting month (window end)</label>
+        <label data-i18n="starting_month">Starting month (window end)</label>
         <select id="reportStart"></select>
       </div>
       <div class="field" id="trendRangeWrap" style="display:none">
-        <label>Compare previous</label>
+        <label data-i18n="compare_previous">Compare previous</label>
         <select id="reportRange">
-          <option value="3">3 months</option>
-          <option value="6">6 months</option>
-          <option value="12">12 months</option>
+          <option value="3" data-i18n="months_3">3 months</option>
+          <option value="6" data-i18n="months_6">6 months</option>
+          <option value="12" data-i18n="months_12">12 months</option>
         </select>
       </div>
       <div class="field" style="min-width:7rem">
@@ -1157,7 +1157,7 @@
 <script>
 /* ===== EN / RU i18n ===== */
 const LANG_KEY = 'eo_netback_lang_v1';
-const APP_UPDATED_AT = '2026-11-13T18:32:00+05:00'; // set on deploy
+const APP_UPDATED_AT = '2026-11-13T18:42:00+05:00'; // set on deploy
 let uiLang = 'en';
 
 const I18N = {
@@ -1284,6 +1284,188 @@ const I18N = {
     current: 'current',
     eot_saved: 'saved',
     eot_hist: 'hist',
+    brand_name: 'Emir Oil Netback',
+    analysis_h1_prefix: 'Analysis — Novorossiysk vs',
+    formulas_values: 'Formulas & values',
+    live_scenario: 'Live scenario',
+    transport_h1: 'Transport costs & route map',
+    transport_lead: 'Tr.cost 2026 legs for Novoros export vs selected domestic path (Shymkent / PKOP or Pavlodar). Drag % bars — netback updates live.',
+    route_map: 'Route map',
+    route_map_lead: 'Approximate pipeline/rail path. Hover a leg to highlight. Prices in original tariff currency.',
+    show_all_routes: 'Show all routes',
+    export_only: 'Export only',
+    domestic_both: 'Domestic (both routes)',
+    fit_map: 'Fit map',
+    how_taxes: 'How taxes enter netback',
+    live_factors: 'Live factors',
+    kebco_ladders: 'Kebco ladders (GCA)',
+    rental_ladder: 'Rental rate ladder',
+    duty_ladder: 'Export duty ladder ($/t)',
+    reset_taxes: 'Reset all taxes to baseline',
+    reset_ladders: 'Reset ladders only',
+    add_rental_row: 'Add rental row',
+    add_duty_row: 'Add duty row',
+    export_bbl_t: 'Export bbl/t',
+    met_rate: 'MET rate',
+    vat_factor: 'VAT factor',
+    bulk_export: 'Bulk % EXPORT',
+    bulk_domestic: 'Bulk % DOMESTIC',
+    export_met_rate: 'Export MET rate',
+    dom_met_factor: 'Domestic MET factor (× MET rate; Code 2026 = 0.5)',
+    rental_bbl: 'Rental bbl factor',
+    met_bbl: 'MET bbl factor',
+    rub_kzt_short: 'RUB→KZT (KZT/RUB)',
+    forecast_slate: 'Forecast slate — sell all',
+    formula_costs: 'Formula costs (per t crude)',
+    historic_trends: 'Historic trends',
+    products_kzt: 'Products · KZT/t',
+    eot_netback_chart: 'EOT netback',
+    historic_month: 'Historic month (actual yields, sell-all)',
+    price_esc: 'Price escalation %',
+    feedstock_vat: 'Feedstock domestic (KZT/t VAT-incl)',
+    feedstock_exvat: 'Feedstock ex-VAT',
+    processing: 'Processing KZT/t',
+    additives1: 'Additives (1)',
+    additives2: 'Additives (2)',
+    additives_other: 'Other additives',
+    admin_kzt: 'Admin KZT/t',
+    excise_gas: 'Excise gas rate (KZT/t product)',
+    excise_diesel: 'Excise diesel rate (KZT/t product)',
+    fuel_oil_duty: 'Fuel-oil duty KZT/t crude',
+    copy_month_forecast: 'Copy month → forecast prices',
+    th_item: 'Item',
+    th_formula: 'Formula',
+    th_value: 'Value',
+    th_kebco: 'Kebco ≥ $/bbl',
+    th_rate: 'Rate (e.g. 0.21)',
+    th_duty: 'Duty $/t',
+    th_product: 'Product',
+    th_yield: 'Yield %',
+    th_price_vat: 'Price KZT/t (VAT-incl)',
+    th_exvat: 'Ex-VAT KZT/t',
+    th_contrib: 'KZT/t contrib',
+    th_kind: 'Kind',
+    th_yield_frac: 'Yield',
+    th_sellable: 'Sellable',
+    th_export_nb: 'Export NB',
+    th_dom_nb: 'Domestic NB',
+    th_delta: 'Δ Exp−Dom',
+    th_eot: 'EOT',
+    pe_month: 'Month',
+    pe_label: 'Label (optional note)',
+    pe_author: 'Author',
+    pe_notes: 'Notes',
+    pe_brent: 'Brent ($/bbl)',
+    pe_fx: 'FX (KZT per 1 USD)',
+    pe_sk: 'Skebco D6 ($/bbl, can be negative)',
+    pe_disc: 'Discount D7 ($/bbl)',
+    pe_local: 'Local domestic VAT-incl (KZT/t)',
+    pe_ru: 'RUB→KZT (KZT per 1 RUB)',
+    pe_kb: 'Export bbl/t',
+    pe_met: 'MET rate (e.g. 0.05)',
+    pe_vat: 'VAT factor',
+    pe_route: 'Domestic destination',
+    pe_bulk_exp: 'Bulk % EXPORT transport',
+    pe_bulk_dom: 'Bulk % DOMESTIC transport',
+    pe_eot_fx: 'EOT FX (defaults to profile FX)',
+    pe_eot_src: 'Yield / price source note',
+    pe_fill_baseline: 'Fill from current month baseline',
+    pe_fill_sliders: 'Fill from current Netback sliders',
+    pe_apply_bulk: 'Apply bulk % to all legs',
+    pe_page_lead: 'Change parameters and transport, check the live preview, then save.',
+    pe_tr_lead: 'Edit adjusted KZT/t per leg. Totals and netback preview update live. RUB legs use RUB→KZT above.',
+    export_novoros: 'EXPORT · Novoros',
+    remember_token: 'Remember token on this device',
+    clear_token: 'Clear token',
+    github_token: 'GitHub token (gist)',
+    publish_settings: 'Online publish settings (optional GitHub token)',
+    publish_lead: 'To let this browser publish to the shared cloud file, paste a GitHub token with gist scope. Colleagues who only load profiles do not need a token.',
+    edit_month_profile: 'Edit month profile',
+    create_month_profile: 'Create new month profile',
+    edit_saved_profile: 'Edit saved profile — {month}',
+    pe_lead_edit: 'Update parameters and transport, then Save. Changes overwrite this saved month.',
+    pe_lead_new: 'Enter a month and parameters, preview, then Save to add a new profile.',
+    save_changes_device: 'Save changes (this device)',
+    save_new_device: 'Save new (this device)',
+    save_changes_online: 'Save changes online',
+    save_new_online: 'Save new online',
+    pe_month_locked: 'Month is locked while editing this saved profile.',
+    pe_month_pick: 'Pick the month id for the new profile (YYYY-MM).',
+    saved_profiles_lead2: 'Use Edit to change a month, then Save on the editor page. Save←Analysis overwrites that month with current Analysis values.',
+    taxes_howto_lead: 'Aligned with RK Tax Code practice: world price for export rental & MET is the relevant grade (here Kebco = Brent − Skebco). Domestic has no rental/duty; MET uses a reduction factor.',
+    ladder_lead: 'Lookup = last row where Kebco (Brent − Skebco) ≥ threshold. Skebco may be negative. Sorted automatically on save.',
+    password_ph: 'Password',
+    yield_sold: 'Yield sold',
+    eot_nb_preview: 'EOT NB preview',
+    domestic_eot_kpi: 'Domestic + EOT',
+    delta_exp_dom_eot_kpi: 'Δ Export − (Dom+EOT)',
+    winner: 'Winner',
+    be_skebco: 'BE Skebco',
+    be_discount: 'BE Discount',
+    be_sk_disc: 'BE Skebco+Disc',
+    export_transport: 'Export transport',
+    domestic_transport: 'Domestic transport',
+    rub_used: 'RUB→KZT used',
+    revenue: 'Revenue',
+    feedstock: 'Feedstock',
+    fixed_opex: 'Fixed opex',
+    excise: 'Excise',
+    pkop_btn: 'PKOP (Shymkent)',
+    pnhz_btn: 'PNHZ (Pavlodar)',
+    analysis_vs_prefix: 'Analysis — Novorossiysk vs',
+    shymkent: 'Shymkent (PKOP)',
+    pavlodar: 'Pavlodar (PNHZ)',
+    oil_note: 'Same month as EOT Netback / decision report: <b>{month}</b> · Export & Dom recalculated live (not snapshot) · {combo}.',
+    products_kzt_head: 'Products · KZT/t',
+    eot_nb_100_series: 'EOT NB (100%)',
+    export_month_profile: 'Export (month profile)',
+    domestic_month_profile: 'Domestic (month profile)',
+    sell_all_chart: 'Sell-all revenue by product (KZT)',
+    wins: 'wins',
+    export_wins: 'EXPORT',
+    domestic_wins: 'DOMESTIC',
+    dom_eot_wins: 'DOMESTIC + EOT',
+    fx_daily_as_of: 'FX daily rate as of <b>{date}</b>{src} — refreshed on page open',
+    fx_fetching: 'FX: fetching today’s daily rate…',
+    fx_fetch_fail: 'FX: could not refresh daily rate — using last saved current-month value',
+    fx_current_daily: 'FX: current month uses daily rate (updates on page open)',
+    fx_monthly_avg: 'FX: monthly average for <b>{month}</b> (fixed for that month)',
+    prior_fx_hint: 'Prior month — keep monthly-average FX (Fetch FX only if you intentionally override).',
+    live_preview_title: 'Live preview',
+    calc_baseline: 'BASELINE CHECK',
+    calc_display_unit: 'DISPLAY UNIT',
+    calc_inputs: 'INPUTS',
+    calc_export: 'EXPORT Novoros',
+    calc_result: 'RESULT',
+    calc_breakeven: 'BREAKEVEN (export = domestic)',
+    calc_eot_compare: 'EOT NETBACK COMPARE',
+    calc_compare_month: 'Compare month',
+    calc_export_month: 'Export (compare month)',
+    calc_dom_crude_month: 'Domestic crude (compare month)',
+    calc_our_eot_share: 'Our EOT share',
+    calc_realized_bbl: 'Realized $/bbl',
+    calc_realized_t: 'Realized $/t',
+    calc_export_rub: 'Export RUB legs',
+    calc_transport: 'Transport',
+    calc_rental: 'Rental',
+    calc_met: 'MET',
+    calc_duty: 'Duty',
+    calc_price_exvat: 'Price ex-VAT',
+    calc_dom_met: 'Dom MET',
+    calc_dom_nb_crude: 'Domestic netback (crude)',
+    calc_be_sk: 'Breakeven Skebco',
+    calc_be_disc: 'Breakeven Discount',
+    calc_be_sk_disc: 'Breakeven Skebco + Discount',
+    calc_local: 'Local domestic',
+    calc_dom_dest: 'Domestic destination',
+    calc_delta_nb: 'Δ Netback (Export−Domestic)',
+    bar_export_nb: 'Export netback',
+    bar_dom_crude: 'Domestic crude only',
+    gauge_exp_dom: 'Export − Domestic',
+    tie: 'TIE',
+    domestic_path: 'DOMESTIC path',
+    export_path: 'EXPORT path (Novoros)',
+    sell_all_exvat: 'Sell-all ex-VAT KZT / t crude (then ÷ FX → $)',
   },
   ru: {
     brand_sub: 'Анализ, транспорт, налоги, EOT Нетбэк, месячные профили и отчёты',
@@ -1408,6 +1590,188 @@ const I18N = {
     current: 'текущий',
     eot_saved: 'сохр.',
     eot_hist: 'факт',
+    brand_name: 'Emir Oil Netback',
+    analysis_h1_prefix: 'Анализ — Новороссийск vs',
+    formulas_values: 'Формулы и значения',
+    live_scenario: 'Живой сценарий',
+    transport_h1: 'Транспорт и карта маршрута',
+    transport_lead: 'Tr.cost 2026: экспорт Новорос vs выбранный внутренний путь (Шымкент / PKOP или Павлодар). Тяните % — нетбэк обновляется сразу.',
+    route_map: 'Карта маршрута',
+    route_map_lead: 'Приблизительный трубопровод/ж-д путь. Наведите на плечо для подсветки. Тарифы в исходной валюте.',
+    show_all_routes: 'Все маршруты',
+    export_only: 'Только экспорт',
+    domestic_both: 'Внутр. (оба маршрута)',
+    fit_map: 'Вписать карту',
+    how_taxes: 'Как налоги входят в нетбэк',
+    live_factors: 'Текущие факторы',
+    kebco_ladders: 'Лестницы Kebco (GCA)',
+    rental_ladder: 'Лестница рентной ставки',
+    duty_ladder: 'Лестница экспортной пошлины ($/т)',
+    reset_taxes: 'Сбросить все налоги к базе',
+    reset_ladders: 'Сбросить только лестницы',
+    add_rental_row: 'Добавить строку ренты',
+    add_duty_row: 'Добавить строку пошлины',
+    export_bbl_t: 'Экспорт барр/т',
+    met_rate: 'Ставка MET',
+    vat_factor: 'Коэффициент НДС',
+    bulk_export: 'Bulk % ЭКСПОРТ',
+    bulk_domestic: 'Bulk % ВНУТР.',
+    export_met_rate: 'Ставка MET экспорта',
+    dom_met_factor: 'Коэф. MET внутрь. (× ставка MET; Кодекс 2026 = 0.5)',
+    rental_bbl: 'Коэф. барр ренты',
+    met_bbl: 'Коэф. барр MET',
+    rub_kzt_short: 'RUB→KZT (тенге/руб)',
+    forecast_slate: 'Прогнозный сланец — sell all',
+    formula_costs: 'Затраты формулы (на т сырья)',
+    historic_trends: 'Исторические тренды',
+    products_kzt: 'Продукты · тенге/т',
+    eot_netback_chart: 'EOT нетбэк',
+    historic_month: 'Фактический месяц (выходы, sell-all)',
+    price_esc: 'Эскалация цены %',
+    feedstock_vat: 'Сырьё внутрь. (тенге/т с НДС)',
+    feedstock_exvat: 'Сырьё без НДС',
+    processing: 'Переработка тенге/т',
+    additives1: 'Присадки (1)',
+    additives2: 'Присадки (2)',
+    additives_other: 'Прочие присадки',
+    admin_kzt: 'Админ тенге/т',
+    excise_gas: 'Акциз бензин (тенге/т прод.)',
+    excise_diesel: 'Акциз дизель (тенге/т прод.)',
+    fuel_oil_duty: 'Пошлина мазут тенге/т сырья',
+    copy_month_forecast: 'Месяц → цены прогноза',
+    th_item: 'Статья',
+    th_formula: 'Формула',
+    th_value: 'Значение',
+    th_kebco: 'Kebco ≥ $/барр',
+    th_rate: 'Ставка (напр. 0.21)',
+    th_duty: 'Пошлина $/т',
+    th_product: 'Продукт',
+    th_yield: 'Выход %',
+    th_price_vat: 'Цена тенге/т (с НДС)',
+    th_exvat: 'Без НДС тенге/т',
+    th_contrib: 'Вклад тенге/т',
+    th_kind: 'Вид',
+    th_yield_frac: 'Выход',
+    th_sellable: 'Продаётся',
+    th_export_nb: 'НБ экспорта',
+    th_dom_nb: 'НБ внутрь.',
+    th_delta: 'Δ Эксп−Внутр',
+    th_eot: 'EOT',
+    pe_month: 'Месяц',
+    pe_label: 'Метка (необязательно)',
+    pe_author: 'Автор',
+    pe_notes: 'Заметки',
+    pe_brent: 'Brent ($/барр)',
+    pe_fx: 'FX (тенге за 1 USD)',
+    pe_sk: 'Skebco D6 ($/барр, может быть <0)',
+    pe_disc: 'Дисконт D7 ($/барр)',
+    pe_local: 'Внутр. цена с НДС (тенге/т)',
+    pe_ru: 'RUB→KZT (тенге за 1 RUB)',
+    pe_kb: 'Экспорт барр/т',
+    pe_met: 'Ставка MET (напр. 0.05)',
+    pe_vat: 'Коэффициент НДС',
+    pe_route: 'Внутреннее направление',
+    pe_bulk_exp: 'Bulk % транспорт ЭКСПОРТ',
+    pe_bulk_dom: 'Bulk % транспорт ВНУТР.',
+    pe_eot_fx: 'FX для EOT (по умолч. = FX профиля)',
+    pe_eot_src: 'Источник выходов / цен',
+    pe_fill_baseline: 'Заполнить из базового месяца',
+    pe_fill_sliders: 'Заполнить из слайдеров Нетбэка',
+    pe_apply_bulk: 'Применить bulk % ко всем плечам',
+    pe_page_lead: 'Измените параметры и транспорт, проверьте предпросмотр, затем сохраните.',
+    pe_tr_lead: 'Правите скорр. тенге/т по плечу. Итоги и нетбэк обновляются live. RUB-плечи используют RUB→KZT выше.',
+    export_novoros: 'ЭКСПОРТ · Новорос',
+    remember_token: 'Запомнить токен на этом устройстве',
+    clear_token: 'Очистить токен',
+    github_token: 'Токен GitHub (gist)',
+    publish_settings: 'Настройки онлайн-публикации (токен GitHub, опционально)',
+    publish_lead: 'Чтобы этот браузер публиковал в общий облачный файл, вставьте GitHub-токен с правом gist. Коллегам, которые только читают профили, токен не нужен.',
+    edit_month_profile: 'Правка месячного профиля',
+    create_month_profile: 'Создать новый месячный профиль',
+    edit_saved_profile: 'Правка сохранённого профиля — {month}',
+    pe_lead_edit: 'Обновите параметры и транспорт, затем Сохранить. Изменения перезапишут этот месяц.',
+    pe_lead_new: 'Укажите месяц и параметры, проверьте предпросмотр, затем Сохранить.',
+    save_changes_device: 'Сохранить изменения (это устройство)',
+    save_new_device: 'Сохранить новый (это устройство)',
+    save_changes_online: 'Сохранить изменения онлайн',
+    save_new_online: 'Сохранить новый онлайн',
+    pe_month_locked: 'Месяц заблокирован при правке сохранённого профиля.',
+    pe_month_pick: 'Выберите id месяца для нового профиля (ГГГГ-ММ).',
+    saved_profiles_lead2: 'Править — изменить месяц, затем Сохранить в редакторе. Анализ→выбранный перезапишет месяц текущими значениями Анализа.',
+    taxes_howto_lead: 'По практике НК РК: мировая цена для экспортной ренты и MET — соответствующий сорт (здесь Kebco = Brent − Skebco). На внутреннем рынке нет ренты/пошлины; MET — с понижающим коэффициентом.',
+    ladder_lead: 'Поиск = последняя строка, где Kebco (Brent − Skebco) ≥ порога. Skebco может быть отрицательным. При сохранении сортируется автоматически.',
+    password_ph: 'Пароль',
+    yield_sold: 'Выход проданный',
+    eot_nb_preview: 'Предпросмотр EOT НБ',
+    domestic_eot_kpi: 'Внутр. + EOT',
+    delta_exp_dom_eot_kpi: 'Δ Экспорт − (Внутр.+EOT)',
+    winner: 'Победитель',
+    be_skebco: 'BE Skebco',
+    be_discount: 'BE дисконт',
+    be_sk_disc: 'BE Skebco+дисконт',
+    export_transport: 'Транспорт экспорта',
+    domestic_transport: 'Транспорт внутрь.',
+    rub_used: 'RUB→KZT исп.',
+    revenue: 'Выручка',
+    feedstock: 'Сырьё',
+    fixed_opex: 'Пост. opex',
+    excise: 'Акциз',
+    pkop_btn: 'PKOP (Шымкент)',
+    pnhz_btn: 'PNHZ (Павлодар)',
+    analysis_vs_prefix: 'Анализ — Новороссийск vs',
+    shymkent: 'Шымкент (PKOP)',
+    pavlodar: 'Павлодар (PNHZ)',
+    oil_note: 'Тот же месяц, что EOT Нетбэк / отчёт решения: <b>{month}</b> · Экспорт и Внутр. пересчитаны live (не снимок) · {combo}.',
+    products_kzt_head: 'Продукты · тенге/т',
+    eot_nb_100_series: 'EOT НБ (100%)',
+    export_month_profile: 'Экспорт (профиль месяца)',
+    domestic_month_profile: 'Внутр. (профиль месяца)',
+    sell_all_chart: 'Выручка sell-all по продуктам (тенге)',
+    wins: 'побеждает',
+    export_wins: 'ЭКСПОРТ',
+    domestic_wins: 'ВНУТР.',
+    dom_eot_wins: 'ВНУТР. + EOT',
+    fx_daily_as_of: 'Дневной FX на <b>{date}</b>{src} — обновляется при открытии',
+    fx_fetching: 'FX: загружаем дневной курс…',
+    fx_fetch_fail: 'FX: не удалось обновить дневной курс — используем последнее сохранённое значение текущего месяца',
+    fx_current_daily: 'FX: текущий месяц — дневной курс (обновляется при открытии)',
+    fx_monthly_avg: 'FX: среднемесячный для <b>{month}</b> (фиксирован для месяца)',
+    prior_fx_hint: 'Прошлый месяц — оставляйте среднемесячный FX (Fetch FX только при намеренной замене).',
+    live_preview_title: 'Живой предпросмотр',
+    calc_baseline: 'ПРОВЕРКА БАЗЫ',
+    calc_display_unit: 'ЕДИНИЦА',
+    calc_inputs: 'ВВОДЫ',
+    calc_export: 'ЭКСПОРТ Новорос',
+    calc_result: 'ИТОГ',
+    calc_breakeven: 'БЕЗУБЫТОЧНОСТЬ (экспорт = внутрь.)',
+    calc_eot_compare: 'СРАВНЕНИЕ EOT НЕТБЭК',
+    calc_compare_month: 'Месяц сравнения',
+    calc_export_month: 'Экспорт (месяц сравнения)',
+    calc_dom_crude_month: 'Внутр. сырьё (месяц сравнения)',
+    calc_our_eot_share: 'Наша доля EOT',
+    calc_realized_bbl: 'Реализ. $/барр',
+    calc_realized_t: 'Реализ. $/т',
+    calc_export_rub: 'Экспорт RUB-плечи',
+    calc_transport: 'Транспорт',
+    calc_rental: 'Рента',
+    calc_met: 'MET',
+    calc_duty: 'Пошлина',
+    calc_price_exvat: 'Цена без НДС',
+    calc_dom_met: 'MET внутрь.',
+    calc_dom_nb_crude: 'Внутр. нетбэк (сырьё)',
+    calc_be_sk: 'Безубыт. Skebco',
+    calc_be_disc: 'Безубыт. дисконт',
+    calc_be_sk_disc: 'Безубыт. Skebco + дисконт',
+    calc_local: 'Внутр. цена',
+    calc_dom_dest: 'Внутр. направление',
+    calc_delta_nb: 'Δ Нетбэк (Экспорт−Внутр.)',
+    bar_export_nb: 'Нетбэк экспорта',
+    bar_dom_crude: 'Только внутрь. сырьё',
+    gauge_exp_dom: 'Экспорт − Внутр.',
+    tie: 'НИЧЬЯ',
+    domestic_path: 'ВНУТР. путь',
+    export_path: 'ЭКСПОРТ путь (Новорос)',
+    sell_all_exvat: 'Sell-all без НДС тенге / т сырья (затем ÷ FX → $)',
   }
 };
 
@@ -1483,13 +1847,17 @@ function applyI18n(){
   if (gLead) gLead.textContent = t('gate_lead');
   const gBtn = document.getElementById('gateBtn');
   if (gBtn) gBtn.textContent = t('gate_unlock');
+  // Keep Analysis / transport page titles in sync
+  const trH1 = document.querySelector('#page-transport > h1');
+  if (trH1 && !trH1.getAttribute('data-i18n')) trH1.setAttribute('data-i18n', 'transport_h1');
+  const taxH1 = document.querySelector('#page-taxes > h1');
+  if (taxH1) taxH1.setAttribute('data-i18n', 'taxes_title');
 }
 
 function setUiLang(lang){
   uiLang = (lang === 'ru') ? 'ru' : 'en';
   try { localStorage.setItem(LANG_KEY, uiLang); } catch {}
-  applyI18n();
-  // Re-render live pages so dynamic labels flip
+  // Re-render first (dynamic strings use t()), then stamp static data-i18n nodes
   try {
     const active = document.querySelector('.page.active');
     const id = active && active.id ? active.id.replace(/^page-/, '') : 'netback';
@@ -1505,6 +1873,7 @@ function setUiLang(lang){
     if (id === 'reports' && typeof renderProfileUI === 'function') renderProfileUI();
     if (id === 'audit' && typeof runRedLightAudit === 'function') runRedLightAudit();
   } catch (e) { console.warn(e); }
+  applyI18n();
 }
 
 function hydrateLang(){
@@ -1705,7 +2074,7 @@ function activeDomesticRoute() {
   return state.domesticRoute === 'pavlodar' ? 'pavlodar' : 'pkop';
 }
 function domesticLabel() {
-  return activeDomesticRoute() === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'Shymkent (PKOP)';
+  return activeDomesticRoute() === 'pavlodar' ? t('pavlodar') : t('shymkent');
 }
 function domesticLines() {
   const route = activeDomesticRoute();
@@ -1909,7 +2278,7 @@ function renderNetback() {
   if (oilNote) {
     oilNote.style.display = oilOn ? '' : 'none';
     if (oilOn) {
-      oilNote.innerHTML = `Same month as EOT Netback / decision report: <b>${compareMonthLabel(compareMid)}</b> · Export &amp; Dom recalculated live (not snapshot) · ${labelDomesticEot(pct)}.`;
+      oilNote.innerHTML = t('oil_note').replace('{month}', compareMonthLabel(compareMid)).replace('{combo}', labelDomesticEot(pct));
     }
   }
 
@@ -1923,8 +2292,18 @@ function renderNetback() {
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(spreadView)<0.5?'tie':spreadView>0?'export':'domestic');
-  const winName = oilOn ? (spreadView>0?'EXPORT':'DOMESTIC + EOT') : (spreadView>0?'EXPORT':'DOMESTIC');
-  document.getElementById('verdictTxt').textContent = Math.abs(spreadView)<0.5?'BREAKEVEN':(winName+' wins');
+  const winName = oilOn
+    ? (spreadView>0 ? t('export_wins') : t('dom_eot_wins'))
+    : (spreadView>0 ? t('export_wins') : t('domestic_wins'));
+  document.getElementById('verdictTxt').textContent = Math.abs(spreadView)<0.5 ? t('breakeven') : (winName + ' ' + t('wins'));
+  try {
+    const h1 = document.querySelector('#page-netback > h1');
+    if (h1) {
+      const dom = document.getElementById('domTitle');
+      const route = (typeof domesticLabel === 'function') ? domesticLabel() : (dom ? dom.textContent : '');
+      h1.innerHTML = t('analysis_vs_prefix') + ' <span id="domTitle">' + route + '</span>';
+    }
+  } catch {}
   document.getElementById('verdictSub').textContent =
     (atBase?(baselinePass?'Baseline check PASS · ':'Baseline check FAIL · '):'') +
     (c.trAdj?'Transport % ON · ':'') +
@@ -1948,52 +2327,52 @@ function renderNetback() {
   const pu = (v, d=2) => fmtUnit(v, c.KB, d);
   const puBare = (v, d=2) => fmt(perUnit(v, c.KB), d);
   const oilRows = (oilOn && oil) ? [
-    row('EOT NETBACK COMPARE','','','secIn'),
-    row('Compare month', 'Same as EOT Netback / decision report', compareMonthLabel(compareMid)),
-    row('Export (compare month)', 'Live recalc from profile params', pu(nbExpView),'total'),
-    row('Domestic crude (compare month)', 'Live recalc', pu(oilDomCrude)),
-    row('EOT NB (100%)', 'Sell-all for compare month', pu(oilRefineNb)),
-    row(`Our EOT share (${pct}%)`, `${pct}% × EOT NB`, pu(oilShareNb)),
-    row(labelDomesticEot(pct), 'Domestic crude + our EOT share', pu(nbDomView),'total'),
-    row(labelExportMinusDomEot(pct), 'decision vs export', (spreadView>=0?'+':'')+pu(spreadView),'total'),
+    row(t('calc_eot_compare'),'','','secIn'),
+    row(t('calc_compare_month'), 'EOT / decision report', compareMonthLabel(compareMid)),
+    row(t('calc_export_month'), 'live', pu(nbExpView),'total'),
+    row(t('calc_dom_crude_month'), 'live', pu(oilDomCrude)),
+    row(t('eot_nb_100'), 'sell-all', pu(oilRefineNb)),
+    row(`${t('calc_our_eot_share')} (${pct}%)`, `${pct}% × EOT`, pu(oilShareNb)),
+    row(labelDomesticEot(pct), 'Dom + EOT share', pu(nbDomView),'total'),
+    row(labelExportMinusDomEot(pct), 'vs export', (spreadView>=0?'+':'')+pu(spreadView),'total'),
   ] : [];
   document.getElementById('calcBody').innerHTML = [
-    row('BASELINE CHECK', atBase?'Nov 2026 cached reference':'Live formulas', atBase?(baselinePass?'PASS':'FAIL'):'Live'),
-    row('DISPLAY UNIT', resultUnitIsBbl() ? `$/t ÷ export bbl/t ${fmt(c.KB,4)}` : 'Native tonne basis', u),
-    row('INPUTS','','','secIn'),
-    row('Brent','L3', fmt(c.B,1)+' $/bbl'),
-    row('FX (KZT per 1 USD)','All KZT totals ÷ FX → $/t', fmt(c.FX,2)+' KZT/USD'),
-    row('RUB→KZT (KZT per 1 RUB)','Novoros RUB legs × rate → KZT', fmt(c.RU,4)),
-    row('Skebco (D6)','D6 (may be negative)', fmt(c.S,3)+' $/bbl'),
-    row('Kebco','Brent − Skebco (GCA / duty lookup)', fmt(c.kebco,3)+' $/bbl'),
-    row('Discount (D7)','D7', fmt(c.DISC,2)+' $/bbl'),
-    row('Local domestic','G5/F5 list', fmtInt(c.LOC)+' KZT/t'),
-    row('Domestic destination','Shymkent (PKOP) or Pavlodar/PNHZ', domesticLabel()),
-    row('EXPORT Novoros','','','sec'),
-    row('Realized $/bbl',`D11=D5−D6−D7<br><span class="sub">${fmt(c.B,1)} − ${fmt(c.S,3)} − ${fmt(c.DISC,2)}</span>`, fmt(c.priceBbl,3)),
-    row(resultUnitIsBbl()?'Realized (same)':'Realized $/t', resultUnitIsBbl()?`already $/bbl · × ${fmt(c.KB,4)} = ${fmt(c.priceTexp,2)} $/t`:`D12=D11×D8`, resultUnitIsBbl()?fmt(c.priceBbl,3)+' $/bbl':fmt(c.priceTexp,2)+' $/t'),
-    row('Export RUB legs',`Σ RUB tariffs × RUB→KZT ${fmt(c.RU,2)}`, fmt(c.expRubKzt,0)+' KZT'),
-    row('Transport',`Σ(KZT + RUB×${fmt(c.RU,2)}) / FX${c.trAdj?' · % adj':''}`, pu(c.trExp)),
-    row('Rental',`rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Kebco ${fmt(c.kebco,1)} × ${fmt(c.kbRent,1)}`, pu(c.rental)),
-    row('MET',`Kebco ${fmt(c.kebco,1)} × MET% × ${fmt(c.kbMet,1)}`, pu(c.metExp)),
-    row('Duty',`duty ladder(Kebco ${fmt(c.kebco,1)}) · MoF uses avg Kebco+Brent`, pu(c.duty, resultUnitIsBbl()?2:0)),
-    row('Export netback','D18', pu(c.nbExp),'total'),
-    row('DOMESTIC '+domesticLabel(),'','','secDom'),
-    row('Price ex-VAT',`${fmtInt(c.LOC)} KZT ÷ ${fmt(c.FX,2)} ÷ VAT ${fmt(c.VAT,2)}`, pu(c.priceTdom)),
-    row('Transport',`domestic KZT / FX${c.trAdj?' · % adj':''}`, pu(c.trDom)),
-    row('Rental','export-only (art. 749) — not on domestic', '0'),
-    row('Duty','export customs duty — not on domestic', '0'),
-    row('Dom MET',`ex-VAT ${fmt(c.priceTdom,2)} $/t × ${(c.MET*100).toFixed(1)}% × ${fmt(c.domMetShare,2)} (art. 778)`, pu(c.metDom)),
-    row('Domestic netback (crude)','ex-VAT − transport − Dom MET', pu(c.nbDom),'total'),
+    row(t('calc_baseline'), atBase?'Nov 2026':'live', atBase?(baselinePass?'PASS':'FAIL'):'live'),
+    row(t('calc_display_unit'), resultUnitIsBbl() ? `$/t ÷ ${fmt(c.KB,4)}` : 't', u),
+    row(t('calc_inputs'),'','','secIn'),
+    row(t('brent'),'L3', fmt(c.B,1)+' $/bbl'),
+    row(t('fx_kzt_usd'),'÷ FX', fmt(c.FX,2)+' KZT/USD'),
+    row(t('rub_kzt'),'RUB×rate', fmt(c.RU,4)),
+    row(t('skebco'),'D6', fmt(c.S,3)+' $/bbl'),
+    row('Kebco','Brent − Skebco', fmt(c.kebco,3)+' $/bbl'),
+    row(t('discount'),'D7', fmt(c.DISC,2)+' $/bbl'),
+    row(t('calc_local'),'list', fmtInt(c.LOC)+' KZT/t'),
+    row(t('calc_dom_dest'),'', domesticLabel()),
+    row(t('calc_export'),'','','sec'),
+    row(t('calc_realized_bbl'),`D11<br><span class="sub">${fmt(c.B,1)} − ${fmt(c.S,3)} − ${fmt(c.DISC,2)}</span>`, fmt(c.priceBbl,3)),
+    row(resultUnitIsBbl()?t('calc_realized_bbl'):t('calc_realized_t'), resultUnitIsBbl()?`× ${fmt(c.KB,4)}`:`D12`, resultUnitIsBbl()?fmt(c.priceBbl,3)+' $/bbl':fmt(c.priceTexp,2)+' $/t'),
+    row(t('calc_export_rub'),`× ${fmt(c.RU,2)}`, fmt(c.expRubKzt,0)+' KZT'),
+    row(t('calc_transport'),`÷ FX${c.trAdj?' · %':''}`, pu(c.trExp)),
+    row(t('calc_rental'),`rate×Kebco×${fmt(c.kbRent,1)}`, pu(c.rental)),
+    row(t('calc_met'),`Kebco×MET%×${fmt(c.kbMet,1)}`, pu(c.metExp)),
+    row(t('calc_duty'),`ladder(Kebco)`, pu(c.duty, resultUnitIsBbl()?2:0)),
+    row(t('export_nb'),'D18', pu(c.nbExp),'total'),
+    row((uiLang==='ru'?'ВНУТР. ':'DOMESTIC ')+domesticLabel(),'','','secDom'),
+    row(t('calc_price_exvat'),`÷FX÷VAT`, pu(c.priceTdom)),
+    row(t('calc_transport'),`÷ FX${c.trAdj?' · %':''}`, pu(c.trDom)),
+    row(t('calc_rental'),'export-only', '0'),
+    row(t('calc_duty'),'export-only', '0'),
+    row(t('calc_dom_met'),`×${(c.MET*100).toFixed(1)}%×${fmt(c.domMetShare,2)}`, pu(c.metDom)),
+    row(t('calc_dom_nb_crude'),'', pu(c.nbDom),'total'),
     ...oilRows,
-    row('RESULT','','','secIn'),
-    row(oilOn ? labelExportMinusDomEot(pct) : 'Δ Netback (Export−Domestic)',
-      oilOn ? 'export NB − (Domestic + EOT)' : 'export NB − domestic NB',
+    row(t('calc_result'),'','','secIn'),
+    row(oilOn ? labelExportMinusDomEot(pct) : t('calc_delta_nb'),
+      '',
       (spreadView>=0?'+':'')+pu(spreadView),'total'),
-    row('BREAKEVEN (export = domestic)','','','secIn'),
-    row('Breakeven Skebco',`Hold Discount ${fmt(c.DISC,2)} · S* = Brent − Disc − needed $/bbl`, fmt(c.skStar,2)+' $/bbl'),
-    row('Breakeven Discount',`Hold Skebco ${fmt(c.S,3)} · D* = Brent − Skebco − needed $/bbl`, fmt(c.discStar,2)+' $/bbl'),
-    row('Breakeven Skebco + Discount',`(S+D)* = Brent − needed $/bbl · now S+D=${fmt(c.S+c.DISC,2)}`, fmt(c.skDiscStar,2)+' $/bbl'),
+    row(t('calc_breakeven'),'','','secIn'),
+    row(t('calc_be_sk'),``, fmt(c.skStar,2)+' $/bbl'),
+    row(t('calc_be_disc'),``, fmt(c.discStar,2)+' $/bbl'),
+    row(t('calc_be_sk_disc'),``, fmt(c.skDiscStar,2)+' $/bbl'),
   ].join('');
 
   const spreadU = perUnit(spreadView, c.KB);
@@ -2002,16 +2381,16 @@ function renderNetback() {
   const nbDomCrudeU = perUnit(oilOn ? oilDomCrude : c.nbDom, c.KB);
   const gaugeMax = resultUnitIsBbl() ? 25 : 150;
   const barY = oilOn
-    ? ['Export netback', labelDomesticEot(pct), 'Domestic crude only']
-    : ['Export netback', 'Domestic netback'];
+    ? [t('bar_export_nb'), labelDomesticEot(pct), t('bar_dom_crude')]
+    : [t('bar_export_nb'), t('domestic_nb')];
   const barX = oilOn ? [nbExpU, nbDomU, nbDomCrudeU] : [nbExpU, nbDomU];
   const barColors = oilOn ? ['#0f766e', '#7c3aed', '#b45309'] : ['#0f766e', '#b45309'];
   const barText = oilOn
     ? [puBare(nbExpView,2)+' '+u, puBare(nbDomView,2)+' '+u, puBare(oilDomCrude,2)+' '+u]
     : [puBare(c.nbExp,2)+' '+u, puBare(c.nbDom,2)+' '+u];
   const gaugeTitle = oilOn
-    ? `Export − (${labelDomesticEot(pct)})<br><span style="font-size:12px;color:#78716c">${compareMonthLabel(compareMid)} · live recalc · ${u}</span>`
-    : `Export − Domestic<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · disc ${fmt(c.DISC,2)} · ${u}</span>`;
+    ? `${uiLang==='ru'?'Экспорт':'Export'} − (${labelDomesticEot(pct)})<br><span style="font-size:12px;color:#78716c">${compareMonthLabel(compareMid)} · ${u}</span>`
+    : `${t('gauge_exp_dom')}<br><span style="font-size:12px;color:#78716c">vs ${domesticLabel()} · Skebco ${fmt(c.S,1)} · ${u}</span>`;
   Plotly.newPlot('chart', [
     {
       type:'indicator', mode:'gauge+number+delta', value:spreadU,
@@ -2054,7 +2433,7 @@ function buildTransportTables() {
       ? TR_LINES.filter(l => l.channel==='export')
       : domesticLines();
     const domName = domesticLabel();
-    let html = `<h2>${channel==='export'?'EXPORT path (Novoros)':'DOMESTIC path ('+domName+')'}<span class="tag ${channel}">${channel.toUpperCase()}</span></h2>`;
+    let html = `<h2>${channel==='export'?t('export_path'):(t('domestic_path')+' ('+domName+')')}<span class="tag ${channel}">${channel.toUpperCase()}</span></h2>`;
     html += `<table class="tr"><thead><tr><th>Row</th><th>Leg</th><th>Ccy</th><th class="num">Base</th><th>% Δ</th><th class="num">Adj KZT/t</th></tr></thead><tbody>`;
     let last='';
     for (const line of lines) {
@@ -2777,7 +3156,7 @@ function renderProdTrends(){
   const toNb = (v) => (v == null ? null : (prodUnitIsBbl() ? v / kb : v));
   const axis = 'KZT/t';
   const ph = document.getElementById('prodPriceHead');
-  if (ph) ph.textContent = 'Products · KZT/t';
+  if (ph) ph.textContent = t('products_kzt_head');
   const priceGrid = document.getElementById('prodPriceGrid');
   if (!labels.length) {
     if (priceGrid) priceGrid.innerHTML = '';
@@ -2839,13 +3218,13 @@ function renderProdTrends(){
     }
     const shareDomY = nbSeries.map((v, i) => (v == null || domY[i] == null ? null : v * share + domY[i]));
     Plotly.newPlot('prodNbChart', [
-      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'EOT NB (100%)',
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:t('eot_nb_100_series'),
         x:xLab, y:nbSeries, line:{color:'#0f766e', width:3}, marker:{size:7} },
       { type:'scatter', mode:'lines+markers', connectgaps:false, name:labelDomesticEot(share*100),
         x:xLab, y:shareDomY, line:{color:'#7c3aed', width:2, dash:'dot'}, marker:{size:6} },
-      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Export (month profile)',
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:t('export_month_profile'),
         x:xLab, y:expY, line:{color:'#b45309', width:2, dash:'dash'}, marker:{size:5} },
-      { type:'scatter', mode:'lines+markers', connectgaps:false, name:'Domestic (month profile)',
+      { type:'scatter', mode:'lines+markers', connectgaps:false, name:t('domestic_month_profile'),
         x:xLab, y:domY, line:{color:'#1e3a5f', width:2, dash:'dash'}, marker:{size:5} }
     ], {
       margin:{t:16,r:20,b:50,l:55}, yaxis:{title:uNb},
@@ -2940,7 +3319,7 @@ function renderProductsPage(){
     if (scl) scl.textContent = labelDomesticEot(r.share*100);
     const vs = document.getElementById('prodVsExp');
     if (vs) {
-      vs.textContent = (tie ? 'TIE · ' : (exportWins ? 'EXPORT +' : 'DOMESTIC + EOT +')) + fmtProdUnit(Math.abs(dExpMinusAlt), 2);
+      vs.textContent = (tie ? (t('tie') + ' · ') : (exportWins ? (t('export_wins') + ' +') : (t('dom_eot_wins') + ' +'))) + fmtProdUnit(Math.abs(dExpMinusAlt), 2);
     }
   }
   const k=(id,t)=>{const el=document.getElementById(id); if(el) el.textContent=t;};
@@ -2955,14 +3334,14 @@ function renderProductsPage(){
   const calcHost = document.getElementById('prodCalcBody');
   if (calcHost) {
     calcHost.innerHTML = `<table class="calc"><tbody>
-      <tr class="secIn"><td colspan="3">Sell-all ex-VAT KZT / t crude (then ÷ FX → $)</td></tr>
-      <tr><td>Revenue</td><td>Σ yield × (VAT-incl price ÷ ${fmt(r.vat,2)})</td><td class="num">${fmtInt(r.revKzt)} KZT</td></tr>
-      <tr><td>Feedstock ex-VAT</td><td>${fmtInt(r.feedKztVat)} ÷ VAT ${fmt(r.vat,2)}</td><td class="num">${fmtInt(r.feedKzt)} KZT</td></tr>
-      <tr><td>Fixed opex</td><td>processing + additives + admin</td><td class="num">${fmtInt(r.fixedKzt)} KZT</td></tr>
-      <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)}</td><td class="num">${fmtInt(r.excGasKzt)} KZT</td></tr>
-      <tr><td>Excise diesel</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)}</td><td class="num">${fmtInt(r.excDtKzt)} KZT</td></tr>
-      <tr><td>Fuel-oil duty</td><td>KZT/t crude</td><td class="num">${fmtInt(r.dutyKzt)} KZT</td></tr>
-      <tr class="total"><td>EOT NB (100%)</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT · ${fmt(r.nb,2)} $/t</td></tr>
+      <tr class="secIn"><td colspan="3">${t('sell_all_exvat')}</td></tr>
+      <tr><td>${t('revenue')}</td><td>Σ yield × (VAT-incl ÷ ${fmt(r.vat,2)})</td><td class="num">${fmtInt(r.revKzt)} KZT</td></tr>
+      <tr><td>${t('feedstock_exvat')}</td><td>${fmtInt(r.feedKztVat)} ÷ VAT ${fmt(r.vat,2)}</td><td class="num">${fmtInt(r.feedKzt)} KZT</td></tr>
+      <tr><td>${t('fixed_opex')}</td><td>processing + additives + admin</td><td class="num">${fmtInt(r.fixedKzt)} KZT</td></tr>
+      <tr><td>${t('excise')} AI</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)}</td><td class="num">${fmtInt(r.excGasKzt)} KZT</td></tr>
+      <tr><td>${t('excise')} DT</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)}</td><td class="num">${fmtInt(r.excDtKzt)} KZT</td></tr>
+      <tr><td>${t('fuel_oil_duty')}</td><td>KZT/t</td><td class="num">${fmtInt(r.dutyKzt)} KZT</td></tr>
+      <tr class="total"><td>${t('eot_nb_100')}</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT · ${fmt(r.nb,2)} $/t</td></tr>
     </tbody></table>`;
   }
   const reportHost = document.getElementById('prodCompareReportBody');
@@ -3038,7 +3417,7 @@ function renderProductsPage(){
       type:'bar', x:sold.map(x=>x.name), y:sold.map(x=>x.contribKzt),
       marker:{color:'#0f766e'}, text:sold.map(x=>fmtInt(x.contribKzt)), textposition:'auto'
     }], { margin:{t:28,r:10,b:80,l:55}, yaxis:{title:'KZT / t crude'},
-      title:{text:'Sell-all revenue by product (KZT)', font:{size:13}},
+      title:{text:t('sell_all_chart'), font:{size:13}},
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
   }
@@ -3859,9 +4238,9 @@ document.getElementById('btnTrReset').addEventListener('click', resetFromTranspo
 document.getElementById('btnAdv').addEventListener('click', () => {
   const box=document.getElementById('advBox');
   const open=box.classList.toggle('open');
-  document.getElementById('btnAdv').textContent = open
-    ? 'Hide structural parameters (VAT, bbl/t, MET%)'
-    : 'Show structural parameters (VAT, bbl/t, MET%)';
+  const btn = document.getElementById('btnAdv');
+  btn.textContent = open ? t('hide_structural') : t('show_structural');
+  btn.setAttribute('data-i18n', open ? 'hide_structural' : 'show_structural');
 });
 document.querySelectorAll('.subnav button[data-page]').forEach(btn => {
   btn.addEventListener('click', () => showPage(btn.dataset.page));
@@ -3939,26 +4318,26 @@ function updateFxRateNoteForActive() {
   }
   if (isCurrentProfile(p)) {
     if (liveFxMeta.status === 'loading') {
-      setFxRateNote('FX: fetching today’s daily rate…', true);
+      setFxRateNote(t('fx_fetching'), true);
       return;
     }
     if (liveFxMeta.asOf && liveFxMeta.fx != null) {
       setFxRateNote(
-        `FX daily rate as of <b>${formatRateDate(liveFxMeta.asOf)}</b>` +
-          (liveFxMeta.source ? ` (${liveFxMeta.source})` : '') +
-          ` — refreshed on page open`,
+        t('fx_daily_as_of')
+          .replace('{date}', formatRateDate(liveFxMeta.asOf))
+          .replace('{src}', liveFxMeta.source ? ` (${liveFxMeta.source})` : ''),
         true
       );
       return;
     }
     if (liveFxMeta.status === 'error') {
-      setFxRateNote('FX: could not refresh daily rate — using last saved current-month value', false);
+      setFxRateNote(t('fx_fetch_fail'), false);
       return;
     }
-    setFxRateNote('FX: current month uses daily rate (updates on page open)', true);
+    setFxRateNote(t('fx_current_daily'), true);
     return;
   }
-  setFxRateNote(`FX: monthly average for <b>${monthLabel(p.month)}</b> (fixed for that month)`, false);
+  setFxRateNote(t('fx_monthly_avg').replace('{month}', monthLabel(p.month)), false);
 }
 
 async function fetchDailyFxRates() {
@@ -4830,7 +5209,7 @@ function buildSingleReport(id) {
 }
 
 function domesticLabelFrom(route) {
-  return route === 'pavlodar' ? 'Pavlodar (PNHZ)' : 'Shymkent (PKOP)';
+  return route === 'pavlodar' ? t('pavlodar') : t('shymkent');
 }
 
 function buildTrendReport(endYm, nMonths) {
@@ -5373,7 +5752,7 @@ function refreshProfileEditorPreview() {
   document.getElementById('peNbExp').textContent = fmt(c.nbExp,1) + ' $/t';
   document.getElementById('peNbDom').textContent = fmt(c.nbDom,1) + ' $/t';
   document.getElementById('peSpread').textContent = (c.spread>=0?'+':'') + fmt(c.spread,1) + ' $/t';
-  document.getElementById('peWinner').textContent = Math.abs(c.spread)<0.5 ? 'Breakeven' : (c.spread>0 ? 'EXPORT' : 'DOMESTIC');
+  document.getElementById('peWinner').textContent = Math.abs(c.spread)<0.5 ? t('breakeven') : (c.spread>0 ? t('export_wins') : t('domestic_wins'));
   const peBeSk = document.getElementById('peBeSk');
   const peBeDisc = document.getElementById('peBeDisc');
   const peBeSkDisc = document.getElementById('peBeSkDisc');
@@ -5409,25 +5788,23 @@ function syncProfileEditorMode() {
     monthEl.style.opacity = editing ? '0.75' : '';
   }
   if (hint) {
-    hint.textContent = editing
-      ? 'Month is locked while editing this saved profile.'
-      : 'Pick the month id for the new profile (YYYY-MM).';
+    hint.textContent = editing ? t('pe_month_locked') : t('pe_month_pick');
   }
   if (title) {
     title.textContent = editing
-      ? `Edit saved profile — ${monthLabel(peEditingId)}`
-      : 'Create new month profile';
+      ? t('edit_saved_profile').replace('{month}', monthLabel(peEditingId))
+      : t('create_month_profile');
   }
   if (lead) {
-    lead.textContent = editing
-      ? 'Update parameters and transport, then Save. Changes overwrite this saved month.'
-      : 'Enter a month and parameters, preview, then Save to add a new profile.';
+    lead.textContent = editing ? t('pe_lead_edit') : t('pe_lead_new');
+    lead.removeAttribute('data-i18n'); // dynamic text owns this node
   }
   ['btnPeSaveLocal', 'btnPeSaveLocalTop', 'btnPeSaveOnline', 'btnPeSaveOnlineTop'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
-    if (id.includes('Online')) btn.textContent = editing ? 'Save changes online' : 'Save new online';
-    else btn.textContent = editing ? 'Save changes (this device)' : 'Save new (this device)';
+    if (id.includes('Online')) btn.textContent = editing ? t('save_changes_online') : t('save_new_online');
+    else btn.textContent = editing ? t('save_changes_device') : t('save_new_device');
+    btn.removeAttribute('data-i18n');
   });
 }
 
