@@ -720,11 +720,18 @@
 
     <div class="section" id="prodTrendsSection">
       <h2>Historic trends</h2>
-      <p class="lead" style="margin-bottom:8px" id="prodTrendNote">Product prices in KZT/t from Jan 2026 (≤12 months). Missing months blank. One square chart per product.</p>
-      <h3 style="font-size:.9rem;margin:10px 0 4px">Gasoline — KZT/t (one chart each)</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px">
+        <p class="lead" style="margin:0;flex:1 1 220px" id="prodTrendNote">Product prices from Jan 2026 (≤12 months). $/t uses each month’s FX from Month profiles.</p>
+        <div class="route-toggle unit-toggle" id="prodPriceDispToggle" role="group" aria-label="Price display">
+          <span class="unit-lbl">Prices</span>
+          <button type="button" data-prod-price-disp="usd" class="active">$/t (profile FX)</button>
+          <button type="button" data-prod-price-disp="kzt">Local KZT</button>
+        </div>
+      </div>
+      <h3 style="font-size:.9rem;margin:10px 0 4px" id="prodGasHead">Gasoline — one chart each</h3>
       <div class="prod-tile-grid" id="prodGasGrid"></div>
       <p class="lead" id="prodGasAnalysis" style="margin-top:8px;font-size:.85rem"></p>
-      <h3 style="font-size:.9rem;margin:14px 0 4px">All products — KZT/t (one chart each)</h3>
+      <h3 style="font-size:.9rem;margin:14px 0 4px" id="prodPriceHead">All products — one chart each</h3>
       <div class="prod-tile-grid" id="prodPriceGrid"></div>
       <h3 style="font-size:.9rem;margin:14px 0 4px">Products netback</h3>
       <div id="prodNbChart" style="height:280px"></div>
@@ -1488,6 +1495,7 @@ let prodState = {
   monthId: null,
   useAnalysisFx: true,
   unit: 't',
+  priceDisp: 'usd', // trend tiles: 'usd' via Month-profile FX, or 'kzt' local
   fx: null,
   feedKzt: null,
   vat: null,
@@ -1537,7 +1545,10 @@ function ensureProdModel(force){
     if (prodState.mode === 'historic') {
       const m = histMonth(prodState.monthId);
       prodState.products = cloneProds(m ? m.products : []);
-      if (m && !prodState.useAnalysisFx) prodState.fx = m.fx;
+      if (m && !prodState.useAnalysisFx) {
+        const pfx = profileFxForMonth(m.id);
+        prodState.fx = pfx != null ? pfx : m.fx;
+      }
     } else {
       prodState.products = cloneProds(block.forecastProducts || []);
     }
@@ -1565,7 +1576,12 @@ function calcProducts(){
   let fxSrc = c.FX;
   if (!prodState.useAnalysisFx) {
     const hm = prodState.mode === 'historic' ? histMonth(prodState.monthId) : null;
-    fxSrc = num(prodState.fx != null ? prodState.fx : (hm && hm.fx), c.FX);
+    const mid = (hm && hm.id) || prodState.monthId;
+    const profileFx = mid ? profileFxForMonth(mid) : null;
+    fxSrc = num(
+      prodState.fx != null ? prodState.fx : (profileFx != null ? profileFx : (hm && hm.fx)),
+      c.FX
+    );
   }
   const fx = Math.max(1e-9, fxSrc);
   const vat = safeRate(prodState.vat != null ? prodState.vat : c.VAT, c.VAT);
@@ -1608,7 +1624,12 @@ function fillProdMonthSelect(){
   if (!sel) return;
   const ms = histMonths();
   const cur = prodState.monthId;
-  sel.innerHTML = ms.map(m => `<option value="${m.id}" ${m.id===cur?'selected':''}>${m.label} · FX ${fmt(m.fx,1)}</option>`).join('');
+  sel.innerHTML = ms.map(m => {
+    const pfx = profileFxForMonth(m.id);
+    const fxShow = pfx != null ? pfx : m.fx;
+    const tag = pfx != null ? 'profile FX' : 'sheet FX';
+    return `<option value="${m.id}" ${m.id===cur?'selected':''}>${m.label} · ${tag} ${fmt(fxShow,1)}</option>`;
+  }).join('');
   if (!ms.length) sel.innerHTML = '<option value="">No historic months for this refinery</option>';
 }
 function syncProdToggles(){
@@ -1659,6 +1680,23 @@ function prodTrendWindow(){
     byId
   };
 }
+function profileFxForMonth(monthId){
+  try {
+    const p = (typeof findProfileByMonth === 'function')
+      ? findProfileByMonth(monthId)
+      : ((typeof profileDb !== 'undefined' && profileDb.profiles)
+          ? profileDb.profiles.find(x => x.id === monthId || x.month === monthId)
+          : null);
+    const fx = p && p.params ? num(p.params.fx) : null;
+    return (fx != null && fx > 1) ? fx : null;
+  } catch (e) { return null; }
+}
+function historicFxForMonth(monthId, fallbackExcelFx){
+  // Prefer shared Month-profile FX (same as Analysis / Profiles pages).
+  const pf = profileFxForMonth(monthId);
+  if (pf != null) return pf;
+  return null; // no invented FX — leave blank if profile missing
+}
 function prodPricesKztSeries(labels, months){
   const names = new Set();
   for (const m of months) {
@@ -1680,6 +1718,24 @@ function prodPricesKztSeries(labels, months){
   }
   return prices;
 }
+function prodPricesDisplaySeries(labels, months){
+  const kzt = prodPricesKztSeries(labels, months);
+  const asKzt = (prodState.priceDisp === 'kzt');
+  const out = {};
+  for (const [name, arr] of Object.entries(kzt)) {
+    out[name] = arr.map((v, i) => {
+      if (v == null) return null;
+      if (asKzt) return v;
+      const fx = historicFxForMonth(labels[i], months[i] && months[i].fx);
+      if (fx == null) return null;
+      return v / fx;
+    });
+  }
+  return out;
+}
+function prodPriceAxisLabel(){
+  return prodState.priceDisp === 'kzt' ? 'KZT/t' : '$/t';
+}
 function shortMonthLabel(id){
   const parts = String(id||'').split('-');
   if (parts.length < 2) return id;
@@ -1687,7 +1743,7 @@ function shortMonthLabel(id){
   const mi = Math.max(0, Math.min(11, Number(parts[1]) - 1));
   return mons[mi] + String(parts[0]).slice(-2);
 }
-function fillProdTileGrid(gridId, names, labels, prices, colors){
+function fillProdTileGrid(gridId, names, labels, prices, colors, yTitle){
   const grid = document.getElementById(gridId);
   if (!grid) return;
   const xLab = labels.map(shortMonthLabel);
@@ -1701,6 +1757,7 @@ function fillProdTileGrid(gridId, names, labels, prices, colors){
     return `<div class="prod-tile"><div class="prod-tile-title">${name}</div><div class="prod-tile-chart" id="${id}"></div></div>`;
   }).join('');
   if (!window.Plotly) return;
+  const isKzt = prodState.priceDisp === 'kzt';
   usable.forEach((name, i) => {
     const el = document.getElementById(gridId + '_tile_' + i);
     if (!el) return;
@@ -1713,7 +1770,11 @@ function fillProdTileGrid(gridId, names, labels, prices, colors){
     }], {
       margin:{t:8,r:8,b:28,l:42},
       xaxis:{tickfont:{size:9}, automargin:true},
-      yaxis:{title:{text:'KZT/t', font:{size:9}}, tickfont:{size:9}, automargin:true, separatethousands:true},
+      yaxis:{
+        title:{text:yTitle || prodPriceAxisLabel(), font:{size:9}},
+        tickfont:{size:9}, automargin:true, separatethousands:true,
+        tickformat: isKzt ? ',.0f' : ',.0f'
+      },
       showlegend:false,
       paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)'
     }, {responsive:true, displayModeBar:false});
@@ -1728,9 +1789,20 @@ function renderProdTrends(){
   const uNb = prodUnitLabel();
   const kb = Math.max(1e-9, num(calcNetback().KB, 7.2223));
   const toNb = (v) => (v == null ? null : (prodUnitIsBbl() ? v / kb : v));
+  const axis = prodPriceAxisLabel();
+  const asKzt = prodState.priceDisp === 'kzt';
+  document.querySelectorAll('#prodPriceDispToggle button[data-prod-price-disp]').forEach(b => {
+    b.classList.toggle('active', b.dataset.prodPriceDisp === (asKzt ? 'kzt' : 'usd'));
+  });
+  const gh = document.getElementById('prodGasHead');
+  const ph = document.getElementById('prodPriceHead');
+  if (gh) gh.textContent = `Gasoline — ${axis} (one chart each)`;
+  if (ph) ph.textContent = `All products — ${axis} (one chart each)`;
   const note = document.getElementById('prodTrendNote');
   if (note) {
-    note.innerHTML = `Each product has its own <b>square</b> chart (KZT/t). Window: <b>from Jan 2026</b>, ≤12 months. Missing months blank. Netback uses <b>${uNb}</b>.`;
+    note.innerHTML = asKzt
+      ? `Posted <b>local KZT/t</b> unit prices. Window: <b>from Jan 2026</b>, ≤12 months. Missing months blank.`
+      : `$/t = KZT price ÷ that month’s <b>Month profile FX</b> (same FX as Analysis / Profiles). No profile FX → blank. Window from Jan 2026.`;
   }
   const gasGrid = document.getElementById('prodGasGrid');
   const priceGrid = document.getElementById('prodPriceGrid');
@@ -1742,14 +1814,13 @@ function renderProdTrends(){
     if (ga) ga.textContent = 'No historic months from Jan 2026 for this refinery.';
     return;
   }
-  const prices = prodPricesKztSeries(labels, months);
+  const prices = prodPricesDisplaySeries(labels, months);
   const colors = ['#0f766e','#b45309','#1e3a5f','#7c3aed','#e11d48','#0891b2','#ca8a04','#0d9488'];
   const gasNames = ['AI92','AI95','AI98'].filter(n => prices[n]);
-  fillProdTileGrid('prodGasGrid', gasNames.length ? gasNames : ['AI92','AI95'], labels, prices, colors);
-  // Prefer sellable / core products, stable order
+  fillProdTileGrid('prodGasGrid', gasNames.length ? gasNames : ['AI92','AI95'], labels, prices, colors, axis);
   const prefer = ['AI92','AI95','AI98','Diesel fuel','Kerosene (Aviation fuel)','Fuel oil','Vacuum gas oil','Sulphur','Liquefied gas'];
   const allNames = [...prefer.filter(n => prices[n]), ...Object.keys(prices).filter(n => !prefer.includes(n)).sort()];
-  fillProdTileGrid('prodPriceGrid', allNames, labels, prices, colors);
+  fillProdTileGrid('prodPriceGrid', allNames, labels, prices, colors, axis);
 
   const ga = document.getElementById('prodGasAnalysis');
   if (ga) {
@@ -1757,14 +1828,16 @@ function renderProdTrends(){
       const vals = ['AI92','AI95'].map(n => (prices[n] || [])[i]).filter(v => v != null);
       return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
     }).filter(v => v != null);
+    const fmtV = (v) => asKzt ? fmtInt(v) : fmt(v, 1);
     if (basket.length >= 2) {
       const first = basket[0], last = basket[basket.length-1];
       const chg = last - first, pct = first ? chg/first*100 : 0;
-      ga.innerHTML = `<b>Gasoline avg (KZT/t):</b> ${fmtInt(first)} → ${fmtInt(last)} (` +
-        `${chg>=0?'+':''}${fmtInt(chg)}, ${pct>=0?'+':''}${fmt(pct,1)}%). Gaps = no data.`;
+      ga.innerHTML = `<b>Gasoline avg (${axis}):</b> ${fmtV(first)} → ${fmtV(last)} (` +
+        `${chg>=0?'+':''}${fmtV(chg)}, ${pct>=0?'+':''}${fmt(pct,1)}%). Gaps = no data` +
+        (asKzt ? '.' : ' or no Month-profile FX.');
     } else if (basket.length === 1) {
-      ga.innerHTML = `<b>Gasoline:</b> one month with data — ${fmtInt(basket[0])} KZT/t.`;
-    } else ga.textContent = 'No gasoline price data in this window.';
+      ga.innerHTML = `<b>Gasoline:</b> one month with data — ${fmtV(basket[0])} ${axis}.`;
+    } else ga.textContent = 'No gasoline price data in this window' + (asKzt ? '.' : ' (need product prices and Month-profile FX).');
   }
 
   const trLabels = tr.labels || [];
@@ -1943,13 +2016,23 @@ function wireProductsPage(){
     prodState.unit = btn.dataset.prodUnit === 'bbl' ? 'bbl' : 't';
     renderProductsPage();
   });
+  const pdt = document.getElementById('prodPriceDispToggle');
+  if (pdt) pdt.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-prod-price-disp]');
+    if (!btn) return;
+    prodState.priceDisp = btn.dataset.prodPriceDisp === 'kzt' ? 'kzt' : 'usd';
+    renderProdTrends();
+  });
   document.getElementById('prodMonthSelect').addEventListener('change', e => {
     prodState.monthId = e.target.value;
     if (prodState.mode === 'historic') {
       prodState.products = null;
       ensureProdModel(true);
       const m = histMonth(prodState.monthId);
-      if (m && !prodState.useAnalysisFx) prodState.fx = m.fx;
+      if (m && !prodState.useAnalysisFx) {
+        const pfx = profileFxForMonth(m.id);
+        prodState.fx = pfx != null ? pfx : m.fx;
+      }
     }
     renderProductsPage();
   });
@@ -1961,7 +2044,10 @@ function wireProductsPage(){
     prodState.products = cloneProds(m.products).map(p => ({
       ...p, priceMode: 'kzt', priceUsd: num(p.priceKzt) / fx
     }));
-    if (!prodState.useAnalysisFx) prodState.fx = m.fx;
+    if (!prodState.useAnalysisFx) {
+      const pfx = profileFxForMonth(m.id);
+      prodState.fx = pfx != null ? pfx : m.fx;
+    }
     renderProductsPage();
   });
   document.getElementById('prodFx').addEventListener('input', e => { prodState.fx = num(e.target.value); renderProductsPage(); });
