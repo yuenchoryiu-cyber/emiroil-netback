@@ -566,7 +566,7 @@
     <div class="two-col">
       <div class="section">
         <h2>1) Current month &amp; load</h2>
-        <p class="lead" style="margin-bottom:8px">Active profile: <b id="activeProfileLbl">Nov 2026 (current)</b></p>
+        <p class="lead" style="margin-bottom:8px">Active profile: <b id="activeProfileLbl">Nov 2026</b></p>
         <div class="field">
           <label>Choose profile to show</label>
           <select id="profileSelect"></select>
@@ -621,7 +621,7 @@
     <div class="section">
       <div class="param-grid">
         <div class="field"><label>Month</label><input id="peMonth" type="month" value="2026-11"/></div>
-        <div class="field"><label>Label</label><input id="peLabel" type="text" placeholder="e.g. Nov 2026 actuals"/></div>
+        <div class="field"><label>Label (optional note)</label><input id="peLabel" type="text" placeholder="Leave blank or add a short note, e.g. actuals"/></div>
         <div class="field"><label>Author</label><input id="peAuthor" type="text" placeholder="Your name"/></div>
       </div>
       <div class="field" style="margin-top:8px"><label>Notes</label><textarea id="peNotes" placeholder="What changed vs prior month"></textarea></div>
@@ -1150,28 +1150,59 @@ function getActiveProfile() {
     ? (profileDb.profiles.find(p => p.id === id) || profileDb.profiles.find(p => p.id === CURRENT_MONTH_ID) || profileDb.profiles[0])
     : null);
 }
-function monthHeadlineText(p) {
+function isCurrentProfile(p) {
+  return !!(p && (p.id === CURRENT_MONTH_ID || p.month === CURRENT_MONTH_ID || p.isCurrent));
+}
+/** Strip redundant "(current)" / month echoes from stored labels. */
+function cleanProfileLabel(p) {
+  if (!p) return '';
+  let label = String(p.label || '').trim();
+  if (!label) return '';
+  label = label
+    .replace(/\s*\((current|latest|baseline)\)\s*/gi, ' ')
+    .replace(/\b(current|latest)\s*baseline\b/gi, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  const when = monthLabel(p.month);
+  const whenLong = (() => {
+    try {
+      const [y, mo] = String(p.month).split('-').map(Number);
+      return new Date(y, mo - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    } catch { return when; }
+  })();
+  const low = label.toLowerCase();
+  if (low === when.toLowerCase() || low === whenLong.toLowerCase()) return '';
+  // "Nov 2026 actuals" → keep "actuals"; bare month prefix only → drop
+  const stripMonth = (s) => s.replace(new RegExp('^' + when.replace(/\s+/g, '\\s+') + '\\s*[—\\-–:]?\\s*', 'i'), '')
+    .replace(new RegExp('^' + whenLong.replace(/\s+/g, '\\s+') + '\\s*[—\\-–:]?\\s*', 'i'), '')
+    .trim();
+  const rest = stripMonth(label);
+  if (!rest || /^(current|latest|baseline)$/i.test(rest)) return '';
+  return rest;
+}
+/** Single neat title: "Nov 2026" or "Nov 2026 · actuals" (+ optional current). */
+function profileTitle(p, { current = true, html = false } = {}) {
   if (!p) return 'No month profile loaded';
   const when = monthLabel(p.month);
-  const label = (p.label || '').trim();
-  const cur = p.id === CURRENT_MONTH_ID ? ' · current baseline' : '';
-  if (label && label.toLowerCase() !== when.toLowerCase()) {
-    return `${when} — ${label}${cur}`;
+  const extra = cleanProfileLabel(p);
+  const cur = current && isCurrentProfile(p);
+  if (html) {
+    return `${when}${extra ? ` <span class="muted">· ${extra}</span>` : ''}${cur ? ' <span class="chip cur">current</span>' : ''}`;
   }
-  return `${when}${cur}`;
+  return `${when}${extra ? ` · ${extra}` : ''}${cur ? ' · current' : ''}`;
+}
+function profileOptionText(p) {
+  return profileTitle(p, { current: true, html: false });
 }
 function updateMonthHeadlines() {
   const p = getActiveProfile();
-  const text = monthHeadlineText(p);
-  const html = p
-    ? `${monthLabel(p.month)}${p.label ? ` <span class="muted">— ${p.label}</span>` : ''}${p.id===CURRENT_MONTH_ID?' <span class="muted">· current baseline</span>':''}`
-    : text;
+  const html = profileTitle(p, { current: true, html: true });
   const nb = document.getElementById('netbackMonthHead');
   const tr = document.getElementById('transportMonthHead');
   if (nb) nb.innerHTML = html;
   if (tr) tr.innerHTML = html;
   const al = document.getElementById('activeProfileLbl');
-  if (al && p) al.textContent = `${p.label || p.id} (${p.month})`;
+  if (al) al.textContent = profileTitle(p, { current: true, html: false });
   document.title = p ? `Emir Oil Netback — ${monthLabel(p.month)}` : 'Emir Oil Netback';
 }
 function resetToMonthId(id) {
@@ -1203,7 +1234,7 @@ function resetToMonthId(id) {
     const el = document.getElementById(rid);
     if (el && [...el.options].some(o => o.value === p.id)) el.value = p.id;
   });
-  setStatus('profileStatus', `Reset to ${p.label || monthLabel(p.month)}.`, 'ok');
+  setStatus('profileStatus', `Reset to ${profileTitle(p, { current: false })}.`, 'ok');
 }
 function resetFromNetback() {
   const id = (document.getElementById('resetMonthSelect') || {}).value || getActiveProfileId();
@@ -1801,7 +1832,7 @@ const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
 const CURRENT_MONTH_ID = '2026-11';
 
-const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026 (current)", "month": "2026-11", "author": "excel import", "notes": "Latest month — prior workbook prices with Nov avg FX USD/KZT 450.18 (KazFin) and RUB/KZT 5.5606 (X-Rates). Previous month Oct verified with monthly FX/RUB.", "savedAt": "2026-11-12T14:02:43.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 450.18, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 188.82800820318806, "nbDom": 212.72979800799988, "spread": -23.901789804811813, "trExp": 59.932558596811944, "trDom": 32.27527055844329, "duty": 115, "rental": 165.375, "metExp": 39.375, "domesticRoute": "pkop"}};
+const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current baseline. Nov avg FX 450.18 KZT/USD (KazFin), RUB→KZT 5.5606 (X-Rates).", "savedAt": "2026-11-12T14:02:43.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 450.18, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 188.82800820318806, "nbDom": 212.72979800799988, "spread": -23.901789804811813, "trExp": 59.932558596811944, "trDom": 32.27527055844329, "duty": 115, "rental": 165.375, "metExp": 39.375, "domesticRoute": "pkop"}};
 
 let profileDb = {
   version: 1,
@@ -1926,6 +1957,17 @@ function sortProfiles() {
   profileDb.profiles.sort((a,b) => String(a.month).localeCompare(String(b.month)) || String(a.savedAt).localeCompare(String(b.savedAt)));
 }
 
+function normalizeStoredProfileLabels() {
+  (profileDb.profiles || []).forEach(p => {
+    if (!p) return;
+    p.isCurrent = p.id === CURRENT_MONTH_ID || p.month === CURRENT_MONTH_ID;
+    const when = monthLabel(p.month || p.id);
+    const extra = cleanProfileLabel(p);
+    // Store a neat label: month name only, or "Month · note" — never "(current)" twice
+    p.label = extra ? `${when} · ${extra}` : when;
+  });
+}
+
 function ensureOctBaseline() {
   const base = JSON.parse(JSON.stringify(OCT2026_PROFILE));
   const i = profileDb.profiles.findIndex(p => p.id === CURRENT_MONTH_ID);
@@ -1935,14 +1977,15 @@ function ensureOctBaseline() {
     const cur = profileDb.profiles[i];
     const ta = Date.parse(cur.savedAt || 0) || 0;
     const tb = Date.parse(base.savedAt || 0) || 0;
-    // Keep newer user edits; otherwise refresh official Oct baseline from seed
+    // Keep newer user edits; otherwise refresh official current-month baseline from seed
     if (tb >= ta) profileDb.profiles[i] = base;
     else {
       cur.isCurrent = true;
-      if (!cur.label) cur.label = OCT2026_PROFILE.label;
+      if (!cur.label || /\(current\)/i.test(cur.label)) cur.label = OCT2026_PROFILE.label;
     }
   }
   profileDb.currentMonthId = CURRENT_MONTH_ID;
+  normalizeStoredProfileLabels();
 }
 
 function saveProfilesLocal() {
@@ -2063,10 +2106,9 @@ function renderProfileUI() {
   const resetSel = document.getElementById('resetMonthSelect');
   const trResetSel = document.getElementById('trResetMonthSelect');
   if (!sel) return;
-  const opts = profileDb.profiles.map(p => {
-    const tag = p.id === CURRENT_MONTH_ID ? ' (current)' : '';
-    return `<option value="${p.id}">${monthLabel(p.month)} — ${p.label || p.id}${tag}</option>`;
-  }).join('');
+  const opts = profileDb.profiles.map(p =>
+    `<option value="${p.id}">${profileOptionText(p)}</option>`
+  ).join('');
   sel.innerHTML = opts;
   if (single) single.innerHTML = opts;
   if (start) start.innerHTML = opts;
@@ -2092,9 +2134,11 @@ function renderProfileUI() {
   const tb = document.getElementById('profileTable');
   tb.innerHTML = profileDb.profiles.map(p => {
     const s = p.snapshot || {};
+    const extra = cleanProfileLabel(p);
+    const note = String(p.notes || '').trim();
     return `<tr>
-      <td>${p.month}${p.id===CURRENT_MONTH_ID?' <span class="chip cur">current</span>':''}</td>
-      <td>${p.label || ''}<div class="sub">${(p.notes||'').slice(0,80)}</div></td>
+      <td>${monthLabel(p.month)}${isCurrentProfile(p)?' <span class="chip cur">current</span>':''}</td>
+      <td>${extra || '—'}${note ? `<div class="sub">${note.slice(0,90)}</div>` : ''}</td>
       <td>${p.author || ''}</td>
       <td class="num">${s.nbExp!=null?fmt(s.nbExp,1):'—'}</td>
       <td class="num">${s.nbDom!=null?fmt(s.nbDom,1):'—'}</td>
@@ -2102,7 +2146,7 @@ function renderProfileUI() {
       <td class="no-print">
         <button type="button" class="ghost" data-load="${p.id}">Load</button>
         <button type="button" class="ghost" data-edit="${p.id}">Edit</button>
-        ${p.id===CURRENT_MONTH_ID?'':`<button type="button" class="danger" data-del="${p.id}">Delete</button>`}
+        ${isCurrentProfile(p)?'':`<button type="button" class="danger" data-del="${p.id}">Delete</button>`}
       </td>
     </tr>`;
   }).join('');
@@ -2124,9 +2168,16 @@ function upsertProfile({ month, label, author, notes, online, params, statusId }
       domesticRoute: norm.domesticRoute
     };
     const existing = profileDb.profiles.find(p => p.id === id);
+    const when = monthLabel(id);
+    let neatLabel = String(label || '').trim();
+    neatLabel = neatLabel
+      .replace(/\s*\((current|latest|baseline)\)\s*/gi, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    if (!neatLabel || neatLabel.toLowerCase() === when.toLowerCase()) neatLabel = when;
     const row = {
       id,
-      label: String(label || '').trim() || (id + ' profile'),
+      label: neatLabel,
       month: id,
       author: String(author ?? '').trim(),
       notes: String(notes ?? '').trim(),
@@ -2164,16 +2215,14 @@ function upsertProfile({ month, label, author, notes, online, params, statusId }
     renderProfileUI();
     const sel = document.getElementById('profileSelect');
     if (sel) sel.value = id;
-    const al = document.getElementById('activeProfileLbl');
-    if (al) al.textContent = `${row.label} (${row.month})`;
+    updateMonthHeadlines();
     if (online) {
       return publishOnline(sid).then(ok => {
-        if (ok) setStatus(sid, `Saved online · ${row.label} · author: ${row.author || '(none)'}`, 'ok');
-        // publishOnline already sets status on failure; keep local success visible
+        if (ok) setStatus(sid, `Saved online · ${profileTitle(row, { current: false })} · author: ${row.author || '(none)'}`, 'ok');
         return ok;
       });
     }
-    setStatus(sid, `Saved on this device · ${row.label} · author: ${row.author || '(none)'}`, 'ok');
+    setStatus(sid, `Saved on this device · ${profileTitle(row, { current: false })} · author: ${row.author || '(none)'}`, 'ok');
     return Promise.resolve(true);
   } catch (err) {
     console.error(err);
@@ -2192,7 +2241,7 @@ function loadProfileById(id) {
     const el = document.getElementById(rid);
     if (el && [...el.options].some(o => o.value === id)) el.value = id;
   });
-  setStatus('profileStatus', `Loaded ${p.label}.`, 'ok');
+  setStatus('profileStatus', `Loaded ${profileTitle(p, { current: false })}.`, 'ok');
   showPage('netback');
 }
 
@@ -2212,8 +2261,9 @@ function deleteProfile(id) {
 
 function monthLabel(m) {
   try {
-    const [y, mo] = m.split('-').map(Number);
-    return new Date(y, mo-1, 1).toLocaleString(undefined, { month:'short', year:'numeric' });
+    const [y, mo] = String(m).split('-').map(Number);
+    // Fixed en-US so titles match English profile labels (avoids "Oct — Oct" / locale drift)
+    return new Date(y, mo - 1, 1).toLocaleString('en-US', { month: 'short', year: 'numeric' });
   } catch { return m; }
 }
 
@@ -2320,7 +2370,7 @@ function buildSingleReport(id) {
   }, 40);
   return `
     <h1>Netback monthly report — ${monthLabel(p.month)}</h1>
-    <div class="meta">${p.label || ''} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'} · Auto vs ${monthLabel(priorYm)}<br>${p.notes || ''}</div>
+    <div class="meta">${profileTitle(p, { current: true })} · Author: ${p.author || '—'} · Saved: ${p.savedAt ? new Date(p.savedAt).toLocaleString() : '—'} · Auto vs ${monthLabel(priorYm)}${p.notes ? `<br>${p.notes}` : ''}</div>
     <div class="kpi-grid">
       <div class="k"><span>Winner</span><b>${winner}</b></div>
       <div class="k"><span>Export NB</span><b>${fmt(c.nbExp,1)} $/t</b></div>
@@ -2915,7 +2965,7 @@ async function saveFromEditor(online) {
   }
   const ok = await upsertProfile({
     month,
-    label: document.getElementById('peLabel').value || (monthLabel(month) + ' profile'),
+    label: document.getElementById('peLabel').value || monthLabel(month),
     author: document.getElementById('peAuthor').value,
     notes: document.getElementById('peNotes').value,
     params,
@@ -3019,8 +3069,8 @@ function wireProfilesReports() {
   if (peRu) peRu.addEventListener('input', () => { /* live preview only; rebuild on change */ refreshProfileEditorPreview(); });
   if (peRoute) peRoute.addEventListener('change', rebuildPeTransportBasesKeepingAdj);
   document.getElementById('btnPeFillOct').onclick = () => fillEditor(OCT2026_PROFILE.params, {
-    month: document.getElementById('peMonth').value,
-    label: document.getElementById('peLabel').value,
+    month: document.getElementById('peMonth').value || CURRENT_MONTH_ID,
+    label: document.getElementById('peLabel').value || monthLabel(document.getElementById('peMonth').value || CURRENT_MONTH_ID),
     author: document.getElementById('peAuthor').value,
     notes: document.getElementById('peNotes').value
   });

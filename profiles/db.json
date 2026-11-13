@@ -355,10 +355,10 @@
     },
     {
       "id": "2026-11",
-      "label": "Nov 2026 (current)",
+      "label": "Nov 2026",
       "month": "2026-11",
       "author": "excel import",
-      "notes": "Latest month — prior workbook prices with Nov avg FX USD/KZT 450.18 (KazFin) and RUB/KZT 5.560603 (X-Rates). Previous month Oct verified with monthly FX/RUB.",
+      "notes": "Current baseline. Nov avg FX 450.18 KZT/USD (KazFin), RUB\to KZT 5.5606 (X-Rates).",
       "savedAt": "2026-11-12T14:02:43.000Z",
       "isCurrent": true,
       "params": {
