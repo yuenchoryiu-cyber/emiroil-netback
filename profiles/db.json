@@ -358,8 +358,8 @@
       "label": "Nov 2026",
       "month": "2026-11",
       "author": "excel import",
-      "notes": "Current month — FX refreshed daily on page open. Other months keep monthly-average FX.",
-      "savedAt": "2026-11-13T04:25:00.000Z",
+      "notes": "Current month — FX refreshed daily on page open. GCA/duty look up on Kebco (Brent-Skebco). Skebco may be negative.",
+      "savedAt": "2026-11-13T07:25:00.000Z",
       "isCurrent": true,
       "params": {
         "brent": 105.0,
@@ -377,13 +377,13 @@
         "bulkDom": 0
       },
       "snapshot": {
-        "nbExp": 188.62228392483775,
+        "nbExp": 255.12228392483775,
         "nbDom": 213.47352937152593,
-        "spread": -24.851245446688182,
+        "spread": 41.64875455331182,
         "trExp": 60.13828287516227,
         "trDom": 32.38605853245364,
-        "duty": 115,
-        "rental": 165.375,
+        "duty": 80,
+        "rental": 133.875,
         "metExp": 39.375,
         "domesticRoute": "pkop"
       }

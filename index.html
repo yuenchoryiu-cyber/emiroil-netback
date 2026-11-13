@@ -368,7 +368,7 @@
         </div>
         <div>
           <label>Skebco (D6) <span class="val" id="skLbl">20.1</span> $/bbl</label>
-          <input id="sk" type="range" min="0" max="30" step="0.1" value="20.104"/>
+          <input id="sk" type="range" min="-30" max="40" step="0.1" value="20.104"/>
         </div>
         <div>
           <label>Discount / skidka (D7) <span class="val" id="discLbl">6.18</span> $/bbl</label>
@@ -500,16 +500,18 @@
     <div class="section">
       <h2>How taxes enter netback</h2>
       <div class="tax-formula" id="taxFormulaStrip">
-        <div><b>Export rental</b> = GCA rental rate(Brent) × Brent × rental bbl factor</div>
+        <div><b>Kebco</b> = Brent − Skebco (Skebco may be negative)</div>
+        <div><b>Export rental</b> = GCA rental rate(Kebco) × Brent × rental bbl factor</div>
         <div><b>Export MET</b> = Brent × MET% × MET bbl factor</div>
-        <div><b>Export duty</b> = GCA duty ladder(Brent) $/t</div>
+        <div><b>Export duty</b> = GCA duty ladder(Kebco) $/t</div>
         <div><b>Domestic MET</b> = domestic MET share × export MET</div>
         <div><b>Local price ex-VAT</b> = local KZT ÷ FX (KZT per USD) ÷ VAT factor</div>
         <div><b>Transport $/t</b> = Σ(KZT legs + RUB legs × RUB→KZT) ÷ FX</div>
       </div>
       <div class="kpi-grid" style="margin-top:10px" id="taxLiveKpis">
-        <div class="k"><span>Rental rate @ Brent</span><b id="taxKpiRentRate">—</b></div>
-        <div class="k"><span>Duty @ Brent</span><b id="taxKpiDuty">—</b></div>
+        <div class="k"><span>Kebco (Brent − Skebco)</span><b id="taxKpiKebco">—</b></div>
+        <div class="k"><span>Rental rate @ Kebco</span><b id="taxKpiRentRate">—</b></div>
+        <div class="k"><span>Duty @ Kebco</span><b id="taxKpiDuty">—</b></div>
         <div class="k"><span>Export MET</span><b id="taxKpiMetExp">—</b></div>
         <div class="k"><span>Domestic MET</span><b id="taxKpiMetDom">—</b></div>
       </div>
@@ -546,13 +548,13 @@
     </div>
 
     <div class="section">
-      <h2>Brent ladders (GCA)</h2>
-      <p class="lead" style="margin-bottom:8px">Lookup = last row where Brent ≥ threshold. Sorted automatically on save.</p>
+      <h2>Kebco ladders (GCA)</h2>
+      <p class="lead" style="margin-bottom:8px">Lookup = last row where <b>Kebco</b> (Brent − Skebco) ≥ threshold. Skebco may be negative. Sorted automatically on save.</p>
       <div class="ladder-wrap">
         <div>
           <h3 style="font-size:.9rem;margin:0 0 6px">Rental rate ladder</h3>
           <table class="ladder-table">
-            <thead><tr><th>Brent ≥ $/bbl</th><th>Rate (e.g. 0.21)</th><th class="act"></th></tr></thead>
+            <thead><tr><th>Kebco ≥ $/bbl</th><th>Rate (e.g. 0.21)</th><th class="act"></th></tr></thead>
             <tbody id="rentLadderBody"></tbody>
           </table>
           <div class="btn-row" style="margin-top:8px">
@@ -562,7 +564,7 @@
         <div>
           <h3 style="font-size:.9rem;margin:0 0 6px">Export duty ladder ($/t)</h3>
           <table class="ladder-table">
-            <thead><tr><th>Brent ≥ $/bbl</th><th>Duty $/t</th><th class="act"></th></tr></thead>
+            <thead><tr><th>Kebco ≥ $/bbl</th><th>Duty $/t</th><th class="act"></th></tr></thead>
             <tbody id="dutyLadderBody"></tbody>
           </table>
           <div class="btn-row" style="margin-top:8px">
@@ -645,7 +647,7 @@
       <div class="param-grid">
         <div class="field"><label>Brent ($/bbl)</label><input id="peBrent" type="number" step="0.1" value="105"/></div>
         <div class="field"><label>FX (KZT per 1 USD)</label><input id="peFx" type="number" step="0.01" value="448.64"/></div>
-        <div class="field"><label>Skebco D6 ($/bbl)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
+        <div class="field"><label>Skebco D6 ($/bbl, can be negative)</label><input id="peSk" type="number" step="0.001" value="20.104"/></div>
         <div class="field"><label>Discount D7 ($/bbl)</label><input id="peDisc" type="number" step="0.01" value="6.18"/></div>
         <div class="field"><label>Local domestic VAT-incl (KZT/t)</label><input id="peLocal" type="number" step="500" value="130000"/></div>
         <div class="field"><label>RUB→KZT (KZT per 1 RUB)</label><input id="peRu" type="number" step="0.0001" value="5.5606"/></div>
@@ -936,7 +938,9 @@ function calcNetback() {
   // FX: KZT per USD — divide KZT amounts to get $/t. RU: KZT per RUB for Novoros legs.
   const { expK, domK, expRubTariff, expRubKzt, fx: FX, ru: RU } = transportTotals();
   const trExp = expK/FX, trDom = domK/FX;
-  const rentRate = vlookup(B, taxState.rent), duty = vlookup(B, taxState.duty);
+  // Kebco = Brent − Skebco (Skebco may be negative → Kebco > Brent)
+  const kebco = B - S;
+  const rentRate = vlookup(kebco, taxState.rent), duty = vlookup(kebco, taxState.duty);
   const priceBbl = B - S - DISC, priceTexp = priceBbl * KB;
   const kbRent = num(taxState.kbRent, 7.5), kbMet = num(taxState.kbMet, 7.5);
   const domMetShare = num(taxState.domMetShare, 0.1);
@@ -950,7 +954,7 @@ function calcNetback() {
   const skStar = B - DISC - neededPriceBbl;          // hold Discount fixed
   const discStar = B - S - neededPriceBbl;           // hold Skebco fixed
   const skDiscStar = B - neededPriceBbl;             // combined S+DISC haircut from Brent
-  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,kbRent,kbMet,domMetShare,trExp,trDom,expK,domK,expRubTariff,expRubKzt,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,discStar,skDiscStar,neededPriceBbl,trAdj:trAdjusted() };
+  return { B,FX,S,DISC,LOC,RU,KB,MET,VAT,kebco,kbRent,kbMet,domMetShare,trExp,trDom,expK,domK,expRubTariff,expRubKzt,rentRate,duty,priceBbl,priceTexp,rental,metExp,nbExp,priceTdom,metDom,nbDom,spread,skStar,discStar,skDiscStar,neededPriceBbl,trAdj:trAdjusted() };
 }
 
 function row(name, formula, value, cls='') {
@@ -989,7 +993,7 @@ function renderNetback() {
     Math.abs(c.B-105)<1e-9 && Math.abs(c.FX-448.64)<1e-9 && Math.abs(c.S-20.104)<1e-9 && Math.abs(c.DISC-6.18)<1e-9 &&
     Math.abs(c.LOC-130000)<1e-9 && Math.abs(c.RU-5.5606)<1e-9 && Math.abs(c.KB-7.2223)<1e-9 &&
     Math.abs(c.MET-0.05)<1e-9 && Math.abs(c.VAT-1.16)<1e-9;
-  const baselinePass = atBase && Math.abs(c.nbExp-188.82800820318806)<1e-6 && Math.abs(c.nbDom-212.72979800799988)<1e-6;
+  const baselinePass = atBase && Math.abs(c.nbExp-255.12228392483775)<1e-6 && Math.abs(c.nbDom-213.47352937152593)<1e-6;
 
   const box = document.getElementById('verdict');
   box.className = 'verdict ' + (Math.abs(c.spread)<0.5?'tie':c.spread>0?'export':'domestic');
@@ -1012,7 +1016,8 @@ function renderNetback() {
     row('Brent','L3', fmt(c.B,1)+' $/bbl'),
     row('FX (KZT per 1 USD)','All KZT totals ÷ FX → $/t', fmt(c.FX,2)+' KZT/USD'),
     row('RUB→KZT (KZT per 1 RUB)','Novoros RUB legs × rate → KZT', fmt(c.RU,4)),
-    row('Skebco (D6)','D6', fmt(c.S,3)+' $/bbl'),
+    row('Skebco (D6)','D6 (may be negative)', fmt(c.S,3)+' $/bbl'),
+    row('Kebco','Brent − Skebco (GCA / duty lookup)', fmt(c.kebco,3)+' $/bbl'),
     row('Discount (D7)','D7', fmt(c.DISC,2)+' $/bbl'),
     row('Local domestic','G5/F5 list', fmtInt(c.LOC)+' KZT/t'),
     row('Domestic destination','Shymkent (PKOP) or Pavlodar/PNHZ', domesticLabel()),
@@ -1021,9 +1026,9 @@ function renderNetback() {
     row('Realized $/t',`D12=D11×D8`, fmt(c.priceTexp,2)),
     row('Export RUB legs',`Σ RUB tariffs × RUB→KZT ${fmt(c.RU,2)}`, fmt(c.expRubKzt,0)+' KZT'),
     row('Transport $/t',`Σ(KZT + RUB×${fmt(c.RU,2)}) / FX${c.trAdj?' · % adj':''}`, fmt(c.trExp,2)),
-    row('Rental $/t',`D16 rate ${(c.rentRate*100).toFixed(0)}%`, fmt(c.rental,2)),
+    row('Rental $/t',`GCA rate(Kebco ${fmt(c.kebco,1)}) ${(c.rentRate*100).toFixed(0)}% × Brent × ${fmt(c.kbRent,1)}`, fmt(c.rental,2)),
     row('MET $/t','D17', fmt(c.metExp,2)),
-    row('Duty $/t','D15', fmt(c.duty,0)),
+    row('Duty $/t',`GCA duty(Kebco ${fmt(c.kebco,1)})`, fmt(c.duty,0)),
     row('Export netback','D18', fmt(c.nbExp,2)+' $/t','total'),
     row('DOMESTIC '+domesticLabel(),'','','secDom'),
     row('Price ex-VAT','local KZT / FX / VAT', fmt(c.priceTdom,2)),
@@ -1791,6 +1796,8 @@ function renderTaxPage() {
   const kDuty = document.getElementById('taxKpiDuty');
   const kMet = document.getElementById('taxKpiMetExp');
   const kDom = document.getElementById('taxKpiMetDom');
+  const kKebco = document.getElementById('taxKpiKebco');
+  if (kKebco) kKebco.textContent = fmt(c.kebco, 2) + ' $/bbl';
   if (kRent) kRent.textContent = (c.rentRate*100).toFixed(0) + '%';
   if (kDuty) kDuty.textContent = fmt(c.duty, 0) + ' $/t';
   if (kMet) kMet.textContent = fmt(c.metExp, 2) + ' $/t';
@@ -1955,7 +1962,7 @@ const TOKEN_KEY = 'eo_publish_token_v1';
 const ACTIVE_KEY = 'eo_active_profile_id';
 const CURRENT_MONTH_ID = '2026-11';
 
-const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current month — FX refreshed daily on page open. Other months keep monthly-average FX.", "savedAt": "2026-11-13T04:25:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 188.62228392483775, "nbDom": 213.47352937152593, "spread": -24.851245446688182, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 115, "rental": 165.375, "metExp": 39.375, "domesticRoute": "pkop"}};
+const OCT2026_PROFILE = {"id": "2026-11", "label": "Nov 2026", "month": "2026-11", "author": "excel import", "notes": "Current month — FX refreshed daily on page open. GCA/duty look up on Kebco (Brent−Skebco). Skebco may be negative.", "savedAt": "2026-11-13T07:25:00.000Z", "isCurrent": true, "params": {"brent": 105, "fx": 448.64, "sk": 20.104, "disc": 6.18, "localKzt": 130000, "ru": 5.5606, "kb": 7.2223, "metRate": 0.05, "vat": 1.16, "domesticRoute": "pkop", "transportPct": {}, "bulkExp": 0, "bulkDom": 0}, "snapshot": {"nbExp": 255.12228392483775, "nbDom": 213.47352937152593, "spread": 41.64875455331182, "trExp": 60.13828287516227, "trDom": 32.38605853245364, "duty": 80, "rental": 133.875, "metExp": 39.375, "domesticRoute": "pkop"}};
 
 /** Live daily FX for the current month only (prior months keep monthly averages). */
 let liveFxMeta = { fx: null, ru: null, asOf: null, source: '', status: 'idle' };
@@ -2179,13 +2186,14 @@ function calcTableHtml(c, params) {
       <tr><td>Brent</td><td>L3</td><td class="num">${fmt(c.B,1)} $/bbl</td></tr>
       <tr><td>FX (KZT per 1 USD)</td><td>Σ KZT ÷ FX → $/t</td><td class="num">${fmt(c.FX,2)} KZT/USD</td></tr>
       <tr><td>RUB→KZT (KZT per 1 RUB)</td><td>Novoros RUB × rate → KZT</td><td class="num">${fmt(c.RU,4)}</td></tr>
-      <tr><td>Skebco (D6)</td><td>D6</td><td class="num">${fmt(c.S,3)} $/bbl</td></tr>
+      <tr><td>Skebco (D6)</td><td>D6 (may be negative)</td><td class="num">${fmt(c.S,3)} $/bbl</td></tr>
+      <tr><td>Kebco</td><td>Brent − Skebco</td><td class="num">${fmt(c.kebco,3)} $/bbl</td></tr>
       <tr><td>Discount (D7)</td><td>D7</td><td class="num">${fmt(c.DISC,2)} $/bbl</td></tr>
       <tr><td>Realized $/bbl</td><td>Brent − Skebco − Discount</td><td class="num">${fmt(c.priceBbl,3)}</td></tr>
       <tr><td>Realized $/t</td><td>× bbl/t ${fmt(c.KB,4)}</td><td class="num">${fmt(c.priceTexp,2)}</td></tr>
       <tr><td>Export transport</td><td>Σ(KZT + RUB×${fmt(c.RU,2)}) / FX</td><td class="num">${fmt(c.trExp,2)} $/t</td></tr>
-      <tr><td>Duty</td><td>GCA lookup</td><td class="num">${fmt(c.duty,0)} $/t</td></tr>
-      <tr><td>Rental</td><td>rate ${(c.rentRate*100).toFixed(0)}% × Brent × ${fmt(c.kbRent,1)}</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
+      <tr><td>Duty</td><td>GCA ladder(Kebco)</td><td class="num">${fmt(c.duty,0)} $/t</td></tr>
+      <tr><td>Rental</td><td>GCA rate(Kebco) ${(c.rentRate*100).toFixed(0)}% × Brent × ${fmt(c.kbRent,1)}</td><td class="num">${fmt(c.rental,2)} $/t</td></tr>
       <tr><td>Export MET</td><td>Brent × MET% × ${fmt(c.kbMet,1)}</td><td class="num">${fmt(c.metExp,2)} $/t</td></tr>
       <tr><td><b>Export netback</b></td><td>D18</td><td class="num"><b>${fmt(c.nbExp,2)} $/t</b></td></tr>
       <tr><td>Local price ex-VAT</td><td>KZT / FX / VAT</td><td class="num">${fmt(c.priceTdom,2)} $/t</td></tr>
