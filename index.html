@@ -731,7 +731,7 @@
           <div class="field"><label>Admin KZT/t</label><input id="prodAdmin" type="number" step="1"/></div>
           <div class="field"><label>Excise gas rate (KZT/t product)</label><input id="prodExcGasRate" type="number" step="1"/></div>
           <div class="field"><label>Excise diesel rate (KZT/t product)</label><input id="prodExcDtRate" type="number" step="1"/></div>
-          <div class="field"><label>Fuel-oil duty $/t crude</label><input id="prodMazDuty" type="number" step="0.1"/></div>
+          <div class="field"><label>Fuel-oil duty KZT/t crude</label><input id="prodMazDuty" type="number" step="100"/></div>
         </div>
         <div class="field" style="margin-top:8px;max-width:12rem">
           <label>Our refinery share %</label>
@@ -759,12 +759,17 @@
       <div id="prodNbChart" style="height:280px"></div>
     </div>
 
+    <div class="section report-section" id="prodCompareReport">
+      <h2>Decision report — Export vs Domestic + share of refinery</h2>
+      <div id="prodCompareReportBody"></div>
+    </div>
+
     <p class="prod-footnote" id="prodFootnote">
       Historic = merged PKOP+PNHZ from <b>Jan 2026</b> (tile badge / marker colour = price source).
       Forecast = choose refinery for weighted yields.
       Sell-all economics are <b>ex-VAT</b> on both sides (Excel product prices are VAT-incl → ÷ VAT; feedstock VAT-incl → ÷ VAT), then ÷ FX → $/t.
       Decision vs <b>Export</b>: full refinery NB, and <b>our share × refine + Domestic</b> (default 60%) — not vs selling crude alone.
-      Hover a tile to enlarge.
+      Fuel-oil duty is entered in <b>KZT/t crude</b>. Hover a tile to enlarge.
     </p>
 
   </div>
@@ -1572,6 +1577,10 @@ function ensureProdModel(force){
   const block = activeRef();
   const d = block.defaults || {};
   if (force || !prodState.rates) {
+    const fx0 = Math.max(1e-9, num(calcNetback().FX, 450));
+    const dutyKzt = d.fuelOilDutyKzt != null
+      ? num(d.fuelOilDutyKzt, 0)
+      : num(d.fuelOilDutyUsd, 0) * fx0;
     prodState.rates = {
       processingKzt: num(d.processingKzt, 26029),
       additive1Kzt: num(d.additive1Kzt, 600),
@@ -1580,7 +1589,7 @@ function ensureProdModel(force){
       adminKzt: num(d.adminKzt, 300),
       exciseGasRateKzt: num(d.exciseGasRateKzt, 38134),
       exciseDieselRateKzt: num(d.exciseDieselRateKzt, 35726),
-      fuelOilDutyUsd: num(d.fuelOilDutyUsd, 0)
+      fuelOilDutyKzt: dutyKzt
     };
   }
   if (!prodState.monthId) {
@@ -1674,8 +1683,10 @@ function calcProducts(){
   const excGasKzt = yGas * num(rates.exciseGasRateKzt);
   const excDtKzt = yDt * num(rates.exciseDieselRateKzt);
   const excKzt = excGasKzt + excDtKzt;
-  const dutyUsd = num(rates.fuelOilDutyUsd);
-  const dutyKzt = dutyUsd * fx;
+  const dutyKzt = rates.fuelOilDutyKzt != null
+    ? num(rates.fuelOilDutyKzt, 0)
+    : num(rates.fuelOilDutyUsd, 0) * fx;
+  const dutyUsd = dutyKzt / fx;
   const opexKzt = fixedKzt + excKzt + dutyKzt;
   // Products NB in KZT/t crude first, then ÷ FX → $/t
   const nbKzt = revKzt - feedKzt - opexKzt;
@@ -1941,7 +1952,10 @@ function renderProdTrends(){
     }
     const fixedKzt = num(rates.processingKzt,26029)+num(rates.additive1Kzt,600)+num(rates.additive2Kzt,240)+num(rates.additivesKzt,0)+num(rates.adminKzt,300);
     const excKzt = yGas*num(rates.exciseGasRateKzt,38134) + yDt*num(rates.exciseDieselRateKzt,35726);
-    const opexKzt = fixedKzt + excKzt + num(rates.fuelOilDutyUsd,0)*fx;
+    const dutyKztH = rates.fuelOilDutyKzt != null
+      ? num(rates.fuelOilDutyKzt, 0)
+      : num(rates.fuelOilDutyUsd, 0) * fx;
+    const opexKzt = fixedKzt + excKzt + dutyKztH;
     const nbKzt = revKzt - feedEx - opexKzt;
     return toNb(nbKzt / fx);
   });
@@ -1999,7 +2013,9 @@ function renderProductsPage(){
   setVal('prodAdmin', r.rates.adminKzt);
   setVal('prodExcGasRate', r.rates.exciseGasRateKzt);
   setVal('prodExcDtRate', r.rates.exciseDieselRateKzt);
-  setVal('prodMazDuty', r.rates.fuelOilDutyUsd);
+  setVal('prodMazDuty', r.rates.fuelOilDutyKzt != null
+    ? r.rates.fuelOilDutyKzt
+    : Math.round(num(r.rates.fuelOilDutyUsd, 0) * r.fx));
   setVal('prodRefineShare', Math.round(num(prodState.refineShare, 0.6) * 100));
 
   const body = document.getElementById('prodTableBody');
@@ -2058,7 +2074,6 @@ function renderProductsPage(){
 
   const calcHost = document.getElementById('prodCalcBody');
   if (calcHost) {
-    const pct = (r.share * 100).toFixed(0);
     calcHost.innerHTML = `<table class="calc"><tbody>
       <tr class="secIn"><td colspan="3">Sell-all ex-VAT KZT / t crude (then ÷ FX → $)</td></tr>
       <tr><td>Revenue</td><td>Σ yield × (VAT-incl price ÷ ${fmt(r.vat,2)})</td><td class="num">${fmtInt(r.revKzt)} KZT</td></tr>
@@ -2066,16 +2081,68 @@ function renderProductsPage(){
       <tr><td>Fixed opex</td><td>processing + additives + admin</td><td class="num">${fmtInt(r.fixedKzt)} KZT</td></tr>
       <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)}</td><td class="num">${fmtInt(r.excGasKzt)} KZT</td></tr>
       <tr><td>Excise diesel</td><td>${fmt(r.yDt*100,2)}% × ${fmtInt(r.rates.exciseDieselRateKzt)}</td><td class="num">${fmtInt(r.excDtKzt)} KZT</td></tr>
-      <tr><td>Fuel-oil duty</td><td>${fmt(r.dutyUsd,2)} $/t × FX ${fmt(r.fx,2)}</td><td class="num">${fmtInt(r.dutyKzt)} KZT</td></tr>
+      <tr><td>Fuel-oil duty</td><td>KZT/t crude</td><td class="num">${fmtInt(r.dutyKzt)} KZT</td></tr>
       <tr class="total"><td>Refinery NB (100%)</td><td>rev − feed − opex</td><td class="num">${fmtInt(r.nbKzt)} KZT · ${fmt(r.nb,2)} $/t</td></tr>
-      <tr class="secDom"><td colspan="3">Compare to Export (Analysis) — not vs selling crude alone</td></tr>
-      <tr><td>Export NB</td><td>Analysis</td><td class="num">${fmt(r.expNb,2)} $/t</td></tr>
-      <tr><td>Domestic NB</td><td>Analysis</td><td class="num">${fmt(r.domNb,2)} $/t</td></tr>
-      <tr><td>Δ Refinery − Export</td><td>100% refine vs export crude</td><td class="num">${(r.deltaVsExp>=0?'+':'')+fmt(r.deltaVsExp,2)} $/t</td></tr>
-      <tr><td>Our share (${pct}%)</td><td>${pct}% × refinery NB</td><td class="num">${fmt(r.shareNb,2)} $/t</td></tr>
-      <tr class="total"><td>${pct}% refine + Domestic</td><td>share + Analysis domestic NB</td><td class="num">${fmt(r.sharePlusDom,2)} $/t</td></tr>
-      <tr class="total"><td>Δ (share+Dom) − Export</td><td></td><td class="num">${(r.deltaShareDomVsExp>=0?'+':'')+fmt(r.deltaShareDomVsExp,2)} $/t</td></tr>
     </tbody></table>`;
+  }
+  const reportHost = document.getElementById('prodCompareReportBody');
+  if (reportHost) {
+    const pct = (r.share * 100).toFixed(0);
+    const u = prodUnitLabel();
+    const beatShare = r.deltaShareDomVsExp >= 0;
+    const beatFull = r.deltaVsExp >= 0;
+    const winner = beatShare
+      ? `${pct}% refine + Domestic beats Export by ${fmtProdUnit(r.deltaShareDomVsExp, 2)}`
+      : `Export beats ${pct}% refine + Domestic by ${fmtProdUnit(-r.deltaShareDomVsExp, 2)}`;
+    const modeLbl = prodState.mode === 'historic'
+      ? ('Historic · ' + (histMonth(prodState.monthId)?.label || prodState.monthId || ''))
+      : ('Forecast · ' + String(prodState.refinery).toUpperCase());
+    reportHost.innerHTML = `
+      <p class="meta" style="margin:0 0 10px">${modeLbl} · FX ${fmt(r.fx,2)} · share ${pct}% · feed ${fmtInt(r.feedKztVat)} KZT/t VAT-incl</p>
+      <p style="margin:0 0 12px;font-size:.92rem;line-height:1.45"><b>Verdict:</b> ${winner}
+        ${beatFull ? ` (full refinery also ahead of Export by ${fmtProdUnit(r.deltaVsExp, 2)})`
+          : ` (full refinery still ${fmtProdUnit(-r.deltaVsExp, 2)} behind Export)`}.</p>
+      <table class="report-table">
+        <thead><tr>
+          <th>Path</th><th class="num">${u}</th><th class="num">vs Export</th><th>Notes</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>Export crude (Analysis)</td>
+            <td class="num">${fmt(prodPerUnit(r.expNb),2)}</td>
+            <td class="num">—</td>
+            <td>Benchmark</td>
+          </tr>
+          <tr>
+            <td>Domestic crude (Analysis)</td>
+            <td class="num">${fmt(prodPerUnit(r.domNb),2)}</td>
+            <td class="num">${(r.domNb-r.expNb>=0?'+':'')+fmt(prodPerUnit(r.domNb-r.expNb),2)}</td>
+            <td>Sell crude to RK refinery</td>
+          </tr>
+          <tr>
+            <td>Refinery NB (100%)</td>
+            <td class="num">${fmt(prodPerUnit(r.nb),2)}</td>
+            <td class="num">${(r.deltaVsExp>=0?'+':'')+fmt(prodPerUnit(r.deltaVsExp),2)}</td>
+            <td>Full sell-all products netback</td>
+          </tr>
+          <tr>
+            <td>Our share (${pct}%) of refine</td>
+            <td class="num">${fmt(prodPerUnit(r.shareNb),2)}</td>
+            <td class="num">${(r.shareNb-r.expNb>=0?'+':'')+fmt(prodPerUnit(r.shareNb-r.expNb),2)}</td>
+            <td>${pct}% × refinery NB only</td>
+          </tr>
+          <tr style="font-weight:700;background:#f5f5f4">
+            <td>${pct}% refine + Domestic</td>
+            <td class="num">${fmt(prodPerUnit(r.sharePlusDom),2)}</td>
+            <td class="num">${(r.deltaShareDomVsExp>=0?'+':'')+fmt(prodPerUnit(r.deltaShareDomVsExp),2)}</td>
+            <td>Decision case vs Export</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin:10px 0 0;font-size:.8rem;color:var(--muted);line-height:1.4">
+        Compare <b>Export</b> to <b>Domestic + our share of refinery netback</b> (not vs selling crude alone).
+        Values use Analysis export/domestic NB and Products sell-all economics (ex-VAT ÷ FX).
+      </p>`;
   }
   if (window.Plotly && document.getElementById('prodChart')) {
     const sold = r.rows.filter(x => x.sold).sort((a,b)=>b.contribKzt-a.contribKzt);
@@ -2099,7 +2166,7 @@ function applyProdRates(){
   prodState.rates.adminKzt = g('prodAdmin');
   prodState.rates.exciseGasRateKzt = g('prodExcGasRate');
   prodState.rates.exciseDieselRateKzt = g('prodExcDtRate');
-  prodState.rates.fuelOilDutyUsd = g('prodMazDuty');
+  prodState.rates.fuelOilDutyKzt = g('prodMazDuty');
   renderProductsPage();
 }
 function switchRefinery(ref){
