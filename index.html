@@ -146,8 +146,13 @@
   .ladder-table th{background:#1e3a5f; color:#fff; text-align:left}
   .ladder-table input{width:100%; padding:4px 6px; border:1px solid var(--line); border-radius:6px; text-align:right}
   .ladder-table .act{width:70px; text-align:center}
-  .tax-formula{font-family:Consolas,"Courier New",monospace; font-size:.78rem; color:#444; line-height:1.45; background:#faf7f0; border:1px solid var(--line); border-radius:10px; padding:10px 12px}
-  .tax-formula b{color:var(--accent); font-family:inherit}
+  .tax-formula{font-size:.82rem; color:#444; line-height:1.5; background:#faf7f0; border:1px solid var(--line); border-radius:10px; padding:12px 14px}
+  .tax-formula .tf-step{margin:0 0 10px}
+  .tax-formula .tf-step:last-child{margin-bottom:0}
+  .tax-formula .tf-h{font-size:.72rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin:0 0 4px}
+  .tax-formula .tf-eq{font-family:Consolas,"Courier New",monospace; font-size:.78rem; color:#333}
+  .tax-formula .tf-eq b{color:var(--accent); font-family:inherit}
+  .tax-formula .tf-note{font-size:.72rem; color:var(--muted); margin-top:3px}
   #gate{
     position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
     background:
@@ -499,14 +504,35 @@
 
     <div class="section">
       <h2>How taxes enter netback</h2>
+      <p class="lead" style="margin-bottom:8px">Fiscal items are priced off <b>Kebco</b>. Netbacks subtract those $/t charges (and transport) from realized price.</p>
       <div class="tax-formula" id="taxFormulaStrip">
-        <div><b>Kebco</b> = Brent − Skebco (Skebco may be negative)</div>
-        <div><b>Export rental</b> = GCA rental rate(Kebco) × Brent × rental bbl factor</div>
-        <div><b>Export MET</b> = Kebco × MET% × MET bbl factor</div>
-        <div><b>Export duty</b> = GCA duty ladder(Kebco) $/t</div>
-        <div><b>Domestic MET</b> = domestic MET share × export MET</div>
-        <div><b>Local price ex-VAT</b> = local KZT ÷ FX (KZT per USD) ÷ VAT factor</div>
-        <div><b>Transport $/t</b> = Σ(KZT legs + RUB legs × RUB→KZT) ÷ FX</div>
+        <div class="tf-step">
+          <div class="tf-h">1 · Fiscal marker</div>
+          <div class="tf-eq"><b>Kebco</b> = Brent − Skebco</div>
+          <div class="tf-note">Skebco may be negative (then Kebco &gt; Brent). GCA ladders and MET use Kebco, not raw Brent.</div>
+        </div>
+        <div class="tf-step">
+          <div class="tf-h">2 · Export fiscal charges ($/t)</div>
+          <div class="tf-eq"><b>Rental</b> = GCA rate(Kebco) × Brent × rental bbl factor</div>
+          <div class="tf-eq"><b>Duty</b> = GCA duty ladder(Kebco)</div>
+          <div class="tf-eq"><b>MET</b> = Kebco × MET% × MET bbl factor</div>
+          <div class="tf-note">Rate/duty bands are looked up on Kebco; rental still multiplies the looked-up rate by Brent.</div>
+        </div>
+        <div class="tf-step">
+          <div class="tf-h">3 · Export netback</div>
+          <div class="tf-eq"><b>Export NB</b> = (Brent − Skebco − Discount) × bbl/t − transport − duty − rental − MET</div>
+        </div>
+        <div class="tf-step">
+          <div class="tf-h">4 · Domestic side</div>
+          <div class="tf-eq"><b>Price ex-VAT</b> = local KZT ÷ FX ÷ VAT factor</div>
+          <div class="tf-eq"><b>Domestic MET</b> = domestic MET share × export MET</div>
+          <div class="tf-eq"><b>Domestic NB</b> = price ex-VAT − domestic transport − domestic MET</div>
+        </div>
+        <div class="tf-step">
+          <div class="tf-h">5 · Result</div>
+          <div class="tf-eq"><b>Δ</b> = Export NB − Domestic NB</div>
+          <div class="tf-note">Transport is not a tax: Σ(KZT + RUB×RUB→KZT) ÷ FX. Edits on this page apply live to Analysis.</div>
+        </div>
       </div>
       <div class="kpi-grid" style="margin-top:10px" id="taxLiveKpis">
         <div class="k"><span>Kebco (Brent − Skebco)</span><b id="taxKpiKebco">—</b></div>
