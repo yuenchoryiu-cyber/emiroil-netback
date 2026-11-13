@@ -710,7 +710,7 @@
         <h2 id="prodSlateTitle">Forecast slate — sell all</h2>
                 <div style="overflow:auto">
           <table class="calc"><thead><tr>
-            <th>Product</th><th>Yield %</th><th>Price KZT/t</th><th>Eff. KZT/t</th><th id="prodContribHead">KZT/t contrib</th>
+            <th>Product</th><th>Yield %</th><th>Price KZT/t (VAT-incl)</th><th>Ex-VAT KZT/t</th><th id="prodContribHead">KZT/t contrib</th>
           </tr></thead><tbody id="prodTableBody"></tbody></table>
         </div>
       </div>
@@ -756,7 +756,8 @@
 
     <p class="prod-footnote" id="prodFootnote">
       Historic = merged PKOP+PNHZ from <b>Jan 2026</b> (tile badge / marker colour = price source).
-      Forecast = choose refinery for weighted yields. Sell-all in KZT/t crude first, then ÷ FX → $/t (toggle → $/bbl).
+      Forecast = choose refinery for weighted yields.
+      Sell-all economics are <b>ex-VAT</b> on both sides (Excel product prices are VAT-incl → ÷ VAT; feedstock VAT-incl → ÷ VAT), then ÷ FX → $/t.
       Hover a tile to enlarge.
     </p>
 
@@ -1634,13 +1635,14 @@ function calcProducts(){
     const y = Math.max(0, num(p.yield));
     if (isGasoline(p)) yGas += y;
     if (isDiesel(p)) yDt += y;
-    // Force posted KZT unit price (sell-all in local currency first)
+    // Excel unit prices are VAT-incl → strip VAT so revenue matches ex-VAT feedstock
     const pKzt = { ...p, priceMode: 'kzt' };
-    const priceKzt = effectivePriceKzt(pKzt, fx, esc);
-    const sold = !!p.sellable && y > 0 && priceKzt > 0;
-    const contribKzt = sold ? y * priceKzt : 0; // KZT per t crude
+    const priceKztVat = effectivePriceKzt(pKzt, fx, esc);
+    const priceKzt = priceKztVat / Math.max(vat, 1e-9);
+    const sold = !!p.sellable && y > 0 && priceKztVat > 0;
+    const contribKzt = sold ? y * priceKzt : 0; // ex-VAT KZT per t crude
     if (sold) { revKzt += contribKzt; yieldSold += y; }
-    rows.push({ name:p.name, yield:y, priceKzt, sellable:!!p.sellable, sold,
+    rows.push({ name:p.name, yield:y, priceKztVat, priceKzt, sellable:!!p.sellable, sold,
       contribKzt, contribUsd: contribKzt / fx, isGas: isGasoline(p) });
   }
   const fixedKzt = num(rates.processingKzt)+num(rates.additive1Kzt)+num(rates.additive2Kzt)+num(rates.additivesKzt)+num(rates.adminKzt);
@@ -1899,7 +1901,7 @@ function renderProdTrends(){
       const y = Math.max(0, num(p.yield));
       if ((p.kind==='gasoline') || /^(ai92|ai95|ai98)$/i.test(p.name||'')) yGas += y;
       if ((p.kind==='diesel') || /^diesel/i.test(p.name||'')) yDt += y;
-      if (p.sellable && y > 0 && num(p.priceKzt) > 0) revKzt += y * num(p.priceKzt);
+      if (p.sellable && y > 0 && num(p.priceKzt) > 0) revKzt += y * (num(p.priceKzt) / Math.max(vat, 1e-9));
     }
     const fixedKzt = num(rates.processingKzt,26029)+num(rates.additive1Kzt,600)+num(rates.additive2Kzt,240)+num(rates.additivesKzt,0)+num(rates.adminKzt,300);
     const excKzt = yGas*num(rates.exciseGasRateKzt,38134) + yDt*num(rates.exciseDieselRateKzt,35726);
@@ -1962,7 +1964,7 @@ function renderProductsPage(){
       return `<tr ${muted}><td>${p.name}</td>
         <td><input data-prod-i="${i}" data-prod-f="yield" type="number" step="0.0001" min="0" max="1" value="${y}" style="width:5.2rem"/></td>
         <td><input data-prod-i="${i}" data-prod-f="priceKzt" type="number" step="100" min="0" value="${priceVal}" style="width:7rem"/></td>
-        <td class="num" data-prod-eff="${i}">${fmt(row.priceKzt||0,0)}</td>
+        <td class="num" data-prod-eff="${i}">${fmt(row.priceKzt||0,0)} <span style="color:var(--muted);font-size:.75em">ex-VAT</span></td>
         <td class="num" data-prod-contrib="${i}">${row.sold?fmtInt(row.contribKzt):'—'}</td></tr>`;
     }).join('') + `<tr class="total"><td>Sellable (sold now)</td><td class="num">${(r.yieldSold*100).toFixed(2)}%</td><td colspan="2"></td><td class="num">${fmtInt(r.revKzt)}</td></tr>`;
   } else if (body && editing) {
@@ -2001,8 +2003,8 @@ function renderProductsPage(){
   const calcHost = document.getElementById('prodCalcBody');
   if (calcHost) {
     calcHost.innerHTML = `<table class="calc"><tbody>
-      <tr class="secIn"><td colspan="3">Sell-all in local KZT / t crude (then ÷ FX → $)</td></tr>
-      <tr><td>Revenue</td><td>Σ (yield × price KZT/t product)</td><td class="num">${fmtInt(r.revKzt)} KZT</td></tr>
+      <tr class="secIn"><td colspan="3">Sell-all ex-VAT KZT / t crude (then ÷ FX → $)</td></tr>
+      <tr><td>Revenue</td><td>Σ yield × (VAT-incl price ÷ ${fmt(r.vat,2)})</td><td class="num">${fmtInt(r.revKzt)} KZT</td></tr>
       <tr><td>Feedstock ex-VAT</td><td>${fmtInt(r.feedKztVat)} ÷ VAT ${fmt(r.vat,2)}</td><td class="num">${fmtInt(r.feedKzt)} KZT</td></tr>
       <tr><td>Fixed opex</td><td>processing + additives + admin</td><td class="num">${fmtInt(r.fixedKzt)} KZT</td></tr>
       <tr><td>Excise gasoline</td><td>${fmt(r.yGas*100,2)}% × ${fmtInt(r.rates.exciseGasRateKzt)}</td><td class="num">${fmtInt(r.excGasKzt)} KZT</td></tr>
