@@ -1,0 +1,23 @@
+name: Sync profiles from gist
+on:
+  schedule:
+    - cron: "15 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull gist db.json (encrypted)
+        run: |
+          curl -fsSL "https://gist.githubusercontent.com/yuenchoryiu-cyber/67935db5c7d607d0f8899471c5c26c74/raw/db.json" -o profiles/db.json
+          python -c "import json; d=json.load(open('profiles/db.json',encoding='utf-8')); assert d.get('enc')==1, 'refusing to publish unencrypted profiles'; print('ok')"
+      - name: Commit if changed
+        run: |
+          git config user.name "netback-bot"
+          git config user.email "netback-bot@users.noreply.github.com"
+          git add profiles/db.json
+          git diff --cached --quiet || git commit -m "Sync month profiles from shared gist"
+          git push
